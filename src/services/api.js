@@ -15,9 +15,17 @@ api.interceptors.request.use(config => {
     return config;
 });
 
+import { errorHandler } from './errorHandler';
+
+// Helper to get toast instance - simple version using window for now until we have a better service locator
+const getToast = () => window.$toast;
+
 api.interceptors.response.use(
     response => response,
     error => {
+        const toast = getToast();
+        errorHandler.handle(error, toast);
+
         if (error.response && error.response.status === 403) {
             localStorage.removeItem('token');
             window.location.href = '/login';

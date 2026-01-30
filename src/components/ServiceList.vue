@@ -89,23 +89,33 @@ defineExpose({ refresh });
 }
 
 .btn-icon {
-  background: none;
-  border: 1px solid #cbd5e1;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   transition: all 0.2s;
+  color: var(--color-text-muted);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-icon:hover {
-  background-color: #f1f5f9;
-  border-color: var(--color-text-muted);
+  background-color: var(--color-bg-body);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-icon.delete {
+    color: var(--color-error, #ef4444);
+    border-color: var(--color-error, #ef4444);
+    opacity: 0.8;
 }
 
 .btn-icon.delete:hover {
   background-color: #fee2e2;
   border-color: #ef4444;
   color: #ef4444;
+  opacity: 1;
 }
 
 .status-badge {

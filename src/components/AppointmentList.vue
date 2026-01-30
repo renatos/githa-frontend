@@ -1,6 +1,6 @@
 <template>
   <div class="appointment-list">
-    <div class="header-actions">
+    <div class="header-actions" v-if="!embedded">
       <h2>Agendamentos</h2>
       <button class="btn btn-primary" @click="$emit('new')">
         + Novo Agendamento
@@ -79,7 +79,7 @@ const fetchDataAdapter = async (params) => {
   
   // Enforce client filtter
   if (props.clientId) {
-    query.clientId = props.clientId;
+    query['client.id'] = props.clientId;
   }
   
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
@@ -120,24 +120,33 @@ defineExpose({ refresh });
 }
 
 .btn-icon {
-  background: none;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   transition: all 0.2s;
-  color: var(--color-text-main);
+  color: var(--color-text-muted);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-icon:hover {
   background-color: var(--color-bg-body);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-icon.delete {
+    color: var(--color-error, #ef4444);
+    border-color: var(--color-error, #ef4444);
+    opacity: 0.8;
 }
 
 .btn-icon.delete:hover {
   background-color: #fee2e2;
   border-color: #ef4444;
   color: #ef4444;
+  opacity: 1;
 }
 
 .status-badge {

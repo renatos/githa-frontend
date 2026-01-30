@@ -184,11 +184,13 @@ const onSearchInput = () => {
   showResults.value = true;
   searchTimeout = setTimeout(async () => {
     try {
-      const response = await props.searchService.getAll({ 
+      const params = { 
           page: 0, 
           size: 10,
-          filters: { name: searchQuery.value } 
-      }); 
+          ...{ name: searchQuery.value } 
+      };
+      
+      const response = await props.searchService.getAll(params); 
       results.value = response.data.content;
     } catch (error) {
       console.error('Search error:', error);
@@ -233,10 +235,11 @@ const formatCurrency = (value) => {
 .form-select {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     font-size: 1rem;
-    background-color: white;
+    background-color: var(--color-bg-card);
+    color: var(--color-text-main);
 }
 
 .lookup-container {
@@ -256,15 +259,17 @@ const formatCurrency = (value) => {
 .form-control {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     font-size: 1rem;
     box-sizing: border-box;
+    background-color: var(--color-bg-card);
+    color: var(--color-text-main);
 }
 
 .id-input {
     text-align: center;
-    background-color: #f8fafc;
+    background-color: var(--color-bg-body);
 }
 
 .lookup-results {
@@ -272,8 +277,8 @@ const formatCurrency = (value) => {
     top: 100%;
     left: 0;
     width: 100%;
-    background: white;
-    border: 1px solid #cbd5e1;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-lg);
     z-index: 1000;
@@ -289,10 +294,11 @@ const formatCurrency = (value) => {
     align-items: center;
     cursor: pointer;
     transition: background-color 0.2s;
+    color: var(--color-text-main);
 }
 
 .lookup-item:hover {
-    background-color: #f1f5f9;
+    background-color: var(--color-bg-body);
 }
 
 .item-name {

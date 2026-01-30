@@ -1,31 +1,46 @@
 <template>
   <div class="app-layout">
-    <aside class="sidebar">
+    <!-- Mobile Header / Hamburger -->
+    <div class="mobile-header">
+      <button @click="toggleSidebar" class="btn-icon hamburger">
+        ☰
+      </button>
+      <h1 class="logo mobile-logo">Githa</h1>
+    </div>
+
+    <!-- Backdrop -->
+    <div 
+      v-if="isSidebarOpen" 
+      class="sidebar-backdrop"
+      @click="closeSidebar"
+    ></div>
+
+    <aside class="sidebar" :class="{ 'open': isSidebarOpen }">
       <div class="sidebar-header">
         <h1 class="logo">Githa</h1>
+        <button class="btn-icon close-sidebar" @click="closeSidebar">×</button>
       </div>
       
       <nav class="sidebar-nav">
-        <router-link to="/" class="nav-item" active-class="active">
+        <router-link to="/" class="nav-item" active-class="active" @click="closeSidebar">
           Dashboard
         </router-link>
-        <router-link to="/clients" class="nav-item" active-class="active">
+        <router-link to="/clients" class="nav-item" active-class="active" @click="closeSidebar">
           Clientes
         </router-link>
-        <router-link to="/professionals" class="nav-item" active-class="active">
+        <router-link to="/professionals" class="nav-item" active-class="active" @click="closeSidebar">
           Profissionais
         </router-link>
-        <router-link to="/services" class="nav-item" active-class="active">
+        <router-link to="/services" class="nav-item" active-class="active" @click="closeSidebar">
           Serviços
         </router-link>
-        <router-link to="/appointments" class="nav-item">Agenda</router-link>
-        <router-link to="/clients" class="nav-item">Clientes</router-link>
-        <router-link to="/strategic-clients" class="nav-item">Clientes Estratégicos</router-link>
-        <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin">Configurações</router-link>
-        <router-link to="/users" class="nav-item" active-class="active">
+        <router-link to="/appointments" class="nav-item" @click="closeSidebar">Agenda</router-link>
+        <router-link to="/strategic-clients" class="nav-item" @click="closeSidebar">Clientes Estratégicos</router-link>
+        <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">Parametrização</router-link>
+        <router-link to="/users" class="nav-item" active-class="active" @click="closeSidebar">
           Usuários
         </router-link>
-        <router-link to="/profile" class="nav-item" active-class="active">
+        <router-link to="/profile" class="nav-item" active-class="active" @click="closeSidebar">
           Meu Perfil
         </router-link>
       </nav>
@@ -63,6 +78,15 @@ const router = useRouter();
 const { isDark, toggleTheme } = useTheme();
 const userEmail = ref('');
 const isAdmin = ref(false);
+const isSidebarOpen = ref(false);
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
+};
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false;
+};
 
 const handleLogout = () => {
   authService.logout();
@@ -72,9 +96,6 @@ onMounted(() => {
   const user = authService.getCurrentUser();
   if (user) {
     userEmail.value = user.email || user.sub; 
-    // Check role - assuming authService stores roles or we decode token
-    // For MVP/Simplicity if email is admin@githa.com make it admin
-    // Or check authService.hasRole('ADMIN') if implemented
     isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
   }
 });
@@ -86,6 +107,25 @@ onMounted(() => {
   min-height: 100vh;
 }
 
+.mobile-header {
+  display: none;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 900;
+  height: 60px;
+}
+
+.mobile-logo {
+  margin-left: 1rem;
+  font-size: 1.25rem;
+}
+
 .sidebar {
   width: 250px;
   background-color: var(--color-bg-card);
@@ -94,11 +134,20 @@ onMounted(() => {
   flex-direction: column;
   position: fixed;
   height: 100vh;
+  z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-header {
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-sidebar {
+  display: none; /* Hidden on desktop */
 }
 
 .logo {
@@ -146,6 +195,11 @@ onMounted(() => {
 .user-info {
   font-weight: 600;
   color: var(--color-text-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .footer-actions {
@@ -161,6 +215,7 @@ onMounted(() => {
   padding: 0.25rem;
   border-radius: var(--radius-sm);
   transition: background-color 0.2s;
+  color: var(--color-text-main);
 }
 
 .btn-icon:hover {
@@ -169,14 +224,55 @@ onMounted(() => {
 
 .main-content {
   flex: 1;
-  margin-left: 250px; /* Sidebar width */
+  margin-left: 250px;
   background-color: var(--color-bg-body);
   width: calc(100% - 250px);
+  transition: margin-left 0.3s ease;
 }
 
 .content-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--spacing-lg);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 950;
+  display: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 60px; /* Space for mobile header */
+  }
+
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  .close-sidebar {
+    display: block;
+  }
 }
 </style>

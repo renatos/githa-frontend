@@ -15,14 +15,22 @@
           </button>
         </div>
         <div v-else class="contacts-list">
-          <div v-for="contact in contacts" :key="contact.resourceName" class="contact-item">
+          <div class="search-container">
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              placeholder="Buscar contato..." 
+              class="search-input"
+            >
+          </div>
+          <div v-for="contact in filteredContacts" :key="contact.resourceName" class="contact-item">
             <label>
               <input type="checkbox" v-model="selectedContacts" :value="contact">
               <span class="contact-name">{{ getDisplayName(contact) }}</span>
               <span class="contact-email" v-if="getEmail(contact)">{{ getEmail(contact) }}</span>
             </label>
           </div>
-          <div v-if="contacts.length === 0">Nenhum contato encontrado.</div>
+          <div v-if="filteredContacts.length === 0">Nenhum contato encontrado.</div>
         </div>
       </div>
       
@@ -37,17 +45,21 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import api from '../../services/api';
+import { useModal } from '../../composables/useModal';
 
 const props = defineProps(['visible']);
 const emit = defineEmits(['close', 'import']);
+
+useModal(emit);
 
 const contacts = ref([]);
 const selectedContacts = ref([]);
 const loading = ref(false);
 const error = ref('');
 const showConnectButton = ref(false);
+const searchQuery = ref('');
 
 const fetchContacts = async () => {
     loading.value = true;
@@ -73,7 +85,19 @@ watch(() => props.visible, (newVal) => {
     if (newVal) {
         fetchContacts();
         selectedContacts.value = [];
+        searchQuery.value = '';
     }
+});
+
+const filteredContacts = computed(() => {
+    if (!searchQuery.value) return contacts.value;
+    
+    const query = searchQuery.value.toLowerCase();
+    return contacts.value.filter(contact => {
+        const name = getDisplayName(contact).toLowerCase();
+        const email = getEmail(contact).toLowerCase();
+        return name.includes(query) || email.includes(query);
+    });
 });
 
 const connectGoogle = () => {
@@ -128,7 +152,7 @@ const importSelected = () => {
 }
 
 .modal {
-  background: white;
+  background: var(--color-bg-card);
   padding: 1.5rem;
   border-radius: 8px;
   width: 500px;
@@ -136,6 +160,7 @@ const importSelected = () => {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .modal-header {
@@ -145,10 +170,15 @@ const importSelected = () => {
   margin-bottom: 1rem;
 }
 
+.modal-header h3 {
+    margin: 0;
+    color: var(--color-text-main);
+}
+
 .modal-body {
   flex: 1;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.5rem;
   min-height: 200px;
@@ -162,7 +192,7 @@ const importSelected = () => {
 
 .contact-item {
   padding: 0.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .contact-item:last-child {
@@ -174,10 +204,11 @@ const importSelected = () => {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  color: var(--color-text-main);
 }
 
 .contact-email {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
   margin-left: 0.5rem;
 }
@@ -194,12 +225,13 @@ const importSelected = () => {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
+  color: var(--color-text-muted);
 }
 
 .loading, .error-container {
     text-align: center;
     padding: 2rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -209,7 +241,7 @@ const importSelected = () => {
 }
 
 .error-message { 
-    color: #ef4444; 
+    color: var(--color-error, #ef4444); 
     margin-bottom: 1rem;
 }
 
@@ -230,5 +262,25 @@ const importSelected = () => {
 
 .mt-2 {
     margin-top: 0.5rem;
+}
+
+.search-container {
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-body);
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
 }
 </style>
