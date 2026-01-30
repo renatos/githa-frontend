@@ -106,3 +106,29 @@ body {
 .btn-primary:hover {
     background-color: var(--color-primary-dark);
 }
+
+/* PrimeVue Overrides for Theme Consistency */
+:root {
+    --p-tabs-tablist-background: transparent !important;
+    --p-tabs-tab-background: transparent !important;
+    --p-tabs-tab-color: var(--color-text-muted) !important;
+    --p-tabs-tab-active-color: var(--color-primary) !important;
+    --p-tabs-tab-active-border-color: var(--color-primary) !important;
+    --p-tabs-tabpanel-background: transparent !important;
+    --p-tabs-tabpanel-color: var(--color-text-main) !important;
+}
+
+/* Fallback for class-based overrides if variables don't catch everything */
+.p-tabview-panels, .p-tabview-nav, .p-tabview-nav-link {
+    background: transparent !important;
+    color: var(--color-text-main) !important;
+}
+
+.p-tabview-nav-link {
+    color: var(--color-text-muted) !important;
+}
+
+.p-tabview-selected .p-tabview-nav-link {
+    color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+}

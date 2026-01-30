@@ -79,20 +79,27 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, onMounted } from 'vue';
+import { ref, defineProps, defineEmits, onMounted, computed, watch } from 'vue';
+import { appointmentService } from '../services/appointmentService';
 import { clientService } from '../services/clientService';
 import { professionalService } from '../services/professionalService';
 import { serviceService } from '../services/serviceService';
 import BaseLookup from './common/BaseLookup.vue';
+import { useModal } from '../composables/useModal';
 
 const props = defineProps({
   appointment: {
     type: Object,
     default: () => ({}),
   },
+  clientId: {
+    type: Number,
+    default: null
+  }
 });
 
 const emit = defineEmits(['close', 'save']);
+useModal(emit);
 
 const form = ref({
   client: { id: '', name: '' },
@@ -147,86 +154,5 @@ const save = () => {
 </script>
 
 <style scoped>
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  width: 100%;
-  max-width: 500px;
-  box-shadow: var(--shadow-lg);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.modal-header h3 {
-  margin: 0;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.form-group label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-main);
-}
-
-.form-control {
-  padding: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-   width: 100%;
-  box-sizing: border-box;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  border: 1px solid #cbd5e1;
-  color: var(--color-text-main);
-}
+/* Global modal and form styles are imported in main.js */
 </style>

@@ -57,6 +57,26 @@
       </table>
     </div>
     
+    <!-- Mobile Card View -->
+    <div class="cards-wrapper">
+      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card">
+        <div v-for="col in columns" :key="col.key" class="card-row">
+          <span class="card-label">{{ col.label }}</span>
+          <span class="card-value">
+             <slot :name="'cell-' + col.key" :value="item[col.key]" :item="item">
+                <span :class="{'monospace': col.monospace}">{{ item[col.key] }}</span>
+             </slot>
+          </span>
+        </div>
+        <div v-if="$slots.actions" class="card-actions">
+           <slot name="actions" :item="item"></slot>
+        </div>
+      </div>
+      <div v-if="processedItems.length === 0" class="empty-state">
+         <slot name="empty">Nenhum registro encontrado.</slot>
+      </div>
+    </div>
+    
     <!-- Pagination -->
     <div v-if="fetchData" class="pagination-footer">
       <div class="pagination-info">
@@ -307,6 +327,7 @@ tr:hover td {
   color: var(--color-text-muted);
 }
 
+/* Pagination */
 .pagination-footer {
   display: flex;
   justify-content: space-between;
@@ -350,5 +371,77 @@ tr:hover td {
 .pagination-current {
   font-size: 0.875rem;
   color: var(--color-text-muted);
+}
+
+/* Base styles for Cards */
+.cards-wrapper {
+  display: none;
+  padding: var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-direction: column;
+}
+
+.data-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-row:last-child {
+  border-bottom: none;
+}
+
+.card-label {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.card-value {
+  color: var(--color-text-main);
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px dashed var(--color-border);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-muted);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .table-wrapper {
+    display: none;
+  }
+  
+  .cards-wrapper {
+    display: flex;
+  }
+  
+  .pagination-footer {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
 }
 </style>

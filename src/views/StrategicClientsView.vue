@@ -89,23 +89,15 @@ const columns = [
 ];
 
 const fetchStatsAdapter = async (params) => {
-    // Current backend endpoint /api/clients/statistics supports pageable but maybe not complex filters yet on the entity relation
-    // We might need to filter client.status.
-    // For MVP, we can fetch all (paginated) and filter? Or ask backend to add spec?
-    // Let's assume basic pagination and try to filter via query params if backend supports GenericSpec on joined table...
-    // Actually GenericSpecification might struggle with Join `client.status`.
-    // Let's Pass page params.
-    
-    // Ideally we update implementation to support filtering by client status.
-    // Spec: client.status IN (...)
-    
     const query = {
         page: params.page,
         size: params.size,
         sort: params.sort
     };
-    
-    // TODO: Add backend support for filtering by client status on this endpoint
+
+    if (selectedStatuses.value.length > 0) {
+        query['client.status'] = selectedStatuses.value.join(',');
+    }
     
     const response = await api.get('/reports/client-statistics', { params: query });
     return response.data;
