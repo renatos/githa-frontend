@@ -1,0 +1,79 @@
+name: Deploy Frontend to OCI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        run: npm run build
+      
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Criar diretório do frontend se não existir
+            sudo mkdir -p /opt/githa/frontend
+            
+            # Limpar arquivos antigos
+            sudo rm -rf /opt/githa/frontend/*
+      
+      - name: Copy files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "dist/*"
+          target: "/tmp/githa-frontend-deploy"
+          strip_components: 1
+      
+      - name: Move files and restart Nginx
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Mover arquivos do deploy
+            sudo mv /tmp/githa-frontend-deploy/* /opt/githa/frontend/
+            sudo rm -rf /tmp/githa-frontend-deploy
+            
+            # Ajustar permissões
+            sudo chown -R nginx:nginx /opt/githa/frontend
+            sudo chmod -R 755 /opt/githa/frontend
+            
+            # Testar configuração do Nginx
+            sudo nginx -t
+            
+            # Recarregar Nginx
+            sudo systemctl reload nginx
+            
+            echo "Frontend deployed successfully!"
