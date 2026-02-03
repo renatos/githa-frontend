@@ -2,8 +2,9 @@
   <div class="auth-layout">
     <div class="auth-card">
       <div class="auth-header">
-        <h1 class="logo">Githa</h1>
-        <p class="subtitle">Gestão Integrada de Terapias Holísticas & Agendamento</p>
+        <!-- <h1 class="logo">Githa</h1> -->
+        <img src="@/assets/githa-logo-login.png" alt="Githa Logo" class="logo-img" />
+        <p class="subtitle">Gestão Integrada</p>
       </div>
       <slot></slot>
     </div>
@@ -35,15 +36,23 @@
   margin-bottom: var(--spacing-xl);
 }
 
-.logo {
-  font-size: 2.5rem;
-  color: var(--color-primary);
-  margin: 0 0 var(--spacing-xs) 0;
+.logo-img {
+  max-width: 250px;
+  width: 100%;
+  height: auto;
+  margin-bottom: var(--spacing-sm);
+  object-fit: contain;
 }
 
 .subtitle {
   color: var(--color-text-muted);
   font-size: 0.875rem;
   margin: 0;
+}
+</style>
+
+<style>
+[data-theme="dark"] .logo-img {
+  filter: brightness(0) invert(1);
 }
 </style>

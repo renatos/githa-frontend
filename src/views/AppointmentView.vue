@@ -54,10 +54,18 @@ const saveItem = async (data) => {
   try {
     if (data.id) {
       await appointmentService.update(data.id, data);
-      showAlert('success', 'Agendamento atualizado com sucesso!');
+      if (data.status === 'COMPLETED') {
+        showAlert('success', 'Agendamento concluído e lançamento financeiro gerado!');
+      } else {
+        showAlert('success', 'Agendamento atualizado com sucesso!');
+      }
     } else {
       await appointmentService.create(data);
-      showAlert('success', 'Agendamento criado com sucesso!');
+      if (data.status === 'COMPLETED') {
+        showAlert('success', 'Agendamento criado e lançamento financeiro gerado!');
+      } else {
+        showAlert('success', 'Agendamento criado com sucesso!');
+      }
     }
     listRef.value?.refresh();
     closeForm();

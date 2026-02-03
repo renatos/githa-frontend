@@ -5,7 +5,7 @@
       <button @click="toggleSidebar" class="btn-icon hamburger">
         ☰
       </button>
-      <h1 class="logo mobile-logo">Githa</h1>
+      <img src="@/assets/githa-logo-main.png" alt="Githa" class="mobile-logo-img" />
     </div>
 
     <!-- Backdrop -->
@@ -17,7 +17,7 @@
 
     <aside class="sidebar" :class="{ 'open': isSidebarOpen }">
       <div class="sidebar-header">
-        <h1 class="logo">Githa</h1>
+        <img src="@/assets/githa-logo-main.png" alt="Githa" class="sidebar-logo-img" />
         <button class="btn-icon close-sidebar" @click="closeSidebar">×</button>
       </div>
       
@@ -121,9 +121,11 @@ onMounted(() => {
   height: 60px;
 }
 
-.mobile-logo {
+.mobile-logo-img {
   margin-left: 1rem;
-  font-size: 1.25rem;
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .sidebar {
@@ -142,19 +144,21 @@ onMounted(() => {
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
 .close-sidebar {
   display: none; /* Hidden on desktop */
+  position: absolute;
+  right: 15px;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin: 0;
+.sidebar-logo-img {
+  max-width: 100%;
+  height: auto;
+  max-height: 80px;
+  object-fit: contain;
 }
 
 .sidebar-nav {
@@ -274,5 +278,13 @@ onMounted(() => {
   .close-sidebar {
     display: block;
   }
+}
+
+</style>
+
+<style>
+[data-theme="dark"] .mobile-logo-img,
+[data-theme="dark"] .sidebar-logo-img {
+  filter: brightness(0) invert(1);
 }
 </style>

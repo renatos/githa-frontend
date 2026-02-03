@@ -26,7 +26,7 @@ api.interceptors.response.use(
         const toast = getToast();
         errorHandler.handle(error, toast);
 
-        if (error.response && error.response.status === 403) {
+        if (error.response && (error.response.status === 403 || error.response.status === 401)) {
             localStorage.removeItem('token');
             window.location.href = '/login';
         }

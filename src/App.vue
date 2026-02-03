@@ -6,8 +6,11 @@ import Toast from 'primevue/toast';
 import MainLayout from './layouts/MainLayout.vue';
 import AuthLayout from './layouts/AuthLayout.vue';
 
+import { useTheme } from './composables/useTheme';
+
 const route = useRoute();
 const toast = useToast();
+const { isDark } = useTheme(); // Initialize theme globally
 
 onMounted(() => {
     window.$toast = toast;
