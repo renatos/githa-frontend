@@ -83,6 +83,24 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/operating-expenses',
+            name: 'OperatingExpenses',
+            component: () => import('../views/financial/OperatingExpenseList.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/operating-expenses/new',
+            name: 'NewOperatingExpense',
+            component: () => import('../components/financial/OperatingExpenseForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/operating-expenses/:id',
+            name: 'EditOperatingExpense',
+            component: () => import('../components/financial/OperatingExpenseForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/accounts',
             name: 'accounts',
             component: () => import('../views/financial/AccountView.vue'),

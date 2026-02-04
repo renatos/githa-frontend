@@ -53,15 +53,29 @@
       :transaction="editingItem"
       @close="closeForm"
       @save="saveItem"
+      @view-appointment="(id) => $emit('view-appointment', id)"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import GenericTable from '../../components/common/GenericTable.vue';
 import TransactionForm from '../../components/financial/TransactionForm.vue';
 import financialService from '../../services/financialService';
+
+const props = defineProps({
+  month: {
+    type: Number,
+    default: null
+  },
+  year: {
+    type: Number,
+    default: null
+  }
+});
+
+const emit = defineEmits(['change', 'view-appointment']);
 
 const tableRef = ref(null);
 const showForm = ref(false);
@@ -72,7 +86,6 @@ const columns = [
   { key: 'category', label: 'Categoria', sortable: true },
   { key: 'amount', label: 'Valor', sortable: true, align: 'right' },
   { key: 'type', label: 'Tipo', sortable: true, align: 'center' },
-  { key: 'dueDate', label: 'Vencimento', sortable: true },
   { key: 'paymentDate', label: 'Pagamento', sortable: true },
   { key: 'status', label: 'Status', sortable: true, align: 'center' },
 ];
@@ -84,19 +97,22 @@ const fetchDataAdapter = async (params) => {
     sort: params.sort,
     ...params.filters
   };
+  
+  // Add month/year if provided
+  if (props.month) query.month = props.month;
+  if (props.year) query.year = props.year;
+  
   // Clean nulls
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
 
   const response = await financialService.getTransactions(query);
-  // If API returns list directly instead of page object (as hinted in Controller "Returning all"),
-  // we might need to wrap it if GenericTable expects page structure. 
-  // But standard Githa GenericTable usually handles Page/List? 
-  // Let's assume pagination wrapper or direct list. 
-  // Controller returns List<TransactionDTO>. 
-  // GenericTable usually expects { content: [], totalElements: X } or just [] if no pagination.
-  // We'll return response.data directly.
   return response.data;
 };
+
+// Watch for month/year changes to reload the table
+watch([() => props.month, () => props.year], () => {
+  tableRef.value?.loadData();
+});
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -104,7 +120,13 @@ const formatCurrency = (value) => {
 
 const formatDate = (value) => {
   if (!value) return '';
-  return new Date(value).toLocaleDateString('pt-BR');
+  return new Date(value).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 const formatStatus = (value) => {
@@ -134,6 +156,7 @@ const saveItem = async (data) => {
       await financialService.createTransaction(data);
     }
     tableRef.value?.loadData();
+    emit('change');
     closeForm();
   } catch (error) {
     console.error('Error saving transaction:', error);
@@ -146,6 +169,7 @@ const deleteItem = async (id) => {
     try {
       await financialService.deleteTransaction(id);
       tableRef.value?.loadData();
+      emit('change');
     } catch (error) {
       console.error('Error deleting transaction:', error);
       alert('Erro ao excluir transação');

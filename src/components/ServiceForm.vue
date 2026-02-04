@@ -2,7 +2,7 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>{{ service.id ? 'Editar Serviço' : 'Novo Serviço' }}</h3>
+        <h3>{{ service.id ? 'Editar Procedimento' : 'Novo Procedimento' }}</h3>
         <button class="btn-close" @click="$emit('close')">×</button>
       </div>
       
@@ -11,6 +11,15 @@
           <div class="form-group">
             <label>Nome</label>
             <input v-model="form.name" type="text" required class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label>Grupo</label>
+            <select v-model="form.group" class="form-control" required>
+              <option value="Serviços básicos">Serviços básicos</option>
+              <option value="Estética Facial">Estética Facial</option>
+              <option value="Consulta">Consulta</option>
+            </select>
           </div>
           
           <div class="form-group">
@@ -50,6 +59,7 @@
 import { ref, defineProps, defineEmits, onMounted, computed } from 'vue';
 import { serviceService } from '../services/serviceService';
 import { useModal } from '../composables/useModal';
+import { useEscapeKey } from '../composables/useEscapeKey';
 
 const props = defineProps({
   service: {
@@ -60,6 +70,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 useModal(emit);
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   name: '',
@@ -67,6 +78,7 @@ const form = ref({
   durationMinutes: 30,
   price: 0,
   active: true,
+  group: 'Serviços básicos', // Default
 });
 
 onMounted(() => {

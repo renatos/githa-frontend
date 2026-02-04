@@ -1,9 +1,9 @@
 <template>
   <div class="service-list">
     <div class="header-actions">
-      <h2>Serviços</h2>
+      <h2>Procedimentos</h2>
       <button class="btn btn-primary" @click="$emit('new')">
-        + Novo Serviço
+        + Novo Procedimento
       </button>
     </div>
 
@@ -48,6 +48,7 @@ const tableRef = ref(null);
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'name', label: 'Nome', sortable: true, filterable: true },
+  { key: 'group', label: 'Grupo', sortable: true, filterable: true },
   { key: 'durationMinutes', label: 'Duração', sortable: true, align: 'end' },
   { key: 'price', label: 'Preço', sortable: true, align: 'end' },
   { key: 'active', label: 'Status', sortable: true, align: 'center' },

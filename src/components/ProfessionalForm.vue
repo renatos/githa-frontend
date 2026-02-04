@@ -44,6 +44,7 @@
 import { ref, defineProps, defineEmits, onMounted } from 'vue';
 import { professionalService } from '../services/professionalService';
 import { useModal } from '../composables/useModal';
+import { useEscapeKey } from '../composables/useEscapeKey';
 
 const props = defineProps({
   professional: {
@@ -54,6 +55,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 useModal(emit);
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   name: '',

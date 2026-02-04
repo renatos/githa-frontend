@@ -32,10 +32,13 @@
           Profissionais
         </router-link>
         <router-link to="/services" class="nav-item" active-class="active" @click="closeSidebar">
-          Serviços
+          Procedimentos
         </router-link>
         <router-link to="/appointments" class="nav-item" @click="closeSidebar">Agenda</router-link>
         <router-link to="/financials" class="nav-item" active-class="active" @click="closeSidebar">Financeiro</router-link>
+        <router-link to="/operating-expenses" class="nav-item" active-class="active" @click="closeSidebar">
+          Despesas Operacionais
+        </router-link>
         <router-link to="/strategic-clients" class="nav-item" @click="closeSidebar">Clientes Estratégicos</router-link>
         <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">Parametrização</router-link>
         <router-link to="/users" class="nav-item" active-class="active" @click="closeSidebar">

@@ -9,13 +9,31 @@
       <form @submit.prevent="save">
         <div class="form-group">
           <label>Descrição</label>
-          <input v-model="form.description" required />
+          <input v-model="form.description" />
+        </div>
+
+        <div class="mb-3" v-if="!isAppointmentTransaction">
+          <label for="operatingExpense" class="form-label">Despesa Operacional</label>
+          <select class="form-select" id="operatingExpense" v-model="form.operatingExpenseId">
+            <option :value="undefined">Selecione uma despesa</option>
+            <option v-for="expense in operatingExpenses" :key="expense.id" :value="expense.id">
+              {{ expense.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row" v-if="isAppointmentTransaction">
+           <div class="form-group">
+                <div class="appointment-link">
+                    <span class="badge income" @click="viewAppointment">Vinculado ao Agendamento #{{ form.appointmentId }}</span>
+                </div>
+           </div>
         </div>
 
         <div class="form-row">
            <div class="form-group">
             <label>Tipo</label>
-            <select v-model="form.type" required>
+            <select v-model="form.type" required :disabled="isAppointmentTransaction || !!form.operatingExpenseId">
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
@@ -43,27 +61,12 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Conta Bancária / Caixa</label>
-            <select v-model="form.bankAccountId">
-              <option :value="undefined">Selecione uma conta...</option>
-              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">
-                {{ acc.name }}
-              </option>
-            </select>
-          </div>
-        </div>
+
 
         <div class="form-row">
-          <div class="form-group">
-            <label>Vencimento</label>
-            <input type="date" v-model="form.dueDate" />
-          </div>
-
           <div class="form-group">
             <label>Pagamento</label>
-             <input type="date" v-model="form.paymentDate" />
+             <input type="datetime-local" v-model="form.paymentDate" step="1" />
           </div>
         </div>
 
@@ -77,49 +80,129 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, onMounted } from 'vue';
+import { ref, defineProps, defineEmits, onMounted, computed, watch } from 'vue';
 import financialService from '../../services/financialService';
+import { useEscapeKey } from '../../composables/useEscapeKey';
 
 const props = defineProps({
   transaction: { type: Object, default: () => ({}) }
 });
 
-const emit = defineEmits(['close', 'save']);
+const emit = defineEmits(['close', 'save', 'view-appointment']);
+
+// Add ESC key support
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   description: '',
   amount: 0,
   type: 'EXPENSE',
   status: 'PENDING',
-  category: '',
-  dueDate: new Date().toISOString().split('T')[0],
-  paymentDate: '',
-  bankAccountId: undefined,
+  category: undefined, // Changed to undefined for select
+  paymentDate: '', // Will be set in onMounted
+  operatingExpenseId: undefined, // Changed from bankAccountId
   active: true
 });
 
-const accounts = ref([]);
+const operatingExpenses = ref([]); // Changed from accounts
+const categories = ref([ // Added categories
+  'Alimentação',
+  'Transporte',
+  'Lazer',
+  'Saúde',
+  'Educação',
+  'Moradia',
+  'Serviços',
+  'Vestuário',
+  'Outros'
+]);
 
 onMounted(async () => {
   try {
-    const response = await financialService.getAccounts();
-    accounts.value = response.data.filter(a => a.active);
+    const response = await financialService.getOperatingExpenses(); // Changed service call
+    operatingExpenses.value = response.data.filter(opEx => opEx.active); // Changed from accounts
   } catch (error) {
-    console.error('Error loading accounts:', error);
+    console.error('Error loading operating expenses:', error); // Updated error message
   }
 
   if (props.transaction && props.transaction.id) {
     form.value = { ...props.transaction };
+    // Format LocalDateTime for input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
+    if (form.value.paymentDate && form.value.paymentDate.length > 16) {
+        form.value.paymentDate = form.value.paymentDate.substring(0, 19);
+    }
+  } else {
+    // Default to current time
+    const now = new Date();
+    const iso = now.toLocaleString('sv').replace(' ', 'T'); // "YYYY-MM-DDTHH:mm:ss" cross-browser hack or use custom formatter
+    // Better safely:
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    form.value.paymentDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 });
 
 const save = () => {
-  if (form.value.status === 'PAID' && !form.value.bankAccountId) {
-    alert('Por favor, selecione uma Conta Bancária para transações Pagas.');
+  // Validate Description or Auto-fill
+  if (!form.value.description) {
+      if (form.value.operatingExpenseId) {
+           const selectedExpense = operatingExpenses.value.find(e => e.id == form.value.operatingExpenseId);
+            if (selectedExpense) {
+                form.value.description = selectedExpense.name;
+            } else {
+                alert('Descrição é obrigatória.');
+                return;
+            }
+      } else {
+          alert('Descrição é obrigatória.');
+          return;
+      }
+  }
+
+  if (form.value.status === 'PAID' && !form.value.operatingExpenseId && !form.value.appointmentId) {
+    alert('Por favor, selecione uma Despesa Operacional ou verifique o Agendamento para transações Pagas.');
     return;
   }
   emit('save', form.value);
 };
+
+const viewAppointment = () => {
+    if (form.value.appointmentId) {
+        emit('view-appointment', form.value.appointmentId);
+    }
+}
+
+// Computed property to check if transaction is from appointment
+const isAppointmentTransaction = computed(() => {
+    return !!form.value.appointmentId;
+});
+
+// Watchers for business logic
+watch(() => form.value.operatingExpenseId, (newVal) => {
+    if (newVal) {
+        if (!isAppointmentTransaction.value) {
+            form.value.type = 'EXPENSE';
+        }
+        
+        // Auto-fill description if empty
+        if (!form.value.description) {
+            const selectedExpense = operatingExpenses.value.find(e => e.id === newVal);
+            if (selectedExpense) {
+                form.value.description = selectedExpense.name;
+            }
+        }
+    }
+});
+
+watch(() => form.value.appointmentId, (newVal) => {
+    if (newVal) {
+        form.value.type = 'INCOME';
+    }
+}, { immediate: true });
 </script>
 
 <style scoped>
@@ -191,10 +274,26 @@ input, select {
   color: var(--color-text-main);
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+.appointment-link {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+.appointment-link .badge {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.income {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #166534;
 }
 </style>

@@ -73,6 +73,7 @@ import BaseLookup from './common/BaseLookup.vue';
 import AppointmentList from './AppointmentList.vue';
 import { clientService } from '../services/clientService';
 import { useModal } from '../composables/useModal';
+import { useEscapeKey } from '../composables/useEscapeKey';
 
 const props = defineProps({
   client: {
@@ -83,6 +84,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 useModal(emit);
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   name: '',

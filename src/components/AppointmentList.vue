@@ -12,17 +12,7 @@
       :columns="columns"
       :fetch-data="fetchDataAdapter"
     >
-      <template #cell-client="{ value }">
-        {{ value?.name }}
-      </template>
-      
-      <template #cell-professional="{ value }">
-        {{ value?.name }}
-      </template>
 
-      <template #cell-service="{ value }">
-        {{ value?.name }}
-      </template>
 
       <template #cell-startTime="{ value }">
         {{ formatDateTime(value) }}
@@ -63,9 +53,9 @@ const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'startTime', label: 'Data', sortable: true },
   // Hide Client column if we are filtering by a specific client
-  ...(props.clientId ? [] : [{ key: 'client', label: 'Cliente', sortable: false }]),
-  { key: 'professional', label: 'Profissional', sortable: false },
-  { key: 'service', label: 'Serviço', sortable: false },
+  ...(props.clientId ? [] : [{ key: 'clientName', label: 'Cliente', sortable: false }]),
+  { key: 'professionalName', label: 'Profissional', sortable: false },
+  { key: 'serviceName', label: 'Serviço', sortable: false },
   { key: 'status', label: 'Status', sortable: true, align: 'center' },
 ];
 

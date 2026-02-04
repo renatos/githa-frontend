@@ -57,6 +57,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits, onMounted } from 'vue';
+import { useEscapeKey } from '../composables/useEscapeKey';
 
 const props = defineProps({
   user: {
@@ -66,6 +67,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'save']);
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   name: '',

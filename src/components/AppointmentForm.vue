@@ -37,18 +37,23 @@
                 :initial-description="form.service.name"
                 :search-service="serviceService"
                 placeholder="Pesquisar Serviço..."
-                @select="(item) => form.service.name = item?.name"
+                @select="onServiceSelect"
             />
           </div>
 
-          <div class="form-group">
-            <label>Data/Hora Início</label>
-            <input v-model="form.startTime" type="datetime-local" required class="form-control" />
-          </div>
-
-           <div class="form-group">
-            <label>Data/Hora Fim</label>
-            <input v-model="form.endTime" type="datetime-local" required class="form-control" />
+          <div class="form-row">
+            <div class="form-group">
+                <label>Data</label>
+                <input v-model="form.date" type="date" required class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>Início</label>
+                <input v-model="form.start" type="time" required class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>Fim</label>
+                <input v-model="form.end" type="time" required class="form-control" @focus="calculateEndTime" />
+            </div>
           </div>
           
            <div class="form-group">
@@ -86,6 +91,7 @@ import { professionalService } from '../services/professionalService';
 import { serviceService } from '../services/serviceService';
 import BaseLookup from './common/BaseLookup.vue';
 import { useModal } from '../composables/useModal';
+import { useEscapeKey } from '../composables/useEscapeKey';
 
 const props = defineProps({
   appointment: {
@@ -100,13 +106,15 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 useModal(emit);
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   client: { id: '', name: '' },
   professional: { id: '', name: '' },
   service: { id: '', name: '' },
-  startTime: '',
-  endTime: '',
+  date: '',
+  start: '',
+  end: '',
   status: 'SCHEDULED',
   notes: ''
 });
@@ -114,26 +122,96 @@ const form = ref({
 onMounted(() => {
   if (props.appointment.id) {
     const apt = { ...props.appointment };
-    if (apt.startTime) apt.startTime = apt.startTime.slice(0, 16);
-    if (apt.endTime) apt.endTime = apt.endTime.slice(0, 16);
+    // Split ISO datetime into date and time
+    if (apt.startTime) {
+        form.value.date = apt.startTime.split('T')[0];
+        form.value.start = apt.startTime.split('T')[1].substring(0, 5);
+    }
+    if (apt.endTime) {
+         form.value.end = apt.endTime.split('T')[1].substring(0, 5);
+    }
     
-    if (!apt.client) apt.client = { id: '', name: '' };
-    else if (!apt.client.name) apt.client.name = ''; // handle missing name if lazy (but backend usually eager fetches full obj in DTO)
+    if (!apt.client) apt.client = { id: apt.clientId || '', name: apt.clientName || '' };
+    else {
+        apt.client.id = apt.clientId || apt.client.id;
+        if (!apt.client.name) apt.client.name = apt.clientName || '';
+    }
 
-    if (!apt.professional) apt.professional = { id: '', name: '' };
-    if (!apt.service) apt.service = { id: '', name: '' };
+    if (!apt.professional) apt.professional = { id: apt.professionalId || '', name: apt.professionalName || '' };
+    else {
+        apt.professional.id = apt.professionalId || apt.professional.id;
+        if (!apt.professional.name) apt.professional.name = apt.professionalName || '';
+    }
+
+    if (!apt.service) apt.service = { id: apt.serviceId || '', name: apt.serviceName || '' };
+    else {
+        apt.service.id = apt.serviceId || apt.service.id;
+        if (!apt.service.name) apt.service.name = apt.serviceName || '';
+    }
     
-    form.value = apt;
+    form.value = { ...form.value, ...apt };
+    
+    // Ensure nested objects are set if apt has flat IDs but no objects (though logic above handles it)
+    if (!form.value.client.id && apt.clientId) form.value.client.id = apt.clientId;
   }
+});
+
+const selectedServiceDuration = ref(0);
+
+const calculateEndTime = () => {
+  if (!form.value.start || !selectedServiceDuration.value) return;
+  
+  const [hours, minutes] = form.value.start.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  date.setMinutes(date.getMinutes() + selectedServiceDuration.value); // Add duration
+  
+  const endHours = String(date.getHours()).padStart(2, '0');
+  const endMinutes = String(date.getMinutes()).padStart(2, '0');
+  
+  form.value.end = `${endHours}:${endMinutes}`;
+};
+
+const onServiceSelect = (item) => {
+    form.value.service.name = item?.name;
+    selectedServiceDuration.value = item?.durationMinutes || 0;
+    calculateEndTime();
+};
+
+watch(() => form.value.start, () => {
+    calculateEndTime();
+});
+
+onMounted(async () => {
+    if (props.appointment.id) {
+        // ... existing logic ...
+        
+        // Fetch service duration for existing appointment if needed, 
+        // OR rely on user re-selecting if they want auto-calc.
+        // For now, let's try to fetch if we have ID but no duration.
+        // But BaseLookup doesn't expose the item directly unless fetched.
+        // If we want this to work on edit load, we might need to fetch service details.
+        // However, usually "edit" keeps existing times unless changed.
+        // Let's just focus on "change" events for now as per requirement "o campo deve ficar aberto".
+        // If user changes start time on Edit, it will only auto-calc if we have duration.
+        if (form.value.service.id) {
+            try {
+                 const response = await serviceService.getById(form.value.service.id);
+                 if (response) {
+                     selectedServiceDuration.value = response.durationMinutes || 0;
+                 }
+            } catch (e) {
+                console.error("Failed to fetch service details", e);
+            }
+        }
+    }
 });
 
 const save = () => {
     // Helper to convert datetime-local string to ISO 8601 with timezone
-    const toISOString = (datetimeLocal) => {
-        if (!datetimeLocal) return null;
-        // datetime-local format: "2026-01-20T10:55"
-        // Backend expects: "2026-01-20T10:55:00" (LocalDateTime)
-        return datetimeLocal + ':00'; // Add seconds
+    const toISOString = (date, time) => {
+        if (!date || !time) return null;
+        return `${date}T${time}:00`;
     };
 
     // Transform nested objects to flat DTO structure
@@ -142,8 +220,8 @@ const save = () => {
         clientId: form.value.client?.id || null,
         professionalId: form.value.professional?.id || null,
         serviceId: form.value.service?.id || null,
-        startTime: toISOString(form.value.startTime),
-        endTime: toISOString(form.value.endTime),
+        startTime: toISOString(form.value.date, form.value.start),
+        endTime: toISOString(form.value.date, form.value.end),
         status: form.value.status,
         notes: form.value.notes
     };
@@ -155,4 +233,16 @@ const save = () => {
 
 <style scoped>
 /* Global modal and form styles are imported in main.js */
+/* Override specific to this form to avoid scrollbars */
+.modal-content {
+  max-width: 600px;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-row .form-group {
+    flex: 1;
+}
 </style>

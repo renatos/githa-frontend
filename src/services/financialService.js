@@ -38,25 +38,30 @@ export default {
 
     /**
      * Get financial summary (totals)
+     * @param {Number} month - Month (1-12), defaults to current
+     * @param {Number} year - Year, defaults to current
      */
-    getSummary() {
-        return api.get(`${resource}/summary`);
+    getSummary(month, year) {
+        const params = {};
+        if (month) params.month = month;
+        if (year) params.year = year;
+        return api.get(`${resource}/summary`, { params });
     },
 
-    // Bank Accounts
-    getAccounts() {
-        return api.get('/bank-accounts');
+    // Operating Expenses
+    getOperatingExpenses(params) {
+        return api.get('/operating-expenses', { params });
     },
 
-    createAccount(account) {
-        return api.post('/bank-accounts', account);
+    createOperatingExpense(data) {
+        return api.post('/operating-expenses', data);
     },
 
-    updateAccount(id, account) {
-        return api.put(`/bank-accounts/${id}`, account);
+    updateOperatingExpense(id, data) {
+        return api.put(`/operating-expenses/${id}`, data);
     },
 
-    deleteAccount(id) {
-        return api.delete(`/bank-accounts/${id}`);
+    deleteOperatingExpense(id) {
+        return api.delete(`/operating-expenses/${id}`);
     }
 };

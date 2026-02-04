@@ -62,3 +62,15 @@
 .col {
     flex: 1;
 }
+
+/* Fix for select dropdowns in dark mode */
+select option {
+    background-color: var(--color-bg-card);
+    color: var(--color-text-main);
+}
+
+/* Ensure select itself has proper colors */
+select {
+    background-color: var(--color-bg-card) !important;
+    color: var(--color-text-main) !important;
+}
