@@ -23,6 +23,12 @@
               class="search-input"
             >
           </div>
+          <div class="select-all-container" v-if="filteredContacts.length > 0">
+            <label>
+              <input type="checkbox" v-model="selectAll">
+              <span class="select-all-text">Selecionar Todos ({{ filteredContacts.length }})</span>
+            </label>
+          </div>
           <div v-for="contact in filteredContacts" :key="contact.resourceName" class="contact-item">
             <label>
               <input type="checkbox" v-model="selectedContacts" :value="contact">
@@ -98,6 +104,29 @@ const filteredContacts = computed(() => {
         const email = getEmail(contact).toLowerCase();
         return name.includes(query) || email.includes(query);
     });
+});
+
+const selectAll = computed({
+    get: () => {
+        if (filteredContacts.value.length === 0) return false;
+        return filteredContacts.value.every(contact => 
+            selectedContacts.value.some(selected => selected.resourceName === contact.resourceName)
+        );
+    },
+    set: (value) => {
+        if (value) {
+            // Add all filtered contacts that aren't already selected
+            const newSelections = filteredContacts.value.filter(contact => 
+                !selectedContacts.value.some(selected => selected.resourceName === contact.resourceName)
+            );
+            selectedContacts.value = [...selectedContacts.value, ...newSelections];
+        } else {
+            // Remove all filtered contacts from selection
+            selectedContacts.value = selectedContacts.value.filter(selected => 
+                !filteredContacts.value.some(contact => contact.resourceName === selected.resourceName)
+            );
+        }
+    }
 });
 
 const connectGoogle = () => {
@@ -282,5 +311,16 @@ const importSelected = () => {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.select-all-container {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-bg-body);
+}
+
+.select-all-text {
+    font-weight: 500;
+    margin-left: 0.5rem;
 }
 </style>

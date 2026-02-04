@@ -51,8 +51,4 @@
 }
 </style>
 
-<style>
-[data-theme="dark"] .logo-img {
-  filter: brightness(0) invert(1);
-}
-</style>
+

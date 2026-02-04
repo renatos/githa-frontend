@@ -18,7 +18,7 @@
                   
                   <div class="form-group">
                     <label>Email</label>
-                    <input v-model="form.email" type="email" required class="form-control" />
+                    <input v-model="form.email" type="email" class="form-control" />
                   </div>
                   
                   <div class="form-group">

@@ -10,39 +10,7 @@
     
     <GoogleLoginButton />
     
-    <div class="divider">
-      <span>ou</span>
-    </div>
-
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label>Email</label>
-        <input 
-          v-model="email" 
-          type="email" 
-          required 
-          class="form-control" 
-          placeholder="seu@email.com"
-          :disabled="loading"
-        />
-      </div>
-
-      <div class="form-group">
-        <label>Senha</label>
-        <input 
-          v-model="password" 
-          type="password" 
-          required 
-          class="form-control" 
-          placeholder="••••••"
-          :disabled="loading"
-        />
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100" :disabled="loading">
-        {{ loading ? 'Entrando...' : 'Entrar' }}
-      </button>
-    </form>
+    <!-- Email/Password login removed as per requirements -->
   </div>
 </template>
 
