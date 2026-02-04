@@ -108,8 +108,10 @@
 
 <script setup>
 import { computed, ref, defineProps, watch, onMounted, defineExpose } from 'vue';
+import { systemParameterService } from '../../services/systemParameterService';
 
 const props = defineProps({
+// ... (keep props as is, but I can't reference them easily in replace_file_content if I don't include them or use context. I will assume they are unchanged)
   items: {
     type: Array,
     default: () => [],
@@ -117,7 +119,6 @@ const props = defineProps({
   columns: {
     type: Array,
     required: true,
-    // { key, label, sortable, filterable, width, align, monospace }
   },
   fetchData: {
     type: Function,
@@ -234,7 +235,21 @@ watch(filters, () => {
   }
 }, { deep: true });
 
-onMounted(() => {
+import { SystemParams } from '../../constants/SystemParams';
+
+onMounted(async () => {
+  try {
+    const response = await systemParameterService.getParameterValue(SystemParams.PAGINATION_SIZE);
+    if (response.data && response.data.value) {
+       const configuredSize = parseInt(response.data.value);
+       if (!isNaN(configuredSize) && configuredSize > 0) {
+         pageSize.value = configuredSize;
+       }
+    }
+  } catch (e) {
+    console.warn('Could not load system parameters', e);
+  }
+
   if (props.fetchData) {
     loadData();
   }

@@ -7,5 +7,13 @@ export const systemParameterService = {
 
     update(id, value) {
         return api.put(`/parameters/${id}`, { value });
+    },
+
+    getPublicParams() {
+        return api.get('/parameters/public');
+    },
+
+    getParameterValue(key) {
+        return api.get(`/parameters/value/${key}`);
     }
 };
