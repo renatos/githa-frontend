@@ -18,16 +18,40 @@
         {{ formatDateTime(value) }}
       </template>
 
-      <template #cell-status="{ value }">
+      <template #cell-status="{ value, item }">
         <span :class="['status-badge', value ? value.toLowerCase() : '']">
-          {{ value }}
+          {{ item.statusDescription }}
         </span>
       </template>
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon" @click="$emit('edit', item)">✎</button>
-          <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
+          <!-- Quick actions -->
+          <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)" 
+                  class="btn-icon confirm" 
+                  title="Confirmar" 
+                  @click="$emit('confirm', item)">
+            ✓
+          </button>
+          
+          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)" 
+                  class="btn-icon complete" 
+                  title="Concluir" 
+                  @click="$emit('complete', item)">
+            ★
+          </button>
+          
+          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)" 
+                  class="btn-icon cancel" 
+                  title="Cancelar" 
+                  @click="$emit('cancel', item)">
+            ✕
+          </button>
+
+          <div class="divider"></div>
+
+          <button class="btn-icon" title="Editar" @click="$emit('edit', item)">✎</button>
+          <button class="btn-icon delete" title="Excluir" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>
     </GenericTable>
@@ -45,7 +69,7 @@ const props = defineProps({
   clientId: { type: Number, default: null }
 });
 
-defineEmits(['new', 'edit', 'delete']);
+defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel']);
 
 const tableRef = ref(null);
 
@@ -139,6 +163,31 @@ defineExpose({ refresh });
   opacity: 1;
 }
 
+.btn-icon.confirm:hover {
+    background-color: #dcfce7;
+    border-color: #166534;
+    color: #166534;
+}
+
+.btn-icon.complete:hover {
+    background-color: #e0f2fe;
+    border-color: #0369a1;
+    color: #0369a1;
+}
+
+.btn-icon.cancel:hover {
+    background-color: #fee2e2;
+    border-color: #991b1b;
+    color: #991b1b;
+    opacity: 1;
+}
+
+.divider {
+    width: 1px;
+    background-color: var(--color-border);
+    margin: 0 4px;
+}
+
 .status-badge {
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
@@ -161,6 +210,16 @@ defineExpose({ refresh });
   color: #991b1b;
 }
 
+.status-badge.completed {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.status-badge.missed {
+  background-color: #ffedd5;
+  color: #9a3412;
+}
+
 /* Dark theme adjustments for badges if necessary */
 :global([data-theme="dark"]) .status-badge.scheduled {
   background-color: #0c4a6e;
@@ -175,5 +234,15 @@ defineExpose({ refresh });
 :global([data-theme="dark"]) .status-badge.canceled {
   background-color: #7f1d1d;
   color: #fee2e2;
+}
+
+:global([data-theme="dark"]) .status-badge.completed {
+  background-color: #374151;
+  color: #f3f4f6;
+}
+
+:global([data-theme="dark"]) .status-badge.missed {
+  background-color: #7c2d12;
+  color: #ffedd5;
 }
 </style>

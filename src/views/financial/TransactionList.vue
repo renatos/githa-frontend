@@ -247,6 +247,12 @@ const deleteItem = async (id) => {
     border-color: var(--color-primary);
 }
 
+.btn-icon.delete {
+    color: var(--color-error, #ef4444);
+    border-color: var(--color-error, #ef4444);
+    opacity: 0.8;
+}
+
 .btn-icon.delete:hover {
     color: var(--color-error);
     border-color: var(--color-error);

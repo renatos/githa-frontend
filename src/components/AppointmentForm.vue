@@ -42,6 +42,26 @@
           </div>
 
           <div class="form-row">
+            <div class="form-group price-group">
+                <label>Preço (R$)</label>
+                <div class="input-group">
+                  <input v-model="form.price" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                </div>
+            </div>
+            <div class="form-group discount-group">
+                <label>Desconto (%)</label>
+                <div class="input-group">
+                  <input v-model="form.discount" type="number" step="0.01" class="form-control" placeholder="0" />
+                </div>
+            </div>
+             <div class="form-group final-group">
+                <label>Valor Final (R$)</label>
+                <div class="input-group">
+                   <input :value="finalPrice" type="text" disabled class="form-control" />
+                </div>
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
                 <label>Data</label>
                 <input v-model="form.date" type="date" required class="form-control" />
@@ -116,7 +136,15 @@ const form = ref({
   start: '',
   end: '',
   status: 'SCHEDULED',
-  notes: ''
+  notes: '',
+  price: 0,
+  discount: 0
+});
+
+const finalPrice = computed(() => {
+    const p = parseFloat(form.value.price) || 0;
+    const d = parseFloat(form.value.discount) || 0;
+    return (p - (p * d / 100)).toFixed(2);
 });
 
 onMounted(() => {
@@ -175,6 +203,9 @@ const calculateEndTime = () => {
 const onServiceSelect = (item) => {
     form.value.service.name = item?.name;
     selectedServiceDuration.value = item?.durationMinutes || 0;
+    if (item && item.price) {
+        form.value.price = item.price;
+    }
     calculateEndTime();
 };
 
@@ -223,7 +254,9 @@ const save = () => {
         startTime: toISOString(form.value.date, form.value.start),
         endTime: toISOString(form.value.date, form.value.end),
         status: form.value.status,
-        notes: form.value.notes
+        notes: form.value.notes,
+        price: form.value.price,
+        discount: form.value.discount
     };
     
     console.log('Sending appointment:', dto); // Debug log
@@ -244,5 +277,28 @@ const save = () => {
 }
 .form-row .form-group {
     flex: 1;
+    min-width: 0; /* Prevent flex items from overflowing */
+}
+
+.form-row .price-group,
+.form-row .final-group {
+    flex: 2;
+}
+
+.form-row .discount-group {
+    flex: 1;
+}
+
+.input-group {
+    display: flex;
+    flex-wrap: nowrap; /* Ensure input and span stay on same line */
+    width: 100%;
+}
+.input-group .form-control {
+    width: 100%; /* Ensure input takes available space */
+    min-width: 0; /* consistent shrinking */
+}
+.input-group-text {
+    white-space: nowrap;
 }
 </style>
