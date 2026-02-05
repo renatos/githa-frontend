@@ -297,4 +297,11 @@ input, select {
     color: #166534;
     border: 1px solid #166534;
 }
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
 </style>
