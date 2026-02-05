@@ -49,6 +49,10 @@
       :fetch-data="fetchClientsAdapter"
       :row-class="getRowClass"
     >
+      <template #cell-phone="{ item }">
+        {{ formatPhone(item.phone) }}
+      </template>
+
       <template #cell-referredByName="{ item }">
         <router-link 
           v-if="item.referredById" 
@@ -62,6 +66,9 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
+          <a v-if="item.phone" :href="getWhatsappLink(item)" target="_blank" class="btn-icon whatsapp" title="WhatsApp">
+              💬
+          </a>
           <button class="btn-icon" @click="$emit('edit', item)">✎</button>
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
@@ -80,7 +87,7 @@ import { ref, defineEmits, defineExpose } from 'vue';
 import GenericTable from './common/GenericTable.vue';
 import GoogleContactsModal from './common/GoogleContactsModal.vue';
 import { clientService } from '../services/clientService';
-import { formatShortName } from '../utils/formatters';
+import { formatShortName, formatPhone } from '../utils/formatters';
 
 defineEmits(['new', 'edit', 'delete']);
 
@@ -148,6 +155,12 @@ const getRowClass = (item) => {
   return `client-row-${item.status.toLowerCase()}`;
 };
 
+const getWhatsappLink = (client) => {
+    if (!client.phone) return '#';
+    const phone = client.phone.replace(/\D/g, '');
+    return `https://wa.me/55${phone}`;
+};
+
 defineExpose({ refresh });
 </script>
 
@@ -201,12 +214,26 @@ defineExpose({ refresh });
   transition: all 0.2s;
   color: var(--color-text-muted);
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  text-decoration: none; /* Ensure link doesn't have underline */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
   background-color: var(--color-bg-body);
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.btn-icon.whatsapp {
+    filter: grayscale(100%);
+    transition: filter 0.2s;
+}
+.btn-icon.whatsapp:hover {
+    filter: grayscale(0%);
+    background-color: #dcfce7;
+    border-color: #22c55e;
 }
 
 .btn-icon.delete {

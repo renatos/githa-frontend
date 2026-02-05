@@ -23,7 +23,7 @@
                   
                   <div class="form-group">
                     <label>Telefone</label>
-                    <input v-model="form.phone" type="tel" class="form-control" />
+                    <input v-model="form.phone" type="tel" class="form-control" @input="onPhoneInput" placeholder="(DD) 99999-9999" maxlength="15" />
                   </div>
         
                    <div class="form-group">
@@ -74,6 +74,7 @@ import AppointmentList from './AppointmentList.vue';
 import { clientService } from '../services/clientService';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
+import { formatPhone } from '../utils/formatters';
 
 const props = defineProps({
   client: {
@@ -103,6 +104,16 @@ onMounted(() => {
 
 const save = () => {
   emit('save', form.value);
+};
+
+const onPhoneInput = (event) => {
+    const formatted = formatPhone(event.target.value);
+    form.value.phone = formatted;
+    // Force update in case v-model hasn't caught up because value didn't change enough?
+    // Actually v-model should handle it if we update form.value.phone,
+    // but sometimes input cursor jumps.
+    // For direct input control:
+    event.target.value = formatted;
 };
 </script>
 
