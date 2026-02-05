@@ -116,10 +116,20 @@ body {
     --p-tabs-tab-active-border-color: var(--color-primary) !important;
     --p-tabs-tabpanel-background: transparent !important;
     --p-tabs-tabpanel-color: var(--color-text-main) !important;
+
+    /* InputText Overrides */
+    --p-inputtext-background: var(--color-bg-card) !important;
+    --p-inputtext-color: var(--color-text-main) !important;
+    --p-inputtext-border-color: var(--color-border) !important;
+    --p-inputtext-focus-border-color: var(--color-primary) !important;
+    --p-inputtext-padding-y: 0.5rem !important;
+    --p-inputtext-padding-x: 0.5rem !important;
 }
 
 /* Fallback for class-based overrides if variables don't catch everything */
-.p-tabview-panels, .p-tabview-nav, .p-tabview-nav-link {
+.p-tabview-panels,
+.p-tabview-nav,
+.p-tabview-nav-link {
     background: transparent !important;
     color: var(--color-text-main) !important;
 }

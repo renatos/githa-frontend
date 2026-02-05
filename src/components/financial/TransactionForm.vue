@@ -41,7 +41,7 @@
 
           <div class="form-group">
             <label>Valor</label>
-            <input type="number" step="0.01" v-model="form.amount" required />
+            <CurrencyInput v-model="form.amount" required />
           </div>
         </div>
 
@@ -83,6 +83,7 @@
 import { ref, defineProps, defineEmits, onMounted, computed, watch } from 'vue';
 import financialService from '../../services/financialService';
 import { useEscapeKey } from '../../composables/useEscapeKey';
+import CurrencyInput from '../common/CurrencyInput.vue';
 
 const props = defineProps({
   transaction: { type: Object, default: () => ({}) }
@@ -270,7 +271,7 @@ input, select {
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-input);
+  background: var(--color-bg-card);
   color: var(--color-text-main);
 }
 

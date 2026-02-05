@@ -33,8 +33,8 @@
                 <input v-model="form.durationMinutes" type="number" required min="1" class="form-control" />
             </div>
              <div class="form-group col">
-                <label>Preço (R$)</label>
-                <input v-model="form.price" type="number" required step="0.01" min="0" class="form-control" />
+                <label>Preço</label>
+                <CurrencyInput v-model="form.price" required />
             </div>
           </div>
           
@@ -60,6 +60,7 @@ import { ref, defineProps, defineEmits, onMounted, computed } from 'vue';
 import { serviceService } from '../services/serviceService';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
+import CurrencyInput from './common/CurrencyInput.vue';
 
 const props = defineProps({
   service: {

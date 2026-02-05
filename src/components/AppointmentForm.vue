@@ -43,22 +43,16 @@
 
           <div class="form-row">
             <div class="form-group price-group">
-                <label>Preço (R$)</label>
-                <div class="input-group">
-                  <input v-model="form.price" type="number" step="0.01" class="form-control" placeholder="0.00" />
-                </div>
+                <label>Valor</label>
+                <CurrencyInput v-model="form.price" />
             </div>
             <div class="form-group discount-group">
                 <label>Desconto (%)</label>
-                <div class="input-group">
                   <input v-model="form.discount" type="number" step="0.01" class="form-control" placeholder="0" />
-                </div>
             </div>
              <div class="form-group final-group">
-                <label>Valor Final (R$)</label>
-                <div class="input-group">
-                   <input :value="finalPrice" type="text" disabled class="form-control" />
-                </div>
+                <label>Valor Final</label>
+                   <input :value="formatCurrency(finalPrice)" type="text" disabled class="form-control" />
             </div>
           </div>
           <div class="form-row">
@@ -112,6 +106,7 @@ import { serviceService } from '../services/serviceService';
 import BaseLookup from './common/BaseLookup.vue';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
+import CurrencyInput from './common/CurrencyInput.vue';
 
 const props = defineProps({
   appointment: {
@@ -144,8 +139,12 @@ const form = ref({
 const finalPrice = computed(() => {
     const p = parseFloat(form.value.price) || 0;
     const d = parseFloat(form.value.discount) || 0;
-    return (p - (p * d / 100)).toFixed(2);
+    return p - (p * d / 100);
 });
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
 
 onMounted(() => {
   if (props.appointment.id) {
