@@ -6,4 +6,6 @@ export const userService = {
     create: (user) => api.post('/users', user),
     update: (id, user) => api.put(`/users/${id}`, user),
     delete: (id) => api.delete(`/users/${id}`),
+    getInactive: () => api.get('/users/inactive'),
+    reactivate: (id) => api.put(`/users/${id}/reactivate`),
 };

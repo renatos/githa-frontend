@@ -76,12 +76,13 @@ const close = () => {
 }
 
 .modal-container {
-  background: white;
+  background: var(--color-bg-card, #ffffff);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 450px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
+  border: 1px solid var(--color-border); /* Add border for contrast if needed */
 }
 
 @keyframes slideIn {
@@ -100,8 +101,8 @@ const close = () => {
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-lg);
-  border-bottom: 1px solid #fee2e2;
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-card); /* Remove gradient that forces light mode */
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
 }
@@ -159,20 +160,20 @@ const close = () => {
 .error-details {
   margin: 0;
   padding: var(--spacing-sm);
-  background: #f8fafc;
+  background: var(--color-bg-input); /* Use input background for code blocks/details */
   border-left: 3px solid #ef4444;
   border-radius: var(--radius-sm);
-  color: #64748b;
+  color: var(--color-text-secondary); /* Use compatible text color */
   font-size: 0.875rem;
   font-family: monospace;
 }
 
 .modal-footer {
   padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
-  background: #fafafa;
+  background: var(--color-bg-card);
   border-bottom-left-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
 }

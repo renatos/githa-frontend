@@ -63,5 +63,9 @@ export default {
 
     deleteOperatingExpense(id) {
         return api.delete(`/operating-expenses/${id}`);
+    },
+
+    createAppointmentFromTransaction(id, data) {
+        return api.post(`${resource}/transactions/${id}/appointment`, data);
     }
 };

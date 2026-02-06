@@ -15,6 +15,7 @@
       @confirm="confirmItem"
       @complete="completeItem"
       @cancel="openCancellationModal"
+      @add-procedure="openAddProcedureForm"
     />
     
     <AppointmentForm 
@@ -61,6 +62,18 @@ const openForm = (item = {}) => {
 const closeForm = () => {
   showForm.value = false;
   editingItem.value = {};
+};
+
+const openAddProcedureForm = (sourceItem) => {
+  const newItem = {
+    clientId: sourceItem.clientId || sourceItem.client?.id,
+    clientName: sourceItem.clientName || sourceItem.client?.name,
+    professionalId: sourceItem.professionalId || sourceItem.professional?.id,
+    professionalName: sourceItem.professionalName || sourceItem.professional?.name,
+    startTime: sourceItem.endTime, // Start new appointment when the previous one ends
+    // Do not copy service, price, etc.
+  };
+  openForm(newItem);
 };
 
 const openCancellationModal = (item) => {

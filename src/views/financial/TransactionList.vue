@@ -13,6 +13,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      :row-class="rowClass"
     >
       <template #cell-amount="{ value, item }">
         <span :class="['amount', item.type.toLowerCase()]">
@@ -42,6 +43,14 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
+          <button 
+            v-if="item.type === 'INCOME'" 
+            class="btn-icon" 
+            title="Gerar Agendamento"
+            @click="openAppointmentModal(item)"
+          >
+            +
+          </button>
           <button class="btn-icon" @click="openForm(item)" title="Editar">✎</button>
           <button class="btn-icon delete" @click="deleteItem(item.id)" title="Excluir">✕</button>
         </div>
@@ -55,6 +64,13 @@
       @save="saveItem"
       @view-appointment="(id) => $emit('view-appointment', id)"
     />
+
+    <CreateAppointmentFromTransactionModal
+        v-if="showAppointmentModal"
+        :transaction="appointmentTransaction"
+        @close="closeAppointmentModal"
+        @save="onAppointmentCreated"
+    />
   </div>
 </template>
 
@@ -62,6 +78,7 @@
 import { ref, watch } from 'vue';
 import GenericTable from '../../components/common/GenericTable.vue';
 import TransactionForm from '../../components/financial/TransactionForm.vue';
+import CreateAppointmentFromTransactionModal from '../../components/financial/CreateAppointmentFromTransactionModal.vue';
 import financialService from '../../services/financialService';
 
 const props = defineProps({
@@ -80,6 +97,8 @@ const emit = defineEmits(['change', 'view-appointment']);
 const tableRef = ref(null);
 const showForm = ref(false);
 const editingItem = ref({});
+const showAppointmentModal = ref(false);
+const appointmentTransaction = ref({});
 
 const columns = [
   { key: 'description', label: 'Descrição', sortable: true },
@@ -89,6 +108,26 @@ const columns = [
   { key: 'paymentDate', label: 'Pagamento', sortable: true },
   { key: 'status', label: 'Status', sortable: true, align: 'center' },
 ];
+
+import { useRoute, useRouter } from 'vue-router';
+const route = useRoute();
+const router = useRouter();
+
+const rowClass = (item) => {
+    if (route.query.highlight && String(item.id) === String(route.query.highlight)) {
+        return 'highlight-row';
+    }
+    return '';
+};
+
+// Clear highlight on click or timeout? 
+// Maybe better to verify if GenericTable supports rowClass prop. yes it does.
+
+// Auto-scroll to highlighted item?
+watch(() => tableRef.value, (val) => {
+    // Need to wait for data load.
+    // Logic inside loadData callback or separate watcher on content changes?
+});
 
 const fetchDataAdapter = async (params) => {
   const query = {
@@ -123,9 +162,7 @@ const formatDate = (value) => {
   return new Date(value).toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric'
   });
 };
 
@@ -175,6 +212,22 @@ const deleteItem = async (id) => {
       alert('Erro ao excluir transação');
     }
   }
+};
+
+const openAppointmentModal = (item) => {
+    appointmentTransaction.value = item;
+    showAppointmentModal.value = true;
+};
+
+const closeAppointmentModal = () => {
+    showAppointmentModal.value = false;
+    appointmentTransaction.value = {};
+};
+
+const onAppointmentCreated = () => {
+    closeAppointmentModal();
+    tableRef.value?.loadData();
+    emit('change');
 };
 </script>
 <style scoped>
@@ -256,5 +309,11 @@ const deleteItem = async (id) => {
 .btn-icon.delete:hover {
     color: var(--color-error);
     border-color: var(--color-error);
+}
+
+
+:deep(.highlight-row) td {
+    background-color: var(--color-highlight-row) !important;
+    transition: background-color 0.5s;
 }
 </style>

@@ -1,9 +1,9 @@
 <template>
   <div class="operating-expense-list">
     <div class="header-actions">
-      <h2>Despesas Operacionais</h2>
+      <h2>Contas Operacionais</h2>
       <button class="btn btn-primary" @click="$router.push('/operating-expenses/new')">
-        + Nova Despesa
+        + Nova Despesa/Receita
       </button>
     </div>
 

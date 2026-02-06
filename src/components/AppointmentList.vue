@@ -50,6 +50,8 @@
 
           <div class="divider"></div>
 
+
+          <button class="btn-icon" title="Adicionar Procedimento" @click="$emit('add-procedure', item)">+</button>
           <button class="btn-icon" title="Editar" @click="$emit('edit', item)">✎</button>
           <button class="btn-icon delete" title="Excluir" @click="$emit('delete', item.id)">✕</button>
         </div>
@@ -69,7 +71,7 @@ const props = defineProps({
   clientId: { type: Number, default: null }
 });
 
-defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel']);
+defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
 
 const tableRef = ref(null);
 

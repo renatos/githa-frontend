@@ -2,9 +2,15 @@
   <div class="user-list">
     <div class="header-actions">
       <h2>Usuários</h2>
-      <button class="btn btn-primary" @click="$emit('new')">
-        + Novo Usuário
-      </button>
+      <div class="actions-right">
+          <label class="checkbox-container">
+            <input type="checkbox" v-model="showInactive" @change="refresh">
+            Exibir Inativos
+          </label>
+          <button class="btn btn-primary" @click="$emit('new')">
+            + Novo Usuário
+          </button>
+      </div>
     </div>
 
     <GenericTable
@@ -20,8 +26,9 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon" @click="$emit('edit', item)">✎</button>
-          <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
+          <button v-if="!showInactive" class="btn-icon" @click="$emit('edit', item)">✎</button>
+          <button v-if="!showInactive" class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
+          <button v-if="showInactive" class="btn-icon reactivate" title="Reativar" @click="reactivateUser(item.id)">♻</button>
         </div>
       </template>
     </GenericTable>
@@ -36,6 +43,7 @@ import { userService } from '../services/userService';
 defineEmits(['new', 'edit', 'delete']);
 
 const tableRef = ref(null);
+const showInactive = ref(false);
 
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
@@ -55,8 +63,31 @@ const fetchDataAdapter = async (params) => {
   // Remove empty keys
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
 
-  const response = await userService.getAll(query);
-  return response.data;
+  if (showInactive.value) {
+      // Inactive endpoint returns a list, not a page structure yet (based on backend implementation)
+      // So we wrap it to match the expected structure if needed, or component handles list
+      const response = await userService.getInactive();
+      // Mock page response structure for the table
+      return {
+          content: response.data,
+          totalElements: response.data.length,
+          size: response.data.length,
+          number: 0
+      };
+  } else {
+      const response = await userService.getAll(query);
+      return response.data;
+  }
+};
+
+const reactivateUser = async (id) => {
+    try {
+        await userService.reactivate(id);
+        refresh();
+    } catch (e) {
+        console.error("Failed to reactivate", e);
+        alert("Erro ao reativar usuário");
+    }
 };
 
 const refresh = () => {
@@ -125,5 +156,28 @@ defineExpose({ refresh });
 .status-badge.inactive {
   background-color: #f1f5f9;
   color: #64748b;
+}
+
+.actions-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-icon.reactivate {
+    color: #166534;
+    border-color: #166534;
+}
+
+.btn-icon.reactivate:hover {
+    background-color: #dcfce7;
 }
 </style>

@@ -8,6 +8,11 @@
       
       <form @submit.prevent="save">
         <div class="form-body">
+          <div v-if="form.transactionId" class="appointment-link" style="margin-bottom: 1rem; text-align: center;">
+                <span class="badge income" style="cursor: pointer; text-decoration: underline;" @click="navigateToTransaction">
+                    Vinculado à Transação #{{ form.transactionId }} 🔗
+                </span>
+          </div>
           <div class="form-group">
             <label>Cliente</label>
             <BaseLookup
@@ -133,7 +138,8 @@ const form = ref({
   status: 'SCHEDULED',
   notes: '',
   price: 0,
-  discount: 0
+  discount: 0,
+  transactionId: null
 });
 
 const finalPrice = computed(() => {
@@ -147,7 +153,8 @@ const formatCurrency = (value) => {
 };
 
 onMounted(() => {
-  if (props.appointment.id) {
+  // Allow population if ID exists OR if we have pre-filled data like startTime (from 'add procedure' action)
+  if (props.appointment.id || props.appointment.startTime) {
     const apt = { ...props.appointment };
     // Split ISO datetime into date and time
     if (apt.startTime) {
@@ -178,8 +185,16 @@ onMounted(() => {
     
     form.value = { ...form.value, ...apt };
     
+    // If it's a new appointment (no ID), ensure status is SCHEDULED
+    if (!apt.id) {
+        form.value.status = 'SCHEDULED';
+        form.value.id = null; // Ensure ID is null
+    }
+    
     // Ensure nested objects are set if apt has flat IDs but no objects (though logic above handles it)
     if (!form.value.client.id && apt.clientId) form.value.client.id = apt.clientId;
+    
+    if (apt.transactionId) form.value.transactionId = apt.transactionId;
   }
 });
 
@@ -214,16 +229,19 @@ watch(() => form.value.start, () => {
 
 onMounted(async () => {
     if (props.appointment.id) {
-        // ... existing logic ...
-        
-        // Fetch service duration for existing appointment if needed, 
-        // OR rely on user re-selecting if they want auto-calc.
-        // For now, let's try to fetch if we have ID but no duration.
-        // But BaseLookup doesn't expose the item directly unless fetched.
-        // If we want this to work on edit load, we might need to fetch service details.
-        // However, usually "edit" keeps existing times unless changed.
-        // Let's just focus on "change" events for now as per requirement "o campo deve ficar aberto".
-        // If user changes start time on Edit, it will only auto-calc if we have duration.
+         try {
+             // Fetch full details to get transactionId and other fields
+             const response = await appointmentService.getById(props.appointment.id);
+             const fullApt = response.data;
+             if (fullApt) {
+                 form.value.transactionId = fullApt.transactionId;
+                 // We could also update other fields here if we wanted to be sure
+             }
+         } catch (e) {
+             console.error("Failed to fetch appointment details", e);
+         }
+
+        // ... existing logic to fetch service duration ...
         if (form.value.service.id) {
             try {
                  const response = await serviceService.getById(form.value.service.id);
@@ -260,6 +278,25 @@ const save = () => {
     
     console.log('Sending appointment:', dto); // Debug log
     emit('save', dto);
+};
+
+const viewTransaction = () => {
+    if (form.value.transactionId) {
+        emit('close'); // Close modal first
+        // Assuming we have a router instance or emit an event to navigate
+        // Since this is a modal, navigating might be tricky if not using router.push
+        // Let's rely on router import
+    }
+};
+// We need router
+import { useRouter } from 'vue-router';
+const router = useRouter();
+
+const navigateToTransaction = () => {
+     if (form.value.transactionId) {
+        emit('close');
+        router.push({ path: '/financials', query: { highlight: form.value.transactionId } });
+    }
 };
 </script>
 
