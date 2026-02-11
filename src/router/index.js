@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { authService } from '../services/authService'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -113,16 +114,36 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token');
 
+    // Public routes — always allow
+    if (to.meta.public) {
+        next();
+        return;
+    }
+
+    // Authenticated redirect — if logged in, don't show login
+    if (to.path === '/login' && token) {
+        next('/');
+        return;
+    }
+
+    // Protected routes — require token
     if (to.meta.requiresAuth && !token) {
         next('/login');
-    } else if (to.path === '/login' && token) {
-        next('/');
-    } else if (to.meta.public) {
-        // Allow access to public routes without authentication
-        next();
-    } else {
-        next();
+        return;
     }
+
+    // Role-based access — check user roles
+    if (to.meta.roles && to.meta.roles.length > 0) {
+        const user = authService.getCurrentUser();
+        const hasRole = to.meta.roles.some(role => user?.roles?.includes(role));
+        if (!hasRole) {
+            next('/');
+            return;
+        }
+    }
+
+    next();
 });
 
 export default router
+

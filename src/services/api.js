@@ -16,9 +16,9 @@ api.interceptors.request.use(config => {
 });
 
 import { errorHandler } from './errorHandler';
+import { toastBridge } from './toastBridge';
 
-// Helper to get toast instance - simple version using window for now until we have a better service locator
-const getToast = () => window.$toast;
+const getToast = () => toastBridge.getToast();
 
 api.interceptors.response.use(
     response => response,

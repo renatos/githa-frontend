@@ -100,7 +100,7 @@ onMounted(() => {
   const user = authService.getCurrentUser();
   if (user) {
     userEmail.value = user.email || user.sub; 
-    isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+    isAdmin.value = user.roles && user.roles.includes('ADMIN');
   }
 });
 </script>

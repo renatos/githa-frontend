@@ -7,13 +7,14 @@ import MainLayout from './layouts/MainLayout.vue';
 import AuthLayout from './layouts/AuthLayout.vue';
 
 import { useTheme } from './composables/useTheme';
+import { toastBridge } from './services/toastBridge';
 
 const route = useRoute();
 const toast = useToast();
 const { isDark } = useTheme(); // Initialize theme globally
 
 onMounted(() => {
-    window.$toast = toast;
+    toastBridge.setToast(toast);
 });
 
 const layout = computed(() => {

@@ -22,7 +22,7 @@
       v-if="showForm" 
       :appointment="editingItem"
       @close="closeForm"
-      @save="saveItem"
+      @save="saveAppointment"
     />
 
     <AppointmentCancellationModal
@@ -41,86 +41,75 @@ import AppointmentForm from '../components/AppointmentForm.vue';
 import AppointmentCancellationModal from '../components/AppointmentCancellationModal.vue';
 import AlertMessage from '../components/common/AlertMessage.vue';
 import { appointmentService } from '../services/appointmentService';
+import { useCrudView } from '../composables/useCrudView';
 
-const listRef = ref(null);
-const showForm = ref(false);
-const editingItem = ref({});
+const {
+  listRef, showForm, editingItem, alert,
+  showAlert, openForm, closeForm, refreshList, deleteItem,
+} = useCrudView(appointmentService, { singular: 'Agendamento', plural: 'Agendamentos' });
+
+// --- Cancellation modal ---
 const showCancellationModal = ref(false);
 const cancelingItem = ref({});
-const alert = ref({ type: 'info', message: '' });
 
-const showAlert = (type, message) => {
-  alert.value = { type, message };
-  setTimeout(() => alert.value.message = '', 3000);
+const openCancellationModal = (item) => {
+  cancelingItem.value = { ...item };
+  showCancellationModal.value = true;
 };
 
-const openForm = (item = {}) => {
-  editingItem.value = { ...item };
-  showForm.value = true;
+const closeCancellationModal = () => {
+  showCancellationModal.value = false;
+  cancelingItem.value = {};
 };
 
-const closeForm = () => {
-  showForm.value = false;
-  editingItem.value = {};
+// --- Status updates ---
+const updateStatus = async (item, status, successMessage) => {
+  try {
+    const updated = { ...item, status };
+    await appointmentService.update(item.id, updated);
+    showAlert('success', successMessage);
+    refreshList();
+  } catch (error) {
+    console.error('Error updating status:', error);
+    showAlert('error', 'Erro ao atualizar status.');
+  }
 };
 
+const confirmItem = (item) => {
+  updateStatus(item, 'CONFIRMED', 'Agendamento confirmado!');
+};
+
+const completeItem = (item) => {
+  updateStatus(item, 'COMPLETED', 'Agendamento concluído e lançamento financeiro gerado!');
+};
+
+const cancelItem = async (data) => {
+  try {
+    const fullData = { ...cancelingItem.value, ...data };
+    await appointmentService.update(data.id, fullData);
+    showAlert('success', 'Agendamento cancelado com sucesso!');
+    refreshList();
+    closeCancellationModal();
+  } catch (error) {
+    console.error('Error canceling appointment:', error);
+    showAlert('error', 'Erro ao cancelar agendamento.');
+  }
+};
+
+// --- Add procedure shortcut ---
 const openAddProcedureForm = (sourceItem) => {
   const newItem = {
     clientId: sourceItem.clientId || sourceItem.client?.id,
     clientName: sourceItem.clientName || sourceItem.client?.name,
     professionalId: sourceItem.professionalId || sourceItem.professional?.id,
     professionalName: sourceItem.professionalName || sourceItem.professional?.name,
-    startTime: sourceItem.endTime, // Start new appointment when the previous one ends
-    // Do not copy service, price, etc.
+    startTime: sourceItem.endTime,
   };
   openForm(newItem);
 };
 
-const openCancellationModal = (item) => {
-    cancelingItem.value = { ...item };
-    showCancellationModal.value = true;
-};
-
-const closeCancellationModal = () => {
-    showCancellationModal.value = false;
-    cancelingItem.value = {};
-};
-
-const updateStatus = async (item, status, successMessage) => {
-    try {
-        const updated = { ...item, status };
-        await appointmentService.update(item.id, updated);
-        showAlert('success', successMessage);
-        listRef.value?.refresh();
-    } catch (error) {
-        console.error('Error updating status:', error);
-        showAlert('error', 'Erro ao atualizar status.');
-    }
-};
-
-const confirmItem = (item) => {
-    updateStatus(item, 'CONFIRMED', 'Agendamento confirmado!');
-};
-
-const completeItem = (item) => {
-    updateStatus(item, 'COMPLETED', 'Agendamento concluído e lançamento financeiro gerado!');
-};
-
-const cancelItem = async (data) => {
-    try {
-        // Merge the original item keys with the new status/notes
-        const fullData = { ...cancelingItem.value, ...data };
-        await appointmentService.update(data.id, fullData);
-        showAlert('success', 'Agendamento cancelado com sucesso!');
-        listRef.value?.refresh();
-        closeCancellationModal();
-    } catch (error) {
-        console.error('Error canceling appointment:', error);
-        showAlert('error', 'Erro ao cancelar agendamento.');
-    }
-};
-
-const saveItem = async (data) => {
+// --- Custom save with status-aware messages ---
+const saveAppointment = async (data) => {
   try {
     if (data.id) {
       await appointmentService.update(data.id, data);
@@ -137,24 +126,11 @@ const saveItem = async (data) => {
         showAlert('success', 'Agendamento criado com sucesso!');
       }
     }
-    listRef.value?.refresh();
+    refreshList();
     closeForm();
   } catch (error) {
     console.error('Error saving appointment:', error);
     showAlert('error', 'Erro ao salvar agendamento.');
-  }
-};
-
-const deleteItem = async (id) => {
-  if (confirm('Tem certeza que deseja excluir este agendamento?')) {
-    try {
-      await appointmentService.delete(id);
-      showAlert('success', 'Agendamento excluído com sucesso!');
-      listRef.value?.refresh();
-    } catch (error) {
-      console.error('Error deleting appointment:', error);
-      showAlert('error', 'Erro ao excluir agendamento.');
-    }
   }
 };
 </script>

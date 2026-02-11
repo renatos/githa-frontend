@@ -8,76 +8,38 @@
     />
 
     <UserList 
-      ref="userList"
+      ref="listRef"
       @new="openForm()"
       @edit="openForm"
-      @delete="deleteUser"
+      @delete="deleteItem"
     />
     
     <UserForm 
       v-if="showForm" 
-      :user="editingUser"
+      :user="editingItem"
       @close="closeForm"
-      @save="saveUser"
+      @save="saveItem"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import UserList from '../components/UserList.vue';
 import UserForm from '../components/UserForm.vue';
 import AlertMessage from '../components/common/AlertMessage.vue';
 import { userService } from '../services/userService';
+import { useCrudView } from '../composables/useCrudView';
 
-const userList = ref(null);
-const showForm = ref(false);
-const editingUser = ref({});
-const alert = ref({ type: 'info', message: '' });
+const {
+  listRef, showForm, editingItem, alert,
+  showAlert, openForm, closeForm, saveItem: baseSave, deleteItem,
+} = useCrudView(userService, { singular: 'Usuário', plural: 'Usuários' });
 
-const showAlert = (type, message) => {
-  alert.value = { type, message };
-  setTimeout(() => alert.value.message = '', 3000);
-};
-
-const openForm = (user = {}) => {
-  editingUser.value = { ...user };
-  showForm.value = true;
-};
-
-const closeForm = () => {
-  showForm.value = false;
-  editingUser.value = {};
-};
-
-const saveUser = async (userData) => {
-  try {
-    if (userData.id) {
-      if (!userData.password) delete userData.password; // Don't send empty password
-      await userService.update(userData.id, userData);
-      showAlert('success', 'Usuário atualizado com sucesso!');
-    } else {
-      await userService.create(userData);
-      showAlert('success', 'Usuário criado com sucesso!');
-    }
-    userList.value?.refresh();
-    closeForm();
-  } catch (error) {
-    console.error('Error saving user:', error);
-    showAlert('error', 'Erro ao salvar usuário.');
+// Override save to handle password stripping
+const saveItem = async (userData) => {
+  if (userData.id && !userData.password) {
+    delete userData.password;
   }
-};
-
-const deleteUser = async (id) => {
-  if (confirm('Tem certeza que deseja excluir este usuário?')) {
-    try {
-      await userService.delete(id);
-      showAlert('success', 'Usuário excluído com sucesso!');
-      userList.value?.refresh();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      showAlert('error', 'Erro ao excluir usuário.');
-    }
-  }
+  await baseSave(userData);
 };
 </script>
