@@ -11,6 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      @row-click="openForm"
     >
       <template #cell-active="{ value }">
         <span class="badge" :class="value ? 'active' : 'inactive'">
@@ -20,7 +21,6 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-           <button class="btn-icon" @click="openForm(item)">✎</button>
            <button class="btn-icon delete" @click="deleteItem(item.id)">✕</button>
         </div>
       </template>

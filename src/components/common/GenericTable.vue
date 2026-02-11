@@ -34,7 +34,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)">
+          <tr v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)" class="clickable-row" @click="emit('row-click', item)">
             <td 
               v-for="col in columns" 
               :key="col.key"
@@ -44,7 +44,7 @@
                 <span :class="{'monospace': col.monospace}">{{ item[col.key] }}</span>
               </slot>
             </td>
-            <td v-if="$slots.actions" class="actions-cell">
+            <td v-if="$slots.actions" class="actions-cell" @click.stop>
               <slot name="actions" :item="item"></slot>
             </td>
           </tr>
@@ -57,9 +57,48 @@
       </table>
     </div>
     
+    <!-- Mobile Search and Sort Controls -->
+    <div class="mobile-controls" v-if="filterableColumns.length > 0 || sortableColumns.length > 0">
+      <div class="mobile-search" v-if="filterableColumns.length > 0">
+        <div class="mobile-search-row">
+          <select v-model="mobileSearchField" class="mobile-select">
+            <option v-for="col in filterableColumns" :key="col.key" :value="col.key">
+              {{ col.label }}
+            </option>
+          </select>
+          <div class="mobile-search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              class="mobile-search-input"
+              placeholder="Pesquisar..."
+              v-model="mobileSearchValue"
+            >
+            <button v-if="mobileSearchValue" class="clear-search" @click="mobileSearchValue = ''">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-sort" v-if="sortableColumns.length > 0">
+        <span class="mobile-sort-label">Ordenar:</span>
+        <select v-model="mobileSortKey" class="mobile-select">
+          <option value="">—</option>
+          <option v-for="col in sortableColumns" :key="col.key" :value="col.key">
+            {{ col.label }}
+          </option>
+        </select>
+        <button 
+          v-if="mobileSortKey" 
+          class="mobile-sort-dir" 
+          @click="toggleMobileSortOrder"
+        >
+          {{ currentSort.order === 'asc' ? '↑ Crescente' : '↓ Decrescente' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Mobile Card View -->
     <div class="cards-wrapper">
-      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card">
+      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card" @click="emit('row-click', item)">
         <div v-for="col in columns" :key="col.key" class="card-row">
           <span class="card-label">{{ col.label }}</span>
           <span class="card-value">
@@ -131,6 +170,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['row-click']);
+
 // State
 const serverItems = ref([]);
 const loading = ref(false);
@@ -153,6 +194,27 @@ const toggleSort = (key) => {
 
 // Filtering
 const filters = ref({});
+
+// Mobile controls
+const filterableColumns = computed(() => props.columns.filter(c => c.filterable));
+const sortableColumns = computed(() => props.columns.filter(c => c.sortable !== false));
+
+const mobileSearchField = ref('');
+const mobileSearchValue = ref('');
+
+const mobileSortKey = computed({
+  get: () => currentSort.value.key || '',
+  set: (val) => {
+    currentSort.value.key = val || null;
+    if (val && !currentSort.value.order) {
+      currentSort.value.order = 'asc';
+    }
+  }
+});
+
+const toggleMobileSortOrder = () => {
+  currentSort.value.order = currentSort.value.order === 'asc' ? 'desc' : 'asc';
+};
 
 // Data Loading
 const loadData = async () => {
@@ -236,6 +298,22 @@ watch(filters, () => {
   }
 }, { deep: true });
 
+// Mobile search sync
+watch(mobileSearchValue, (newVal) => {
+  if (mobileSearchField.value) {
+    filters.value[mobileSearchField.value] = newVal;
+  }
+});
+
+watch(mobileSearchField, (newField, oldField) => {
+  if (oldField) {
+    filters.value[oldField] = '';
+  }
+  if (newField && mobileSearchValue.value) {
+    filters.value[newField] = mobileSearchValue.value;
+  }
+});
+
 
 
 onMounted(async () => {
@@ -249,6 +327,11 @@ onMounted(async () => {
     }
   } catch (e) {
     console.warn('Could not load system parameters', e);
+  }
+
+  // Initialize mobile search field to first filterable column
+  if (filterableColumns.value.length > 0) {
+    mobileSearchField.value = filterableColumns.value[0].key;
   }
 
   if (props.fetchData) {
@@ -330,6 +413,14 @@ tr:hover td {
   background-color: var(--color-bg-body);
 }
 
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover td {
+  background-color: var(--color-primary-soft, #f0f4ff);
+}
+
 .monospace {
   font-family: monospace;
 }
@@ -403,6 +494,13 @@ tr:hover td {
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.data-card:active {
+  background-color: var(--color-bg-body);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-primary-soft);
 }
 
 .card-row {
@@ -445,10 +543,116 @@ tr:hover td {
   border-radius: var(--radius-md);
 }
 
+/* Mobile Controls */
+.mobile-controls {
+  display: none;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-body);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-search-row {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.mobile-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  min-width: 100px;
+  appearance: auto;
+}
+
+.mobile-search-input-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mobile-search-input {
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 1.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  outline: none;
+}
+
+.mobile-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.clear-search {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.clear-search:hover {
+  color: var(--color-error, #ef4444);
+}
+
+.mobile-sort {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.mobile-sort-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.mobile-sort-dir {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.mobile-sort-dir:hover {
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .table-wrapper {
     display: none;
+  }
+  
+  .mobile-controls {
+    display: flex;
   }
   
   .cards-wrapper {

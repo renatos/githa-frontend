@@ -45,6 +45,7 @@
       :columns="columns"
       :fetch-data="fetchDataAdapter"
       :row-class="getRowClass"
+      @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-type="{ item }">
         <span :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
@@ -66,12 +67,6 @@
         {{ formatDateTime(item.createdAt) }}
       </template>
 
-      <template #actions="{ item }">
-        <div class="actions-group">
-          <!-- Reply/View Details Button -->
-          <button class="btn-icon" @click="$emit('edit', item)" title="Ver Detalhes / Responder">💬</button>
-        </div>
-      </template>
     </GenericTable>
   </div>
 </template>

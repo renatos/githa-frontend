@@ -14,6 +14,7 @@
       :columns="columns"
       :fetch-data="fetchDataAdapter"
       :row-class="rowClass"
+      @row-click="openForm"
     >
       <template #cell-amount="{ value, item }">
         <span :class="['amount', item.type.toLowerCase()]">
@@ -50,12 +51,6 @@
             @click="openAppointmentModal(item)"
           >
             +
-          </button>
-          <button 
-            class="btn-icon" 
-            :title="getEditTitle(item)" 
-            @click="openForm(item)">
-            ✎
           </button>
           <button 
             class="btn-icon delete" 

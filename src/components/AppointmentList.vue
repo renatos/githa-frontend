@@ -11,6 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      @row-click="(item) => $emit('edit', item)"
     >
 
 
@@ -51,13 +52,6 @@
           <div class="divider"></div>
 
           <button class="btn-icon" title="Adicionar Procedimento" @click="$emit('add-procedure', item)">+</button>
-          
-          <button 
-            class="btn-icon" 
-            title="Editar / Visualizar"
-            @click="$emit('edit', item)">
-            ✎
-          </button>
           
           <button 
             class="btn-icon delete" 

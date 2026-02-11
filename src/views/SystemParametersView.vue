@@ -9,6 +9,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchParametersAdapter"
+      @row-click="startEdit"
     >
       <template #cell-value="{ item }">
         <div class="value-cell">
@@ -28,16 +29,6 @@
         </div>
       </template>
 
-      <template #actions="{ item }">
-        <button 
-          v-if="!editingItem || editingItem.id !== item.id" 
-          class="btn-icon" 
-          @click="startEdit(item)"
-          title="Editar"
-        >
-          ✎
-        </button>
-      </template>
     </GenericTable>
   </div>
 </template>

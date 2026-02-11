@@ -17,6 +17,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-active="{ value }">
         <span :class="['status-badge', value ? 'active' : 'inactive']">
@@ -26,7 +27,6 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button v-if="!showInactive" class="btn-icon" @click="$emit('edit', item)">✎</button>
           <button v-if="!showInactive" class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
           <button v-if="showInactive" class="btn-icon reactivate" title="Reativar" @click="reactivateUser(item.id)">♻</button>
         </div>

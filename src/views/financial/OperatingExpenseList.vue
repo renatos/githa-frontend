@@ -11,6 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      @row-click="(item) => $router.push(`/operating-expenses/${item.id}`)"
     >
       <template #cell-active="{ value }">
         <span :class="['status-badge', value ? 'active' : 'inactive']">
@@ -20,7 +21,6 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon" @click="$router.push(`/operating-expenses/${item.id}`)">✎</button>
           <button class="btn-icon delete" @click="confirmDelete(item)">✕</button>
         </div>
       </template>

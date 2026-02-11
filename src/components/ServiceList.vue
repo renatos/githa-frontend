@@ -11,6 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-price="{ value }">
         {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value) }}
@@ -28,7 +29,6 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon" @click="$emit('edit', item)">✎</button>
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>

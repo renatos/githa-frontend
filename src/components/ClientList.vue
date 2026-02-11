@@ -48,6 +48,7 @@
       :columns="columns"
       :fetch-data="fetchClientsAdapter"
       :row-class="getRowClass"
+      @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-phone="{ item }">
         {{ formatPhone(item.phone) }}
@@ -69,7 +70,6 @@
           <a v-if="item.phone" :href="getWhatsappLink(item)" target="_blank" class="btn-icon whatsapp" title="WhatsApp">
               💬
           </a>
-          <button class="btn-icon" @click="$emit('edit', item)">✎</button>
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>
