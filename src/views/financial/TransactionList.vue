@@ -51,8 +51,20 @@
           >
             +
           </button>
-          <button class="btn-icon" @click="openForm(item)" title="Editar">✎</button>
-          <button class="btn-icon delete" @click="deleteItem(item.id)" title="Excluir">✕</button>
+          <button 
+            class="btn-icon" 
+            :title="getEditTitle(item)" 
+            @click="openForm(item)">
+            ✎
+          </button>
+          <button 
+            class="btn-icon delete" 
+            :disabled="isActionDisabled(item)"
+            :class="{ 'disabled': isActionDisabled(item) }"
+            @click="!isActionDisabled(item) && deleteItem(item.id)" 
+            :title="getDeleteTitle(item)">
+            ✕
+          </button>
         </div>
       </template>
     </GenericTable>
@@ -75,11 +87,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import GenericTable from '../../components/common/GenericTable.vue';
 import TransactionForm from '../../components/financial/TransactionForm.vue';
 import CreateAppointmentFromTransactionModal from '../../components/financial/CreateAppointmentFromTransactionModal.vue';
 import financialService from '../../services/financialService';
+import { authService } from '../../services/authService';
 
 const props = defineProps({
   month: {
@@ -94,11 +108,40 @@ const props = defineProps({
 
 const emit = defineEmits(['change', 'view-appointment']);
 
+const route = useRoute();
+const router = useRouter();
+
 const tableRef = ref(null);
 const showForm = ref(false);
 const editingItem = ref({});
 const showAppointmentModal = ref(false);
 const appointmentTransaction = ref({});
+const isAdmin = ref(false);
+
+const checkUserRole = () => {
+    const user = authService.getCurrentUser();
+    isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+};
+
+onMounted(() => {
+    checkUserRole();
+});
+
+const isActionDisabled = (item) => {
+    return item.status === 'PAID' && !isAdmin.value;
+};
+
+const getDeleteTitle = (item) => {
+    if (isActionDisabled(item)) {
+        return 'Transação paga, acesso permitido apenas para ADMIN';
+    }
+    return 'Excluir';
+};
+
+const getEditTitle = (item) => {
+     // User wants to view even if disabled, so title is relevant but action is enabled
+     return 'Editar / Visualizar';
+};
 
 const columns = [
   { key: 'description', label: 'Descrição', sortable: true },
@@ -108,10 +151,6 @@ const columns = [
   { key: 'paymentDate', label: 'Pagamento', sortable: true },
   { key: 'status', label: 'Status', sortable: true, align: 'center' },
 ];
-
-import { useRoute, useRouter } from 'vue-router';
-const route = useRoute();
-const router = useRouter();
 
 const rowClass = (item) => {
     if (route.query.highlight && String(item.id) === String(route.query.highlight)) {
@@ -229,6 +268,12 @@ const onAppointmentCreated = () => {
     tableRef.value?.loadData();
     emit('change');
 };
+
+const loadData = () => {
+    tableRef.value?.loadData();
+};
+
+defineExpose({ loadData });
 </script>
 <style scoped>
 .header-actions {
@@ -298,6 +343,11 @@ const onAppointmentCreated = () => {
 .btn-icon:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
+}
+
+.btn-icon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-icon.delete {

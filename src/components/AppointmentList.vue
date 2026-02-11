@@ -50,10 +50,23 @@
 
           <div class="divider"></div>
 
-
           <button class="btn-icon" title="Adicionar Procedimento" @click="$emit('add-procedure', item)">+</button>
-          <button class="btn-icon" title="Editar" @click="$emit('edit', item)">✎</button>
-          <button class="btn-icon delete" title="Excluir" @click="$emit('delete', item.id)">✕</button>
+          
+          <button 
+            class="btn-icon" 
+            title="Editar / Visualizar"
+            @click="$emit('edit', item)">
+            ✎
+          </button>
+          
+          <button 
+            class="btn-icon delete" 
+            :title="getDeleteTitle(item)"
+            :disabled="isActionDisabled(item)"
+            :class="{ 'disabled': isActionDisabled(item) }"
+            @click="!isActionDisabled(item) && $emit('delete', item.id)">
+            ✕
+          </button>
         </div>
       </template>
     </GenericTable>
@@ -61,9 +74,10 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose, defineProps, watch } from 'vue';
+import { ref, defineEmits, defineExpose, defineProps, watch, onMounted } from 'vue';
 import GenericTable from './common/GenericTable.vue';
 import { appointmentService } from '../services/appointmentService';
+import { authService } from '../services/authService';
 import { formatDateTime } from '../utils/formatters';
 
 const props = defineProps({
@@ -74,6 +88,36 @@ const props = defineProps({
 defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
 
 const tableRef = ref(null);
+const isAdmin = ref(false);
+
+const checkUserRole = () => {
+  const user = authService.getCurrentUser();
+  isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+};
+
+const isActionDisabled = (item) => {
+  return item.status === 'COMPLETED' && !isAdmin.value;
+};
+
+const getEditTitle = (item) => {
+  if (isActionDisabled(item)) {
+    return 'Atendimento concluído, acesso permitido apenas para ADMIN';
+  }
+  return 'Editar';
+};
+
+const getDeleteTitle = (item) => {
+  if (isActionDisabled(item)) {
+    return 'Atendimento concluído, acesso permitido apenas para ADMIN';
+  }
+  return 'Excluir';
+};
+
+onMounted(() => {
+  checkUserRole();
+});
+
+
 
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
@@ -246,5 +290,11 @@ defineExpose({ refresh });
 :global([data-theme="dark"]) .status-badge.missed {
   background-color: #7c2d12;
   color: #ffedd5;
+}
+
+.btn-icon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  /* pointer-events: none; - Removed to allow tooltips */
 }
 </style>
