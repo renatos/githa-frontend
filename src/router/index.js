@@ -107,6 +107,12 @@ const router = createRouter({
             component: () => import('../views/financial/AccountView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/feedbacks',
+            name: 'feedbacks',
+            component: () => import('../views/FeedbackView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })

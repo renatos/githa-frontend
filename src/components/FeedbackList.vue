@@ -1,0 +1,230 @@
+<template>
+  <div class="feedback-list">
+    <div class="header-actions">
+      <h2>Feedbacks e Suporte</h2>
+      <div class="header-buttons">
+          <button class="btn btn-primary" @click="$emit('new')">
+            + Novo Feedback
+          </button>
+      </div>
+    </div>
+
+    <div class="status-legend">
+      <span 
+        class="legend-item new" 
+        :class="{ selected: selectedStatuses.includes('NEW') }"
+        @click="toggleFilter('NEW')"
+      >
+        Novo
+      </span>
+      <span 
+        class="legend-item accepted"
+        :class="{ selected: selectedStatuses.includes('ACCEPTED') }"
+        @click="toggleFilter('ACCEPTED')"
+      >
+        Em Análise
+      </span>
+      <span 
+        class="legend-item implemented"
+        :class="{ selected: selectedStatuses.includes('IMPLEMENTED') }"
+        @click="toggleFilter('IMPLEMENTED')"
+      >
+        Concluído
+      </span>
+      <span 
+        class="legend-item rejected"
+        :class="{ selected: selectedStatuses.includes('REJECTED') }"
+        @click="toggleFilter('REJECTED')"
+      >
+        Rejeitado
+      </span>
+    </div>
+
+    <GenericTable
+      ref="tableRef"
+      :columns="columns"
+      :fetch-data="fetchDataAdapter"
+      :row-class="getRowClass"
+    >
+      <template #cell-type="{ item }">
+        <span :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
+      </template>
+
+      <template #cell-status="{ item }">
+        <span :class="'badge status-' + item.status.toLowerCase()">{{ formatStatus(item.status) }}</span>
+      </template>
+
+      <template #cell-user="{ item }">
+        {{ item.user ? item.user.name : '-' }}
+      </template>
+
+      <template #cell-reporter="{ item }">
+        {{ item.reporter ? item.reporter.name : '-' }}
+      </template>
+
+      <template #cell-createdAt="{ item }">
+        {{ formatDateTime(item.createdAt) }}
+      </template>
+
+      <template #actions="{ item }">
+        <div class="actions-group">
+          <!-- Reply/View Details Button -->
+          <button class="btn-icon" @click="$emit('edit', item)" title="Ver Detalhes / Responder">💬</button>
+        </div>
+      </template>
+    </GenericTable>
+  </div>
+</template>
+
+<script setup>
+import { ref, defineEmits, defineExpose } from 'vue';
+import GenericTable from './common/GenericTable.vue';
+import { feedbackService } from '../services/feedbackService';
+import { formatDateTime } from '../utils/formatters';
+
+defineEmits(['new', 'edit']);
+
+const tableRef = ref(null);
+const selectedStatuses = ref([]);
+
+const columns = [
+  { key: 'id', label: '#', width: '50px', sortable: true },
+  { key: 'title', label: 'Título', sortable: true, filterable: true },
+  { key: 'type', label: 'Tipo', sortable: true, filterable: true },
+  { key: 'status', label: 'Status', sortable: true, filterable: true },
+  { key: 'reporter', label: 'Relator', sortable: false },
+  { key: 'createdAt', label: 'Data', sortable: true },
+];
+
+const toggleFilter = (status) => {
+  if (selectedStatuses.value.includes(status)) {
+    selectedStatuses.value = selectedStatuses.value.filter(s => s !== status);
+  } else {
+    selectedStatuses.value.push(status);
+  }
+  refresh();
+};
+
+const fetchDataAdapter = async (params) => {
+  const query = {
+    page: params.page,
+    size: params.size,
+    sort: params.sort,
+    ...params.filters
+  };
+  
+  if (selectedStatuses.value.length > 0) {
+    query.status = selectedStatuses.value.join(',');
+  }
+  
+  // Remove empty keys
+  Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
+
+  const response = await feedbackService.getAll(query);
+  return response.data;
+};
+
+const refresh = () => {
+  tableRef.value?.loadData();
+};
+
+const getRowClass = (item) => {
+  if (!item.status) return '';
+  return `feedback-row-${item.status.toLowerCase()}`;
+};
+
+const formatType = (type) => {
+    const map = {
+        'BUG': 'Erro',
+        'FEATURE': 'Nova Funcionalidade',
+        'IMPROVEMENT': 'Melhoria'
+    };
+    return map[type] || type;
+};
+
+const formatStatus = (status) => {
+    const map = {
+        'NEW': 'Novo',
+        'ACCEPTED': 'Em Análise',
+        'Rejeitado': 'Rejeitado',
+        'IMPLEMENTED': 'Concluído'
+    };
+    return map[status] || status;
+};
+
+defineExpose({ refresh });
+</script>
+
+<style scoped>
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.status-legend {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  opacity: 0.7;
+}
+
+.legend-item:hover {
+  background-color: var(--color-bg-body);
+}
+
+.legend-item.selected {
+  opacity: 1;
+  border-color: var(--color-border);
+  background-color: var(--color-bg-card);
+  font-weight: 600;
+}
+
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+}
+
+/* Status colors - adapt based on status */
+.legend-item.new::before, .badge.status-new { background-color: #3b82f6; border-color: #3b82f6; color: white}
+.legend-item.accepted::before, .badge.status-accepted { background-color: #f59e0b; border-color: #f59e0b; color: white}
+.legend-item.implemented::before, .badge.status-implemented { background-color: #10b981; border-color: #10b981; color: white}
+.legend-item.rejected::before, .badge.status-rejected { background-color: #ef4444; border-color: #ef4444; color: white}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge.type-bug { background-color: #fee2e2; color: #ef4444; }
+.badge.type-feature { background-color: #dbeafe; color: #3b82f6; }
+.badge.type-improvement { background-color: #f3e8ff; color: #a855f7; }
+
+.btn-icon {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+</style>

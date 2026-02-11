@@ -39,6 +39,9 @@
         <router-link to="/operating-expenses" class="nav-item" active-class="active" @click="closeSidebar">
           Contas Operacionais
         </router-link>
+        <router-link to="/feedbacks" class="nav-item" active-class="active" @click="closeSidebar">
+          Feedbacks e Suporte
+        </router-link>
         <router-link to="/strategic-clients" class="nav-item" @click="closeSidebar">Clientes Estratégicos</router-link>
         <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">Parametrização</router-link>
         <router-link to="/users" class="nav-item" active-class="active" @click="closeSidebar">
