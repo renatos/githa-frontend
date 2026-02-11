@@ -9,12 +9,12 @@
       <form @submit.prevent="save">
         <div class="form-group">
           <label>Descrição</label>
-          <input v-model="form.description" />
+          <input v-model="form.description" :disabled="!canSave" />
         </div>
 
         <div class="mb-3" v-if="!isAppointmentTransaction">
           <label for="operatingExpense" class="form-label">Despesa Operacional</label>
-          <select class="form-select" id="operatingExpense" v-model="form.operatingExpenseId">
+          <select class="form-select" id="operatingExpense" v-model="form.operatingExpenseId" :disabled="!canSave">
             <option :value="undefined">Selecione uma despesa</option>
             <option v-for="expense in operatingExpenses" :key="expense.id" :value="expense.id">
               {{ expense.name }}
@@ -33,7 +33,7 @@
         <div class="form-row">
            <div class="form-group">
             <label>Tipo</label>
-            <select v-model="form.type" required :disabled="isAppointmentTransaction || !!form.operatingExpenseId">
+            <select v-model="form.type" required :disabled="isAppointmentTransaction || !!form.operatingExpenseId || !canSave">
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
@@ -41,19 +41,19 @@
 
           <div class="form-group">
             <label>Valor</label>
-            <CurrencyInput v-model="form.amount" required />
+            <CurrencyInput v-model="form.amount" required :disabled="!canSave" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Categoria</label>
-            <input v-model="form.category" />
+            <input v-model="form.category" :disabled="!canSave" />
           </div>
           
            <div class="form-group">
             <label>Status</label>
-            <select v-model="form.status" required>
+            <select v-model="form.status" required :disabled="!canSave">
               <option value="PENDING">Pendente</option>
               <option value="PAID">Pago</option>
               <option value="CANCELLED">Cancelado</option>
@@ -66,13 +66,13 @@
         <div class="form-row">
           <div class="form-group">
             <label>Pagamento</label>
-             <input type="datetime-local" v-model="form.paymentDate" step="1" />
+             <input type="datetime-local" v-model="form.paymentDate" step="1" :disabled="!canSave" />
           </div>
         </div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="submit" class="btn btn-primary" :disabled="!canSave" :title="saveTooltip">Salvar</button>
         </div>
       </form>
     </div>
@@ -82,6 +82,7 @@
 <script setup>
 import { ref, defineProps, defineEmits, onMounted, computed, watch } from 'vue';
 import financialService from '../../services/financialService';
+import { authService } from '../../services/authService';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import CurrencyInput from '../common/CurrencyInput.vue';
 
@@ -93,6 +94,14 @@ const emit = defineEmits(['close', 'save', 'view-appointment']);
 
 // Add ESC key support
 useEscapeKey(() => emit('close'));
+
+const isAdmin = ref(false);
+const originalStatus = ref('');
+
+const checkUserRole = () => {
+    const user = authService.getCurrentUser();
+    isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+};
 
 const form = ref({
   description: '',
@@ -115,10 +124,36 @@ const categories = ref([ // Added categories
   'Moradia',
   'Serviços',
   'Vestuário',
-  'Outros'
+  'Outros',
+  'IMPORTACAO 2025'
 ]);
 
+const canSave = computed(() => {
+    // If it's a new transaction (no ID), anyone can save
+    if (!props.transaction.id) return true;
+    
+    // If original status was PAID, only ADMIN can save any changes
+    if (originalStatus.value === 'PAID' && !isAdmin.value) {
+        return false;
+    }
+
+    // If current status is PAID (and changing to it), only ADMIN can save
+    if (form.value.status === 'PAID' && !isAdmin.value) {
+        return false;
+    }
+    
+    return true;
+});
+
+const saveTooltip = computed(() => {
+    if (!canSave.value) {
+        return 'Transação paga, apenas ADMIN pode salvar alterações.';
+    }
+    return '';
+});
+
 onMounted(async () => {
+  checkUserRole();
   try {
     const response = await financialService.getOperatingExpenses(); // Changed service call
     operatingExpenses.value = response.data.filter(opEx => opEx.active); // Changed from accounts
@@ -128,6 +163,8 @@ onMounted(async () => {
 
   if (props.transaction && props.transaction.id) {
     form.value = { ...props.transaction };
+    originalStatus.value = props.transaction.status;
+    
     // Format LocalDateTime for input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
     if (form.value.paymentDate && form.value.paymentDate.length > 16) {
         form.value.paymentDate = form.value.paymentDate.substring(0, 19);
@@ -135,7 +172,6 @@ onMounted(async () => {
   } else {
     // Default to current time
     const now = new Date();
-    const iso = now.toLocaleString('sv').replace(' ', 'T'); // "YYYY-MM-DDTHH:mm:ss" cross-browser hack or use custom formatter
     // Better safely:
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');

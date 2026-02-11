@@ -21,6 +21,7 @@
                 :search-service="clientService"
                 placeholder="Pesquisar Cliente..."
                 @select="(item) => form.client.name = item?.name"
+                :disabled="!canSave"
             />
           </div>
           
@@ -32,6 +33,7 @@
                 :search-service="professionalService"
                 placeholder="Pesquisar Profissional..."
                 @select="(item) => form.professional.name = item?.name"
+                :disabled="!canSave"
             />
           </div>
 
@@ -43,17 +45,18 @@
                 :search-service="serviceService"
                 placeholder="Pesquisar Serviço..."
                 @select="onServiceSelect"
+                :disabled="!canSave"
             />
           </div>
 
           <div class="form-row">
             <div class="form-group price-group">
                 <label>Valor</label>
-                <CurrencyInput v-model="form.price" />
+                <CurrencyInput v-model="form.price" :disabled="!canSave" />
             </div>
             <div class="form-group discount-group">
                 <label>Desconto (%)</label>
-                  <input v-model="form.discount" type="number" step="0.01" class="form-control" placeholder="0" />
+                  <input v-model="form.discount" type="number" step="0.01" class="form-control" placeholder="0" :disabled="!canSave" />
             </div>
              <div class="form-group final-group">
                 <label>Valor Final</label>
@@ -63,21 +66,21 @@
           <div class="form-row">
             <div class="form-group">
                 <label>Data</label>
-                <input v-model="form.date" type="date" required class="form-control" />
+                <input v-model="form.date" type="date" required class="form-control" :disabled="!canSave" />
             </div>
             <div class="form-group">
                 <label>Início</label>
-                <input v-model="form.start" type="time" required class="form-control" />
+                <input v-model="form.start" type="time" required class="form-control" :disabled="!canSave" />
             </div>
             <div class="form-group">
                 <label>Fim</label>
-                <input v-model="form.end" type="time" required class="form-control" @focus="calculateEndTime" />
+                <input v-model="form.end" type="time" required class="form-control" @focus="calculateEndTime" :disabled="!canSave" />
             </div>
           </div>
           
            <div class="form-group">
             <label>Status</label>
-            <select v-model="form.status" required class="form-control">
+            <select v-model="form.status" required class="form-control" :disabled="!canSave">
                 <option value="SCHEDULED">Agendado</option>
                 <option value="CONFIRMED">Confirmado</option>
                 <option value="CANCELED">Cancelado</option>
@@ -88,14 +91,14 @@
 
            <div class="form-group">
             <label>Notas</label>
-            <textarea v-model="form.notes" class="form-control" rows="2"></textarea>
+            <textarea v-model="form.notes" class="form-control" rows="2" :disabled="!canSave"></textarea>
           </div>
 
         </div>
         
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="submit" class="btn btn-primary" :disabled="!canSave" :title="saveTooltip">Salvar</button>
         </div>
       </form>
     </div>
@@ -108,6 +111,7 @@ import { appointmentService } from '../services/appointmentService';
 import { clientService } from '../services/clientService';
 import { professionalService } from '../services/professionalService';
 import { serviceService } from '../services/serviceService';
+import { authService } from '../services/authService';
 import BaseLookup from './common/BaseLookup.vue';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
@@ -128,6 +132,8 @@ const emit = defineEmits(['close', 'save']);
 useModal(emit);
 useEscapeKey(() => emit('close'));
 
+const isAdmin = ref(false);
+
 const form = ref({
   client: { id: '', name: '' },
   professional: { id: '', name: '' },
@@ -140,6 +146,37 @@ const form = ref({
   price: 0,
   discount: 0,
   transactionId: null
+});
+
+const originalStatus = ref('');
+
+const checkUserRole = () => {
+    const user = authService.getCurrentUser();
+    isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+};
+
+const canSave = computed(() => {
+    // If it's a new appointment (no ID), anyone can save
+    if (!props.appointment.id) return true;
+    
+    // If original status was COMPLETED, only ADMIN can save any changes
+    if (originalStatus.value === 'COMPLETED' && !isAdmin.value) {
+        return false;
+    }
+
+    // If current status is COMPLETED (and changing to it), only ADMIN can save (optional, but good)
+    if (form.value.status === 'COMPLETED' && !isAdmin.value) {
+        return false;
+    }
+    
+    return true;
+});
+
+const saveTooltip = computed(() => {
+    if (!canSave.value) {
+        return 'Atendimento concluído, apenas ADMIN pode salvar alterações.';
+    }
+    return '';
 });
 
 const finalPrice = computed(() => {
@@ -156,6 +193,8 @@ onMounted(() => {
   // Allow population if ID exists OR if we have pre-filled data like startTime (from 'add procedure' action)
   if (props.appointment.id || props.appointment.startTime) {
     const apt = { ...props.appointment };
+    originalStatus.value = apt.status;
+    
     // Split ISO datetime into date and time
     if (apt.startTime) {
         form.value.date = apt.startTime.split('T')[0];
@@ -196,6 +235,8 @@ onMounted(() => {
     
     if (apt.transactionId) form.value.transactionId = apt.transactionId;
   }
+  
+  checkUserRole();
 });
 
 const selectedServiceDuration = ref(0);

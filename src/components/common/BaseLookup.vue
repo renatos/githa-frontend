@@ -6,6 +6,7 @@
         :value="modelValue" 
         @change="onSelectChange"
         class="form-select"
+        :disabled="disabled"
       >
         <option value="">{{ placeholder }}</option>
         <option v-for="item in allItems" :key="item.id" :value="item.id">
@@ -24,6 +25,7 @@
           @input="onIdInput"
           placeholder="ID"
           class="form-control id-input"
+          :disabled="disabled"
         />
       </div>
       
@@ -37,6 +39,7 @@
           :placeholder="placeholder"
           class="form-control"
           @blur="onBlur"
+          :disabled="disabled"
         />
         
         <!-- Dropdown Results -->
@@ -83,6 +86,10 @@ const props = defineProps({
   searchService: {
     type: Object,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 
