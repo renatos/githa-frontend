@@ -70,7 +70,7 @@
           </div>
         </div>
 
-        <div class="modal-actions">
+        <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
           <button type="submit" class="btn btn-primary" :disabled="!canSave" :title="saveTooltip">Salvar</button>
         </div>

@@ -270,7 +270,6 @@ const scrollToBottom = () => {
     flex-shrink: 0;
     padding: var(--spacing-md);
     background: var(--color-bg-body);
-    border-top: 1px solid var(--color-border);
 }
 
 .feedback-meta {

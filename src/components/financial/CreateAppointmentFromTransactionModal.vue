@@ -291,13 +291,7 @@ const submit = async () => {
   padding: var(--spacing-lg);
 }
 
-.modal-footer {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-}
+
 
 .form-group {
   margin-bottom: var(--spacing-md);
