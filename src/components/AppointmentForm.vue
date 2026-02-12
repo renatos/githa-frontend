@@ -21,6 +21,7 @@
                 :search-service="clientService"
                 placeholder="Pesquisar Cliente..."
                 @select="(item) => form.client.name = item?.name"
+                @edit="onEditClient"
                 :disabled="!canSave"
             />
           </div>
@@ -33,6 +34,7 @@
                 :search-service="professionalService"
                 placeholder="Pesquisar Profissional..."
                 @select="(item) => form.professional.name = item?.name"
+                @edit="onEditProfessional"
                 :disabled="!canSave"
             />
           </div>
@@ -45,6 +47,7 @@
                 :search-service="serviceService"
                 placeholder="Pesquisar Serviço..."
                 @select="onServiceSelect"
+                @edit="onEditService"
                 :disabled="!canSave"
             />
           </div>
@@ -102,6 +105,26 @@
         </div>
       </form>
     </div>
+
+    <!-- Edit Modals (Stacked) -->
+    <ClientForm 
+        v-if="showClientForm" 
+        :client="editingClient" 
+        @close="showClientForm = false" 
+        @save="onClientSaved" 
+    />
+    <ProfessionalForm 
+        v-if="showProfessionalForm" 
+        :professional="editingProfessional" 
+        @close="showProfessionalForm = false" 
+        @save="onProfessionalSaved" 
+    />
+    <ServiceForm 
+        v-if="showServiceForm" 
+        :service="editingService" 
+        @close="showServiceForm = false" 
+        @save="onServiceSaved" 
+    />
   </div>
 </template>
 
@@ -116,6 +139,9 @@ import BaseLookup from './common/BaseLookup.vue';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
 import CurrencyInput from './common/CurrencyInput.vue';
+import ClientForm from './ClientForm.vue';
+import ProfessionalForm from './ProfessionalForm.vue';
+import ServiceForm from './ServiceForm.vue';
 
 const props = defineProps({
   appointment: {
@@ -334,9 +360,128 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const navigateToTransaction = () => {
-     if (form.value.transactionId) {
+    if (form.value.transactionId) {
         emit('close');
         router.push({ path: '/financials', query: { highlight: form.value.transactionId } });
+    }
+};
+
+// --- Edit Modal Logic ---
+const showClientForm = ref(false);
+const editingClient = ref({});
+
+const showProfessionalForm = ref(false);
+const editingProfessional = ref({});
+
+const showServiceForm = ref(false);
+const editingService = ref({});
+
+const onEditClient = async (id) => {
+    try {
+        const response = await clientService.getById(id);
+        editingClient.value = response.data;
+        showClientForm.value = true;
+    } catch (e) {
+        console.error("Failed to fetch client for editing", e);
+        alert("Erro ao carregar dados do cliente");
+    }
+};
+
+const onClientSaved = async (updatedClientData) => {
+    try {
+        // We need to actually save the client changes first? 
+        // Wait, the ClientForm emits 'save' with the data. 
+        // ClientForm usually calls the API itself? No, looking at ClientForm, it emits 'save' with form data.
+        // It does NOT call the API. The parent is responsible for saving.
+        // So we must call clientService.save/update here.
+        
+        const isNew = !updatedClientData.id;
+        let savedClient;
+        
+        if (isNew) {
+             const res = await clientService.create(updatedClientData);
+             savedClient = res.data;
+        } else {
+             const res = await clientService.update(updatedClientData.id, updatedClientData);
+             savedClient = res.data;
+        }
+        
+        // Update local form state
+        form.value.client.name = savedClient.name;
+        // If we just created a new one (unlikely path here since we edit existing), we'd update ID too.
+        
+        showClientForm.value = false;
+    } catch (e) {
+        console.error("Failed to save client", e);
+        alert("Erro ao salvar cliente");
+    }
+};
+
+const onEditProfessional = async (id) => {
+    try {
+        const response = await professionalService.getById(id);
+        editingProfessional.value = response.data;
+        showProfessionalForm.value = true;
+    } catch (e) {
+        console.error("Failed to fetch professional", e);
+        alert("Erro ao carregar dados do profissional");
+    }
+};
+
+const onProfessionalSaved = async (data) => {
+    try {
+        const isNew = !data.id;
+        let saved;
+        if (isNew) {
+            const res = await professionalService.create(data);
+            saved = res.data;
+        } else {
+            const res = await professionalService.update(data.id, data);
+            saved = res.data;
+        }
+        form.value.professional.name = saved.name;
+        showProfessionalForm.value = false;
+    } catch (e) {
+         console.error("Failed to save professional", e);
+         alert("Erro ao salvar profissional");
+    }
+};
+
+const onEditService = async (id) => {
+    try {
+        const response = await serviceService.getById(id);
+        editingService.value = response.data;
+        showServiceForm.value = true;
+    } catch (e) {
+        console.error("Failed to fetch service", e);
+        alert("Erro ao carregar dados do serviço");
+    }
+};
+
+const onServiceSaved = async (data) => {
+    try {
+        const isNew = !data.id;
+        let saved;
+         if (isNew) {
+            const res = await serviceService.create(data);
+            saved = res.data;
+        } else {
+            const res = await serviceService.update(data.id, data);
+            saved = res.data;
+        }
+        
+        form.value.service.name = saved.name;
+        // Also update price/duration if they changed?
+        if (saved.price) form.value.price = saved.price;
+        if (saved.durationMinutes) {
+             selectedServiceDuration.value = saved.durationMinutes; // Update duration ref for calc
+             calculateEndTime(); // Recalc end time
+        }
+        
+        showServiceForm.value = false;
+    } catch (e) {
+         console.error("Failed to save service", e);
+         alert("Erro ao salvar serviço");
     }
 };
 </script>

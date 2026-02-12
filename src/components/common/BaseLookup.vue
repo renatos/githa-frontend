@@ -1,7 +1,7 @@
 <template>
-  <div class="base-lookup">
+  <div class="base-lookup lookup-container">
     <!-- Combobox Mode (Select) -->
-    <div v-if="isComboboxMode">
+    <div v-if="isComboboxMode" class="combobox-wrapper">
       <select 
         :value="modelValue" 
         @change="onSelectChange"
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Lookup Mode (Inputs) -->
-    <div v-else class="lookup-container">
+    <div v-else class="lookup-inputs-wrapper">
       <!-- ID Input -->
       <div class="id-input-wrapper">
         <input
@@ -62,11 +62,23 @@
         </div>
       </div>
     </div>
+      
+    <!-- Edit Button -->
+    <!-- Edit Button -->
+    <button 
+      v-if="modelValue && !disabled && canEdit"
+      type="button"
+      class="btn-icon-small edit-btn"
+      @click="$emit('edit', modelValue)"
+      title="Editar registro selecionado"
+    >
+      ✏️
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, onMounted } from 'vue';
+import { ref, watch, defineProps, defineEmits, onMounted, useAttrs, computed } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -94,6 +106,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'select']);
+const attrs = useAttrs();
+
+const canEdit = computed(() => {
+    return !!attrs.onEdit;
+});
 
 // Mode State
 const isComboboxMode = ref(false);
@@ -254,6 +271,16 @@ const formatCurrency = (value) => {
     gap: var(--spacing-sm);
 }
 
+.combobox-wrapper {
+    flex: 1;
+}
+
+.lookup-inputs-wrapper {
+    flex: 1;
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
 .id-input-wrapper {
     flex: 0 0 80px;
 }
@@ -323,5 +350,28 @@ const formatCurrency = (value) => {
     color: var(--color-success, #16a34a);
     margin-left: auto;
     padding-left: 0.5rem;
+}
+
+.btn-icon-small {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-main);
+    transition: all 0.2s;
+    background-color: var(--color-bg-card);
+}
+
+.btn-icon-small:hover {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary);
+}
+
+.edit-btn {
+    flex: 0 0 auto;
 }
 </style>
