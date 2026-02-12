@@ -98,6 +98,10 @@ const props = defineProps({
   year: {
     type: Number,
     default: null
+  },
+  day: {
+    type: Number,
+    default: null
   }
 });
 
@@ -174,6 +178,7 @@ const fetchDataAdapter = async (params) => {
   // Add month/year if provided
   if (props.month) query.month = props.month;
   if (props.year) query.year = props.year;
+  if (props.day) query.day = props.day;
   
   // Clean nulls
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
@@ -182,8 +187,8 @@ const fetchDataAdapter = async (params) => {
   return response.data;
 };
 
-// Watch for month/year changes to reload the table
-watch([() => props.month, () => props.year], () => {
+// Watch for month/year/day changes to reload the table
+watch([() => props.month, () => props.year, () => props.day], () => {
   tableRef.value?.loadData();
 });
 

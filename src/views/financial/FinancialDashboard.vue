@@ -3,15 +3,31 @@
     <div class="header-row">
       <h2>Dashboard Financeiro</h2>
       <div class="selectors-container">
+        <div class="view-mode-toggle">
+            <button 
+                class="btn-toggle" 
+                :class="{ active: viewMode === 'MONTH' }"
+                @click="viewMode = 'MONTH'"
+            >
+                Mensal
+            </button>
+            <button 
+                class="btn-toggle" 
+                :class="{ active: viewMode === 'DAY' }"
+                @click="viewMode = 'DAY'"
+            >
+                Diário
+            </button>
+        </div>
         <div class="month-selector">
           <button @click="previousMonth" class="btn-icon">❮</button>
           <span class="current-month">{{ currentMonthLabel }}</span>
           <button @click="nextMonth" class="btn-icon">❯</button>
         </div>
         <div class="day-selector">
-          <button @click="previousDay" class="btn-icon" :disabled="selectedDay <= 1">❮</button>
+          <button @click="previousDay" class="btn-icon">❮</button>
           <span class="current-day">{{ currentDayLabel }}</span>
-          <button @click="nextDay" class="btn-icon" :disabled="selectedDay >= daysInMonth">❯</button>
+          <button @click="nextDay" class="btn-icon">❯</button>
         </div>
       </div>
     </div>
@@ -62,6 +78,7 @@
             ref="transactionListRef" 
             :month="selectedMonth" 
             :year="selectedYear" 
+            :day="viewMode === 'DAY' ? selectedDay : null"
             @change="loadSummary" 
             @view-appointment="openAppointment" 
         />
@@ -83,6 +100,8 @@ import financialService from '../../services/financialService';
 import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
 import AppointmentForm from '../../components/AppointmentForm.vue';
+
+const viewMode = ref('MONTH'); // 'MONTH' or 'DAY'
 
 const summary = ref({
   totalIncome: 0,
@@ -127,15 +146,7 @@ onMounted(async () => {
 });
 
 watch([selectedMonth, selectedYear], async () => {
-  // Reset day when month changes: use current day if same month/year, otherwise 1
-  const today = new Date();
-  if (selectedMonth.value === today.getMonth() + 1 && selectedYear.value === today.getFullYear()) {
-    selectedDay.value = today.getDate();
-  } else {
-    selectedDay.value = 1;
-  }
   await loadAllData();
-  transactionListRef.value?.loadData();
 });
 
 watch(selectedDay, async () => {
@@ -173,6 +184,7 @@ const previousMonth = () => {
   } else {
     selectedMonth.value--;
   }
+  resetDayToDefault();
 };
 
 const nextMonth = () => {
@@ -182,17 +194,46 @@ const nextMonth = () => {
   } else {
     selectedMonth.value++;
   }
+  resetDayToDefault();
+};
+
+const resetDayToDefault = () => {
+  const today = new Date();
+  if (selectedMonth.value === today.getMonth() + 1 && selectedYear.value === today.getFullYear()) {
+    selectedDay.value = today.getDate();
+  } else {
+    selectedDay.value = 1;
+  }
 };
 
 const previousDay = () => {
   if (selectedDay.value > 1) {
     selectedDay.value--;
+  } else {
+    // Go to previous month
+    if (selectedMonth.value === 1) {
+      selectedMonth.value = 12;
+      selectedYear.value--;
+    } else {
+      selectedMonth.value--;
+    }
+    // Set to last day of new month
+    selectedDay.value = new Date(selectedYear.value, selectedMonth.value, 0).getDate();
   }
 };
 
 const nextDay = () => {
   if (selectedDay.value < daysInMonth.value) {
     selectedDay.value++;
+  } else {
+    // Go to next month
+    if (selectedMonth.value === 12) {
+        selectedMonth.value = 1;
+        selectedYear.value++;
+    } else {
+        selectedMonth.value++;
+    }
+    selectedDay.value = 1;
   }
 };
 
@@ -253,6 +294,32 @@ const saveAppointment = async (data) => {
   flex-direction: column;
   gap: 0.5rem;
   align-items: flex-end;
+}
+
+.view-mode-toggle {
+    display: flex;
+    background: var(--color-bg-card, #fff);
+    border-radius: var(--radius-md);
+    padding: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 0.25rem;
+}
+
+.btn-toggle {
+    background: transparent;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-toggle.active {
+    background: var(--color-primary);
+    color: white;
 }
 
 .month-selector,
