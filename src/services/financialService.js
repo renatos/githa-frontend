@@ -48,6 +48,16 @@ export default {
         return api.get(`${resource}/summary`, { params });
     },
 
+    /**
+     * Get daily financial summary
+     * @param {Number} day - Day of month (1-31)
+     * @param {Number} month - Month (1-12)
+     * @param {Number} year - Year
+     */
+    getDailySummary(day, month, year) {
+        return api.get(`${resource}/daily-summary`, { params: { day, month, year } });
+    },
+
     // Operating Expenses
     getOperatingExpenses(params) {
         return api.get('/operating-expenses', { params });

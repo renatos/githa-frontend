@@ -2,10 +2,17 @@
   <div class="financial-dashboard">
     <div class="header-row">
       <h2>Dashboard Financeiro</h2>
-      <div class="month-selector">
-        <button @click="previousMonth" class="btn-icon">❮</button>
-        <span class="current-month">{{ currentMonthLabel }}</span>
-        <button @click="nextMonth" class="btn-icon">❯</button>
+      <div class="selectors-container">
+        <div class="month-selector">
+          <button @click="previousMonth" class="btn-icon">❮</button>
+          <span class="current-month">{{ currentMonthLabel }}</span>
+          <button @click="nextMonth" class="btn-icon">❯</button>
+        </div>
+        <div class="day-selector">
+          <button @click="previousDay" class="btn-icon" :disabled="selectedDay <= 1">❮</button>
+          <span class="current-day">{{ currentDayLabel }}</span>
+          <button @click="nextDay" class="btn-icon" :disabled="selectedDay >= daysInMonth">❯</button>
+        </div>
       </div>
     </div>
     
@@ -28,6 +35,24 @@
         <div class="pending" :class="{ negative: (summary.pendingBalance || 0) < 0 }">
           Pendente: {{ formatCurrency(summary.pendingBalance || 0) }}
         </div>
+      </div>
+    </div>
+
+    <!-- Daily summary cards -->
+    <div class="summary-cards daily-cards">
+      <div class="card daily income">
+        <h3>Receitas (dia)</h3>
+        <div class="amount">{{ formatCurrency(dailySummary.totalIncome) }}</div>
+      </div>
+
+      <div class="card daily expense">
+        <h3>Despesas (dia)</h3>
+        <div class="amount">{{ formatCurrency(dailySummary.totalExpense) }}</div>
+      </div>
+
+      <div class="card daily balance" :class="{ negative: dailySummary.balance < 0 }">
+        <h3>Saldo (dia)</h3>
+        <div class="amount">{{ formatCurrency(dailySummary.balance) }}</div>
       </div>
     </div>
 
@@ -65,13 +90,25 @@ const summary = ref({
   balance: 0
 });
 
-const selectedMonth = ref(new Date().getMonth() + 1); // 1-12
-const selectedYear = ref(new Date().getFullYear());
+const dailySummary = ref({
+  totalIncome: 0,
+  totalExpense: 0,
+  balance: 0
+});
+
+const now = new Date();
+const selectedMonth = ref(now.getMonth() + 1); // 1-12
+const selectedYear = ref(now.getFullYear());
+const selectedDay = ref(now.getDate());
 const transactionListRef = ref(null);
 
 // Appointment Form State
 const showAppointmentForm = ref(false);
 const editingAppointment = ref({});
+
+const daysInMonth = computed(() => {
+  return new Date(selectedYear.value, selectedMonth.value, 0).getDate();
+});
 
 const currentMonthLabel = computed(() => {
   const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
@@ -79,23 +116,53 @@ const currentMonthLabel = computed(() => {
   return `${months[selectedMonth.value - 1]} ${selectedYear.value}`;
 });
 
+const currentDayLabel = computed(() => {
+  const dayStr = String(selectedDay.value).padStart(2, '0');
+  const monthStr = String(selectedMonth.value).padStart(2, '0');
+  return `${dayStr}/${monthStr}`;
+});
+
 onMounted(async () => {
-  await loadSummary();
+  await loadAllData();
 });
 
 watch([selectedMonth, selectedYear], async () => {
-  await loadSummary();
-  // Reload transaction list when month changes
+  // Reset day when month changes: use current day if same month/year, otherwise 1
+  const today = new Date();
+  if (selectedMonth.value === today.getMonth() + 1 && selectedYear.value === today.getFullYear()) {
+    selectedDay.value = today.getDate();
+  } else {
+    selectedDay.value = 1;
+  }
+  await loadAllData();
   transactionListRef.value?.loadData();
 });
+
+watch(selectedDay, async () => {
+  await loadDailySummary();
+});
+
+const loadAllData = async () => {
+  await Promise.all([loadSummary(), loadDailySummary()]);
+};
 
 const loadSummary = async () => {
   try {
     const response = await financialService.getSummary(selectedMonth.value, selectedYear.value);
-    console.log('Financial Summary Response:', response.data);
     summary.value = response.data;
   } catch (error) {
     console.error('Error loading summary:', error);
+  }
+};
+
+const loadDailySummary = async () => {
+  try {
+    const response = await financialService.getDailySummary(
+      selectedDay.value, selectedMonth.value, selectedYear.value
+    );
+    dailySummary.value = response.data;
+  } catch (error) {
+    console.error('Error loading daily summary:', error);
   }
 };
 
@@ -114,6 +181,18 @@ const nextMonth = () => {
     selectedYear.value++;
   } else {
     selectedMonth.value++;
+  }
+};
+
+const previousDay = () => {
+  if (selectedDay.value > 1) {
+    selectedDay.value--;
+  }
+};
+
+const nextDay = () => {
+  if (selectedDay.value < daysInMonth.value) {
+    selectedDay.value++;
   }
 };
 
@@ -144,13 +223,11 @@ const saveAppointment = async (data) => {
       await appointmentService.update(data.id, data);
       alert('Agendamento atualizado com sucesso!');
     } else {
-       // Should not happen in this context usually, but good to have
       await appointmentService.create(data);
       alert('Agendamento criado com sucesso!');
     }
     closeAppointmentForm();
-    // Maybe refresh transactions?
-    loadSummary();
+    loadAllData();
     transactionListRef.value?.loadData();
   } catch (error) {
     console.error('Error saving appointment:', error);
@@ -171,7 +248,15 @@ const saveAppointment = async (data) => {
   margin-bottom: 1.5rem;
 }
 
-.month-selector {
+.selectors-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.month-selector,
+.day-selector {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -181,11 +266,23 @@ const saveAppointment = async (data) => {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.day-selector {
+  padding: 0.35rem 0.8rem;
+}
+
 .current-month {
   font-weight: 600;
   color: var(--color-text-main);
   min-width: 150px;
   text-align: center;
+}
+
+.current-day {
+  font-weight: 600;
+  color: var(--color-text-main);
+  min-width: 60px;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 .btn-icon {
@@ -198,15 +295,24 @@ const saveAppointment = async (data) => {
   color: var(--color-text-muted);
 }
 
-.btn-icon:hover {
+.btn-icon:hover:not(:disabled) {
   color: var(--color-primary);
   border-color: var(--color-primary);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.summary-cards.daily-cards {
   margin-bottom: 2rem;
 }
 
@@ -216,6 +322,10 @@ const saveAppointment = async (data) => {
   border-radius: var(--radius-md);
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-left: 5px solid transparent;
+}
+
+.card.daily {
+  padding: 1rem 1.25rem;
 }
 
 .card.income {
@@ -240,10 +350,19 @@ const saveAppointment = async (data) => {
   text-transform: uppercase;
 }
 
+.card.daily h3 {
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
 .card .amount {
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--color-text-main);
+}
+
+.card.daily .amount {
+  font-size: 1.3rem;
 }
 
 .card .pending {
