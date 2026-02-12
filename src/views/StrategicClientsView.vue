@@ -27,11 +27,10 @@
       :columns="columns"
       :fetch-data="fetchStatsAdapter"
       :row-class="rowClass"
+      @row-click="handleRowClick"
     >
       <template #cell-client.name="{ item }">
-        <router-link :to="{ name: 'client-detail', params: { id: item.client.id }, query: { from: 'strategic-clients' }}">
-          {{ item.client.name }}
-        </router-link>
+        {{ item.client.name }}
       </template>
 
       <template #cell-client.status="{ item }">
@@ -64,7 +63,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import GenericTable from '../components/common/GenericTable.vue';
 import api from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -73,6 +72,7 @@ const tableRef = ref(null);
 const recalculating = ref(false);
 const selectedStatuses = ref([]);
 const route = useRoute();
+const router = useRouter();
 
 const statuses = [
   { value: 'VIP', label: 'VIP', class: 'vip' },
@@ -132,6 +132,16 @@ const rowClass = (item) => {
         return 'highlight-row';
     }
     return '';
+};
+
+const handleRowClick = (item) => {
+    // Navigate to client detail
+    // We maintain the 'from' query param to allow back navigation logic to work
+    router.push({ 
+        name: 'client-detail', 
+        params: { id: item.client.id }, 
+        query: { from: 'strategic-clients' } 
+    });
 };
 </script>
 
