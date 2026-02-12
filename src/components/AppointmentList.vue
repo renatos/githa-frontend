@@ -25,7 +25,7 @@
         </span>
       </template>
 
-      <template #actions="{ item }">
+      <template #actions="{ item }" v-if="!embedded">
         <div class="actions-group">
           <!-- Quick actions -->
           <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)" 
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose, defineProps, watch, onMounted } from 'vue';
+import { ref, defineEmits, defineExpose, defineProps, watch, onMounted, computed } from 'vue';
 import GenericTable from './common/GenericTable.vue';
 import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
@@ -113,15 +113,25 @@ onMounted(() => {
 
 
 
-const columns = [
-  { key: 'id', label: '#', width: '50px', sortable: true },
-  { key: 'startTime', label: 'Data', sortable: true },
-  // Hide Client column if we are filtering by a specific client
-  ...(props.clientId ? [] : [{ key: 'clientName', label: 'Cliente', sortable: false }]),
-  { key: 'professionalName', label: 'Profissional', sortable: false },
-  { key: 'serviceName', label: 'Serviço', sortable: false },
-  { key: 'status', label: 'Status', sortable: true, align: 'center' },
-];
+const columns = computed(() => {
+  const cols = [];
+  if (!props.embedded) {
+    cols.push({ key: 'id', label: '#', width: '50px', sortable: true });
+  }
+  cols.push({ key: 'startTime', label: 'Data', sortable: true });
+  
+  if (!props.clientId) {
+    cols.push({ key: 'clientName', label: 'Cliente', sortable: false });
+  }
+
+  cols.push(
+    { key: 'professionalName', label: 'Profissional', sortable: false },
+    { key: 'serviceName', label: 'Serviço', sortable: false },
+    { key: 'status', label: 'Status', sortable: true, align: 'center' }
+  );
+  
+  return cols;
+});
 
 const fetchDataAdapter = async (params) => {
   const query = {

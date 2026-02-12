@@ -2,7 +2,7 @@
   <div class="client-detail-view">
     <div class="page-header" v-if="client.id">
       <div class="header-left">
-        <button class="btn-back" @click="$router.push({ name: 'clients' })">←</button>
+        <button class="btn-back" @click="goBack">←</button>
         <div class="title-section">
           <h1>{{ client.name }}</h1>
           <span :class="['status-badge', client.status ? client.status.toLowerCase() : '']">
@@ -129,6 +129,15 @@ const onClientSaved = async (data) => {
 const editAppointment = (appt) => { /* TODO: Open Appointment Modal */ };
 const deleteAppointment = (id) => { /* TODO: Delete logic */ };
 const newAppointment = () => { /* TODO: New Appointment logic */ };
+
+const goBack = () => {
+  const from = route.query.from;
+  if (from === 'strategic-clients') {
+    router.push({ name: 'strategic-clients', query: { highlight: client.value.id } });
+  } else {
+    router.push({ name: 'clients' });
+  }
+};
 
 onMounted(() => {
   loadClient();

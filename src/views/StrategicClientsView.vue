@@ -26,9 +26,10 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchStatsAdapter"
+      :row-class="rowClass"
     >
       <template #cell-client.name="{ item }">
-        <router-link :to="{ name: 'client-detail', params: { id: item.client.id }}">
+        <router-link :to="{ name: 'client-detail', params: { id: item.client.id }, query: { from: 'strategic-clients' }}">
           {{ item.client.name }}
         </router-link>
       </template>
@@ -52,7 +53,7 @@
             <a v-if="item.client.phone" :href="getWhatsappLink(item.client)" target="_blank" class="btn-icon whatsapp" title="WhatsApp">
               💬
             </a>
-            <router-link :to="{ name: 'client-detail', params: { id: item.client.id }}" class="btn-icon" title="Ver Detalhes">
+            <router-link :to="{ name: 'client-detail', params: { id: item.client.id }, query: { from: 'strategic-clients' }}" class="btn-icon" title="Ver Detalhes">
               👤
             </router-link>
         </div>
@@ -63,6 +64,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 import GenericTable from '../components/common/GenericTable.vue';
 import api from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -70,6 +72,7 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 const tableRef = ref(null);
 const recalculating = ref(false);
 const selectedStatuses = ref([]);
+const route = useRoute();
 
 const statuses = [
   { value: 'VIP', label: 'VIP', class: 'vip' },
@@ -122,6 +125,13 @@ const recalculate = async () => {
 const getWhatsappLink = (client) => {
     const phone = client.phone.replace(/\D/g, '');
     return `https://wa.me/55${phone}`;
+};
+
+const rowClass = (item) => {
+    if (route.query.highlight && String(item.client.id) === String(route.query.highlight)) {
+        return 'highlight-row';
+    }
+    return '';
 };
 </script>
 
@@ -188,5 +198,10 @@ const getWhatsappLink = (client) => {
 .btn-icon.whatsapp:hover {
     filter: grayscale(0%);
     background-color: #dcfce7;
+}
+
+:deep(.highlight-row) td {
+    background-color: var(--color-highlight-row, #fffbeb) !important; 
+    transition: background-color 0.5s;
 }
 </style>
