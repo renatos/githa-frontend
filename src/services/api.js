@@ -1,4 +1,31 @@
 import axios from 'axios';
+import { loadingState } from './loadingState';
+
+let pendingRequests = 0;
+let loadingTimeout = null;
+
+const startLoading = () => {
+    pendingRequests++;
+    if (pendingRequests === 1) {
+        loadingTimeout = setTimeout(() => {
+            if (pendingRequests > 0) {
+                loadingState.setLoading(true);
+            }
+        }, 1000);
+    }
+};
+
+const stopLoading = () => {
+    pendingRequests--;
+    if (pendingRequests <= 0) {
+        pendingRequests = 0;
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+            loadingTimeout = null;
+        }
+        loadingState.setLoading(false);
+    }
+};
 
 const api = axios.create({
     baseURL: '/api',
@@ -8,11 +35,15 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
+    startLoading();
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+}, error => {
+    stopLoading();
+    return Promise.reject(error);
 });
 
 import { errorHandler } from './errorHandler';
@@ -21,8 +52,12 @@ import { toastBridge } from './toastBridge';
 const getToast = () => toastBridge.getToast();
 
 api.interceptors.response.use(
-    response => response,
+    response => {
+        stopLoading();
+        return response;
+    },
     error => {
+        stopLoading();
         const toast = getToast();
         errorHandler.handle(error, toast);
 

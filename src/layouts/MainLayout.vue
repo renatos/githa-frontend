@@ -39,6 +39,9 @@
         <router-link to="/operating-expenses" class="nav-item" active-class="active" @click="closeSidebar">
           Contas Operacionais
         </router-link>
+        <router-link to="/payment-methods" class="nav-item" active-class="active" @click="closeSidebar">
+          Formas de Pagamento
+        </router-link>
         <router-link to="/feedbacks" class="nav-item" active-class="active" @click="closeSidebar">
           Feedbacks e Suporte
         </router-link>

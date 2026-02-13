@@ -102,6 +102,24 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/payment-methods',
+            name: 'PaymentMethods',
+            component: () => import('../views/financial/PaymentMethodList.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/payment-methods/new',
+            name: 'NewPaymentMethod',
+            component: () => import('../components/financial/PaymentMethodForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/payment-methods/:id',
+            name: 'EditPaymentMethod',
+            component: () => import('../components/financial/PaymentMethodForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/accounts',
             name: 'accounts',
             component: () => import('../views/financial/AccountView.vue'),
