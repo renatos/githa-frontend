@@ -38,6 +38,7 @@
             :initial-description="form.paymentMethodName"
             placeholder="Selecione a forma de pagamento"
             :disabled="!canSave"
+            @select="onPaymentMethodSelect"
           />
         </div>
 
@@ -53,6 +54,28 @@
           <div class="form-group">
             <label>Valor</label>
             <CurrencyInput v-model="form.amount" required :disabled="!canSave" />
+          </div>
+        </div>
+
+        <!-- Discount Preview -->
+        <div v-if="discountPreview" class="discount-preview">
+          <div class="discount-header">
+            <span class="discount-icon">💰</span>
+            <span>Desconto: <strong>{{ selectedPaymentMethod.name }}</strong> ({{ discountPreview.percentage }}%)</span>
+          </div>
+          <div class="discount-details">
+            <div class="discount-row">
+              <span>Valor original:</span>
+              <span>{{ formatCurrency(form.amount) }}</span>
+            </div>
+            <div class="discount-row discount-value">
+              <span>Desconto:</span>
+              <span>- {{ formatCurrency(discountPreview.discountAmount) }}</span>
+            </div>
+            <div class="discount-row discount-final">
+              <span>Valor final estimado:</span>
+              <span>{{ formatCurrency(discountPreview.finalAmount) }}</span>
+            </div>
           </div>
         </div>
 
@@ -122,13 +145,15 @@ const form = ref({
   amount: 0,
   type: 'EXPENSE',
   status: 'PENDING',
-  category: undefined, // Changed to undefined for select
-  paymentDate: '', // Will be set in onMounted
-  operatingExpenseId: undefined, // Changed from bankAccountId
+  category: undefined,
+  paymentDate: '',
+  operatingExpenseId: undefined,
   paymentMethodId: undefined,
   paymentMethodName: '',
   active: true
 });
+
+const selectedPaymentMethod = ref(null);
 
 const operatingExpenses = ref([]); // Changed from accounts
 const categories = ref([ // Added categories
@@ -181,6 +206,11 @@ onMounted(async () => {
     form.value = { ...props.transaction };
     originalStatus.value = props.transaction.status;
     
+    // Show originalAmount in the Valor field so user sees the pre-discount value
+    if (form.value.originalAmount) {
+        form.value.amount = form.value.originalAmount;
+    }
+    
     // Format LocalDateTime for input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
     if (form.value.paymentDate && form.value.paymentDate.length > 16) {
         form.value.paymentDate = form.value.paymentDate.substring(0, 19);
@@ -190,10 +220,21 @@ onMounted(async () => {
     if (form.value.paymentMethodId && props.transaction.paymentMethodName) {
         form.value.paymentMethodName = props.transaction.paymentMethodName;
     }
+
+    // Load full payment method data for discount preview
+    if (form.value.paymentMethodId) {
+        try {
+            const pmResponse = await paymentMethodService.getById(form.value.paymentMethodId);
+            if (pmResponse.data) {
+                selectedPaymentMethod.value = pmResponse.data;
+            }
+        } catch (e) {
+            console.warn('Could not load payment method details', e);
+        }
+    }
   } else {
     // Default to current time
     const now = new Date();
-    // Better safely:
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
@@ -203,6 +244,28 @@ onMounted(async () => {
     form.value.paymentDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 });
+
+const onPaymentMethodSelect = (item) => {
+    selectedPaymentMethod.value = item;
+};
+
+const discountPreview = computed(() => {
+    if (!selectedPaymentMethod.value) return null;
+    const pct = parseFloat(selectedPaymentMethod.value.discountPercentage);
+    if (!pct || pct <= 0) return null;
+    const amount = parseFloat(form.value.amount);
+    if (!amount || amount <= 0) return null;
+    const discountAmount = (amount * pct) / 100;
+    return {
+        percentage: pct,
+        discountAmount: Math.round(discountAmount * 100) / 100,
+        finalAmount: Math.round((amount - discountAmount) * 100) / 100
+    };
+});
+
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+};
 
 const save = () => {
   // Validate Description or Auto-fill
@@ -227,6 +290,11 @@ const save = () => {
   }
   emit('save', form.value);
 };
+
+// Keep originalAmount in sync when user edits the Valor field
+watch(() => form.value.amount, (newVal) => {
+    form.value.originalAmount = newVal;
+});
 
 const viewAppointment = () => {
     if (form.value.appointmentId) {
@@ -360,5 +428,51 @@ input, select {
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
+}
+
+.discount-preview {
+    background: var(--color-bg-body, #f8f9fa);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-success, #16a34a);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.discount-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.discount-icon {
+    font-size: 1rem;
+}
+
+.discount-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.discount-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-text-main);
+}
+
+.discount-value {
+    color: var(--color-danger, #dc2626);
+}
+
+.discount-final {
+    font-weight: 700;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-success, #16a34a);
 }
 </style>

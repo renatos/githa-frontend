@@ -79,7 +79,7 @@
             :month="selectedMonth" 
             :year="selectedYear" 
             :day="viewMode === 'DAY' ? selectedDay : null"
-            @change="loadSummary" 
+            @change="loadAllData" 
             @view-appointment="openAppointment" 
         />
     </div>
