@@ -8,6 +8,7 @@ import AuthLayout from './layouts/AuthLayout.vue';
 
 import { useTheme } from './composables/useTheme';
 import { toastBridge } from './services/toastBridge';
+import LoadingOverlay from './components/LoadingOverlay.vue';
 
 const route = useRoute();
 const toast = useToast();
@@ -26,6 +27,7 @@ const layout = computed(() => {
   <component :is="layout">
     <RouterView />
   </component>
+  <LoadingOverlay />
   <Toast />
 </template>
 

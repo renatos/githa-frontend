@@ -1,10 +1,7 @@
 <template>
   <div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="mb-4">
       <h2>{{ isEditing ? 'Editar Despesa' : 'Nova Despesa' }}</h2>
-      <button class="btn btn-secondary" @click="$router.push('/operating-expenses')">
-        <i class="bi bi-arrow-left"></i> Voltar
-      </button>
     </div>
 
     <div class="card">
@@ -20,7 +17,11 @@
             <label class="form-check-label" for="active">Ativo</label>
           </div>
 
-          <button type="submit" class="btn btn-primary">Salvar</button>
+          <div class="d-flex justify-content-start gap-3 pt-4 mt-4" style="border-top: 1px solid #4b5563;">
+            <div style="flex-grow: 1;"></div>
+            <button type="button" class="btn btn-secondary" @click="$router.push('/operating-expenses')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
         </form>
       </div>
     </div>
