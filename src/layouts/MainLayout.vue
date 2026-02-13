@@ -22,31 +22,42 @@
       </div>
       
       <nav class="sidebar-nav">
-        <router-link to="/" class="nav-item" active-class="active" @click="closeSidebar">
-          Dashboard
+        <router-link to="/appointments" class="nav-item" active-class="active" @click="closeSidebar">
+          Agenda
         </router-link>
         <router-link to="/clients" class="nav-item" active-class="active" @click="closeSidebar">
           Clientes
         </router-link>
-        <router-link to="/professionals" class="nav-item" active-class="active" @click="closeSidebar">
-          Profissionais
+        <router-link to="/strategic-clients" class="nav-item" active-class="active" @click="closeSidebar">
+          Clientes Estratégicos
         </router-link>
-        <router-link to="/services" class="nav-item" active-class="active" @click="closeSidebar">
-          Procedimentos
-        </router-link>
-        <router-link to="/appointments" class="nav-item" @click="closeSidebar">Agenda</router-link>
-        <router-link to="/financials" class="nav-item" active-class="active" @click="closeSidebar">Financeiro</router-link>
         <router-link to="/operating-expenses" class="nav-item" active-class="active" @click="closeSidebar">
           Contas Operacionais
         </router-link>
-        <router-link to="/payment-methods" class="nav-item" active-class="active" @click="closeSidebar">
-          Formas de Pagamento
+        <router-link to="/" class="nav-item" active-class="active" @click="closeSidebar">
+          Dashboard
         </router-link>
         <router-link to="/feedbacks" class="nav-item" active-class="active" @click="closeSidebar">
           Feedbacks e Suporte
         </router-link>
-        <router-link to="/strategic-clients" class="nav-item" @click="closeSidebar">Clientes Estratégicos</router-link>
-        <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">Parametrização</router-link>
+        <router-link to="/financials" class="nav-item" active-class="active" @click="closeSidebar">
+          Financeiro
+        </router-link>
+        <router-link to="/payment-methods" class="nav-item" active-class="active" @click="closeSidebar">
+          Formas de Pagamento
+        </router-link>
+        <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">
+          Parametrização
+        </router-link>
+        <router-link to="/services" class="nav-item" active-class="active" @click="closeSidebar">
+          Procedimentos
+        </router-link>
+        <router-link to="/products" class="nav-item" active-class="active" @click="closeSidebar">
+          Produtos
+        </router-link>
+        <router-link to="/professionals" class="nav-item" active-class="active" @click="closeSidebar">
+          Profissionais
+        </router-link>
         <router-link to="/users" class="nav-item" active-class="active" @click="closeSidebar">
           Usuários
         </router-link>

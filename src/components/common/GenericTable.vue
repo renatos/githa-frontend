@@ -11,7 +11,7 @@
               :style="{ width: col.width, textAlign: col.align || 'left' }"
               @click="col.sortable !== false ? toggleSort(col.key) : null"
             >
-              <div class="header-content">
+              <div class="header-content" :style="{ justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start' }">
                 <span>{{ col.label }}</span>
                 <span v-if="col.sortable !== false" class="sort-icon">
                   <span v-if="currentSort.key === col.key">

@@ -120,6 +120,24 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/products',
+            name: 'Products',
+            component: () => import('../views/ProductList.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/products/new',
+            name: 'NewProduct',
+            component: () => import('../components/ProductForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/products/:id',
+            name: 'EditProduct',
+            component: () => import('../components/ProductForm.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/accounts',
             name: 'accounts',
             component: () => import('../views/financial/AccountView.vue'),
