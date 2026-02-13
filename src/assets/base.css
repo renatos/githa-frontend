@@ -146,3 +146,19 @@ body {
     color: var(--color-primary) !important;
     border-color: var(--color-primary) !important;
 }
+
+/* Mobile Toast Overrides - Centered */
+@media screen and (max-width: 768px) {
+    .p-toast {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 350px !important;
+    }
+
+    .p-toast-message {
+        border-radius: var(--radius-md) !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+}

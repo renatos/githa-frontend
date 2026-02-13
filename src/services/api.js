@@ -11,7 +11,7 @@ const startLoading = () => {
             if (pendingRequests > 0) {
                 loadingState.setLoading(true);
             }
-        }, 1000);
+        }, 800);
     }
 };
 
