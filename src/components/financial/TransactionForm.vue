@@ -30,6 +30,17 @@
            </div>
         </div>
 
+        <div class="form-group">
+          <label>Forma de Pagamento</label>
+          <BaseLookup
+            v-model="form.paymentMethodId"
+            :search-service="paymentMethodService"
+            :initial-description="form.paymentMethodName"
+            placeholder="Selecione a forma de pagamento"
+            :disabled="!canSave"
+          />
+        </div>
+
         <div class="form-row">
            <div class="form-group">
             <label>Tipo</label>
@@ -63,6 +74,7 @@
 
 
 
+
         <div class="form-row">
           <div class="form-group">
             <label>Pagamento</label>
@@ -85,6 +97,8 @@ import financialService from '../../services/financialService';
 import { authService } from '../../services/authService';
 import { useEscapeKey } from '../../composables/useEscapeKey';
 import CurrencyInput from '../common/CurrencyInput.vue';
+import BaseLookup from '../common/BaseLookup.vue';
+import paymentMethodService from '../../services/paymentMethodService';
 
 const props = defineProps({
   transaction: { type: Object, default: () => ({}) }
@@ -111,6 +125,8 @@ const form = ref({
   category: undefined, // Changed to undefined for select
   paymentDate: '', // Will be set in onMounted
   operatingExpenseId: undefined, // Changed from bankAccountId
+  paymentMethodId: undefined,
+  paymentMethodName: '',
   active: true
 });
 
@@ -168,6 +184,11 @@ onMounted(async () => {
     // Format LocalDateTime for input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
     if (form.value.paymentDate && form.value.paymentDate.length > 16) {
         form.value.paymentDate = form.value.paymentDate.substring(0, 19);
+    }
+    
+    // Set payment method name for lookup
+    if (form.value.paymentMethodId && props.transaction.paymentMethodName) {
+        form.value.paymentMethodName = props.transaction.paymentMethodName;
     }
   } else {
     // Default to current time

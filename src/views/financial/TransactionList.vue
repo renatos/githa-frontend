@@ -236,7 +236,6 @@ const saveItem = async (data) => {
     closeForm();
   } catch (error) {
     console.error('Error saving transaction:', error);
-    alert('Erro ao salvar transação');
   }
 };
 
@@ -248,7 +247,6 @@ const deleteItem = async (id) => {
       emit('change');
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert('Erro ao excluir transação');
     }
   }
 };
