@@ -45,11 +45,11 @@
         </div>
 
         <div class="mb-3" v-if="!isAppointmentTransaction && launchMode === 'MANUAL'">
-          <label for="operatingExpense" class="form-label">Despesa Operacional</label>
-          <select class="form-select" id="operatingExpense" v-model="form.operatingExpenseId" :disabled="!canSave">
-            <option :value="undefined">Selecione uma despesa</option>
-            <option v-for="expense in operatingExpenses" :key="expense.id" :value="expense.id">
-              {{ expense.name }}
+          <label for="accountGroup" class="form-label">Grupo de Contas</label>
+          <select class="form-select" id="accountGroup" v-model="form.accountGroupId" :disabled="!canSave">
+            <option :value="undefined">Selecione um grupo</option>
+            <option v-for="group in accountGroups" :key="group.id" :value="group.id">
+              {{ group.name }}
             </option>
           </select>
         </div>
@@ -152,8 +152,8 @@
 
         <div class="form-row">
            <div class="form-group">
-            <label>Tipo</label>
-            <select v-model="form.type" required :disabled="isAppointmentTransaction || !!form.operatingExpenseId || !canSave">
+            <label>Natureza</label>
+            <select v-model="form.nature" required :disabled="isAppointmentTransaction || !!form.accountGroupId || !canSave">
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
@@ -258,11 +258,11 @@ const launchMode = ref('MANUAL'); // 'MANUAL' or 'SALE'
 const form = ref({
   description: '',
   amount: 0,
-  type: 'EXPENSE',
+  nature: 'EXPENSE',
   status: 'PENDING',
   category: undefined,
   paymentDate: '',
-  operatingExpenseId: undefined,
+  accountGroupId: undefined,
   paymentMethodId: undefined,
   paymentMethodName: '',
   clientId: undefined,
@@ -285,7 +285,7 @@ const newItem = ref({
 
 const selectedPaymentMethod = ref(null);
 
-const operatingExpenses = ref([]); // Changed from accounts
+const accountGroups = ref([]); // Changed from groups
 const categories = ref([ // Added categories
   'Alimentação',
   'Transporte',
@@ -326,10 +326,10 @@ const saveTooltip = computed(() => {
 onMounted(async () => {
   checkUserRole();
   try {
-    const response = await financialService.getOperatingExpenses(); // Changed service call
-    operatingExpenses.value = response.data.filter(opEx => opEx.active); // Changed from accounts
+    const response = await financialService.getAccountGroups(); // Changed service call
+    accountGroups.value = response.data.filter(group => group.active); // Changed from groups
   } catch (error) {
-    console.error('Error loading operating expenses:', error); // Updated error message
+    console.error('Error loading account groups:', error); // Updated error message
   }
 
   if (props.transaction && props.transaction.id) {
@@ -456,18 +456,18 @@ const formatCurrency = (value) => {
 
 const save = async () => {
   // Common Validations
-  if (form.value.status === 'PAID' && !form.value.operatingExpenseId && !form.value.appointmentId && launchMode.value === 'MANUAL') {
-    alert('Por favor, selecione uma Despesa Operacional ou verifique o Agendamento para transações Pagas.');
+  if (form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId && launchMode.value === 'MANUAL') {
+    alert('Por favor, selecione um Grupo de Contas ou verifique o Agendamento para transações Pagas.');
     return;
   }
 
   // Manual Mode logic
   if (launchMode.value === 'MANUAL') {
       if (!form.value.description) {
-          if (form.value.operatingExpenseId) {
-            const selectedExpense = operatingExpenses.value.find(e => e.id == form.value.operatingExpenseId);
-            if (selectedExpense) {
-                form.value.description = selectedExpense.name;
+          if (form.value.accountGroupId) {
+            const selectedGroup = accountGroups.value.find(e => e.id == form.value.accountGroupId);
+            if (selectedGroup) {
+                form.value.description = selectedGroup.name;
             } else {
                 alert('Descrição é obrigatória.');
                 return;
@@ -509,7 +509,7 @@ const save = async () => {
               transaction: {
                   ...form.value,
                   description: form.value.description || `Venda para ${form.value.clientName}`,
-                  type: 'INCOME',
+                  nature: 'INCOME',
                   amount: form.value.amount,
                   originalAmount: form.value.amount
               }
@@ -541,17 +541,24 @@ const isAppointmentTransaction = computed(() => {
 });
 
 // Watchers for business logic
-watch(() => form.value.operatingExpenseId, (newVal) => {
+watch(() => form.value.accountGroupId, (newVal) => {
     if (newVal) {
         if (!isAppointmentTransaction.value) {
-            form.value.type = 'EXPENSE';
+            // Nature is now on AccountGroup, but we still force EXPENSE for manual launch if linked to group?
+            // Actually, we should probably load the nature from the group.
+            const selectedGroup = accountGroups.value.find(e => e.id === newVal);
+            if (selectedGroup && selectedGroup.nature) {
+                form.value.nature = selectedGroup.nature;
+            } else {
+                form.value.nature = 'EXPENSE';
+            }
         }
         
         // Auto-fill description if empty
         if (!form.value.description) {
-            const selectedExpense = operatingExpenses.value.find(e => e.id === newVal);
-            if (selectedExpense) {
-                form.value.description = selectedExpense.name;
+            const selectedGroup = accountGroups.value.find(e => e.id === newVal);
+            if (selectedGroup) {
+                form.value.description = selectedGroup.name;
             }
         }
     }
@@ -559,7 +566,7 @@ watch(() => form.value.operatingExpenseId, (newVal) => {
 
 watch(() => form.value.appointmentId, (newVal) => {
     if (newVal) {
-        form.value.type = 'INCOME';
+        form.value.nature = 'INCOME';
     }
 }, { immediate: true });
 </script>

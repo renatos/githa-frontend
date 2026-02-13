@@ -1,9 +1,9 @@
 <template>
-  <div class="operating-expense-list">
+  <div class="account-group-list">
     <div class="header-actions">
-      <h2>Contas Operacionais</h2>
-      <button class="btn btn-primary" @click="$router.push('/operating-expenses/new')">
-        + Nova Despesa/Receita
+      <h2>Grupos de Contas</h2>
+      <button class="btn btn-primary" @click="$router.push('/account-groups/new')">
+        + Novo Grupo
       </button>
     </div>
 
@@ -11,8 +11,14 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
-      @row-click="(item) => $router.push(`/operating-expenses/${item.id}`)"
+      @row-click="(item) => $router.push(`/account-groups/${item.id}`)"
     >
+      <template #cell-nature="{ value }">
+        <span :class="['nature-badge', value.toLowerCase()]">
+          {{ value === 'INCOME' ? 'Receita' : 'Despesa' }}
+        </span>
+      </template>
+
       <template #cell-active="{ value }">
         <span :class="['status-badge', value ? 'active' : 'inactive']">
           {{ value ? 'Ativo' : 'Inativo' }}
@@ -40,16 +46,15 @@ const tableRef = ref(null);
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'name', label: 'Nome', sortable: true, filterable: true },
+  { key: 'nature', label: 'Natureza', sortable: true, align: 'center' },
   { key: 'active', label: 'Status', sortable: true, align: 'center' },
 ];
 
 const fetchDataAdapter = async (params) => {
-  // Backend currently returns a simple list, not paginated
-  // We'll wrap it in a PageResponse structure for GenericTable compatibility
-  const response = await financialService.getOperatingExpenses();
+  const response = await financialService.getAccountGroups();
   const allData = response.data;
   
-  // Apply filtering if needed
+  // Apply filtering
   let filteredData = allData;
   if (params.filters && params.filters.name) {
     const searchTerm = params.filters.name.toLowerCase();
@@ -58,7 +63,7 @@ const fetchDataAdapter = async (params) => {
     );
   }
   
-  // Apply sorting if needed
+  // Apply sorting
   if (params.sort) {
     const [field, direction] = params.sort.split(',');
     filteredData.sort((a, b) => {
@@ -74,7 +79,6 @@ const fetchDataAdapter = async (params) => {
   const end = start + params.size;
   const paginatedData = filteredData.slice(start, end);
   
-  // Return PageResponse format
   return {
     content: paginatedData,
     number: params.page,
@@ -83,14 +87,14 @@ const fetchDataAdapter = async (params) => {
   };
 };
 
-const confirmDelete = async (expense) => {
-  if (confirm(`Tem certeza que deseja excluir a despesa "${expense.name}"?`)) {
+const confirmDelete = async (group) => {
+  if (confirm(`Tem certeza que deseja excluir o grupo "${group.name}"?`)) {
     try {
-      await financialService.deleteOperatingExpense(expense.id);
+      await financialService.deleteAccountGroup(group.id);
       tableRef.value?.loadData();
     } catch (error) {
-      console.error('Error deleting operating expense:', error);
-      alert('Erro ao excluir despesa. Verifique se existem transações vinculadas.');
+      console.error('Error deleting account group:', error);
+      alert('Erro ao excluir grupo. Verifique se existem transações vinculadas.');
     }
   }
 };
@@ -140,7 +144,7 @@ const confirmDelete = async (expense) => {
   opacity: 1;
 }
 
-.status-badge {
+.status-badge, .nature-badge {
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   font-size: 0.75rem;
@@ -155,5 +159,15 @@ const confirmDelete = async (expense) => {
 .status-badge.inactive {
   background-color: #f1f5f9;
   color: #64748b;
+}
+
+.nature-badge.income {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.nature-badge.expense {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 </style>

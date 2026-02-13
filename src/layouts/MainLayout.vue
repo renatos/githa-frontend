@@ -31,8 +31,8 @@
         <router-link to="/strategic-clients" class="nav-item" active-class="active" @click="closeSidebar">
           Clientes Estratégicos
         </router-link>
-        <router-link to="/operating-expenses" class="nav-item" active-class="active" @click="closeSidebar">
-          Contas Operacionais
+        <router-link to="/account-groups" class="nav-item" active-class="active" @click="closeSidebar">
+          Grupos de Contas
         </router-link>
         <router-link to="/" class="nav-item" active-class="active" @click="closeSidebar">
           Dashboard

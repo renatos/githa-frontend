@@ -17,12 +17,12 @@
       @row-click="openForm"
     >
       <template #cell-amount="{ value, item }">
-        <span :class="['amount', item.type.toLowerCase()]">
+        <span :class="['amount', item.nature.toLowerCase()]">
           {{ formatCurrency(value) }}
         </span>
       </template>
       
-      <template #cell-type="{ value }">
+      <template #cell-nature="{ value }">
         <span :class="['badge', value.toLowerCase()]">
           {{ value === 'INCOME' ? 'Receita' : 'Despesa' }}
         </span>
@@ -45,7 +45,7 @@
       <template #actions="{ item }">
         <div class="actions-group">
           <button 
-            v-if="item.type === 'INCOME'" 
+            v-if="item.nature === 'INCOME'" 
             class="btn-icon" 
             title="Gerar Agendamento"
             @click="openAppointmentModal(item)"
@@ -73,10 +73,10 @@
     />
 
     <CreateAppointmentFromTransactionModal
-        v-if="showAppointmentModal"
-        :transaction="appointmentTransaction"
-        @close="closeAppointmentModal"
-        @save="onAppointmentCreated"
+      v-if="showAppointmentModal"
+      :transaction="appointmentTransaction"
+      @close="closeAppointmentModal"
+      @save="onAppointmentCreated"
     />
   </div>
 </template>
@@ -146,7 +146,7 @@ const columns = [
   { key: 'description', label: 'Descrição', sortable: true },
   { key: 'category', label: 'Categoria', sortable: true },
   { key: 'amount', label: 'Valor', sortable: true, align: 'right' },
-  { key: 'type', label: 'Tipo', sortable: true, align: 'center' },
+  { key: 'nature', label: 'Natureza', sortable: true, align: 'center' },
   { key: 'paymentDate', label: 'Pagamento', sortable: true },
   { key: 'status', label: 'Status', sortable: true, align: 'center' },
 ];

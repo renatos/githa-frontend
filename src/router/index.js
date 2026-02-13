@@ -84,21 +84,21 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/operating-expenses',
-            name: 'OperatingExpenses',
-            component: () => import('../views/financial/OperatingExpenseList.vue'),
+            path: '/account-groups',
+            name: 'AccountGroups',
+            component: () => import('../views/financial/AccountGroupList.vue'),
             meta: { requiresAuth: true }
         },
         {
-            path: '/operating-expenses/new',
-            name: 'NewOperatingExpense',
-            component: () => import('../components/financial/OperatingExpenseForm.vue'),
+            path: '/account-groups/new',
+            name: 'NewAccountGroup',
+            component: () => import('../components/financial/AccountGroupForm.vue'),
             meta: { requiresAuth: true }
         },
         {
-            path: '/operating-expenses/:id',
-            name: 'EditOperatingExpense',
-            component: () => import('../components/financial/OperatingExpenseForm.vue'),
+            path: '/account-groups/:id',
+            name: 'EditAccountGroup',
+            component: () => import('../components/financial/AccountGroupForm.vue'),
             meta: { requiresAuth: true }
         },
         {
