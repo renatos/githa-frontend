@@ -226,6 +226,13 @@ const closeForm = () => {
 
 const saveItem = async (data) => {
   try {
+    if (data.refresh) {
+      tableRef.value?.loadData();
+      emit('change');
+      closeForm();
+      return;
+    }
+    
     if (data.id) {
       await financialService.updateTransaction(data.id, data);
     } else {

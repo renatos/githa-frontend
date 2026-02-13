@@ -56,7 +56,7 @@
             
             <TabPanel header="Histórico" v-if="client.id">
                 <div class="history-tab">
-                    <AppointmentList :client-id="client.id" :embedded="true" />
+                    <SaleList :client-id="client.id" :embedded="true" />
                 </div>
             </TabPanel>
         </TabView>
@@ -70,7 +70,7 @@ import { ref, defineProps, defineEmits, onMounted } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import BaseLookup from './common/BaseLookup.vue';
-import AppointmentList from './AppointmentList.vue';
+import SaleList from './SaleList.vue';
 import { clientService } from '../services/clientService';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';

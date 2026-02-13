@@ -7,12 +7,44 @@
       </div>
 
       <form @submit.prevent="save">
-        <div class="form-group">
+        <div class="launch-mode-selector" v-if="!transaction.id">
+            <button 
+                type="button"
+                class="mode-btn" 
+                :class="{ active: launchMode === 'MANUAL' }"
+                @click="launchMode = 'MANUAL'"
+            >
+                Lançamento Manual
+            </button>
+            <button 
+                type="button"
+                class="mode-btn" 
+                :class="{ active: launchMode === 'SALE' }"
+                @click="launchMode = 'SALE'"
+            >
+                Venda de Produtos/Serviços
+            </button>
+        </div>
+
+        <div class="form-group" v-if="launchMode === 'MANUAL'">
           <label>Descrição</label>
           <input v-model="form.description" :disabled="!canSave" />
         </div>
 
-        <div class="mb-3" v-if="!isAppointmentTransaction">
+        <!-- NEW: Client Selection for SALE mode -->
+        <div class="form-group" v-if="launchMode === 'SALE'">
+          <label>Cliente</label>
+          <BaseLookup
+            v-model="form.clientId"
+            :search-service="clientService"
+            :initial-description="form.clientName"
+            placeholder="Selecione o cliente"
+            :disabled="!canSave"
+            @select="onClientSelect"
+          />
+        </div>
+
+        <div class="mb-3" v-if="!isAppointmentTransaction && launchMode === 'MANUAL'">
           <label for="operatingExpense" class="form-label">Despesa Operacional</label>
           <select class="form-select" id="operatingExpense" v-model="form.operatingExpenseId" :disabled="!canSave">
             <option :value="undefined">Selecione uma despesa</option>
@@ -20,6 +52,82 @@
               {{ expense.name }}
             </option>
           </select>
+        </div>
+
+        <!-- SALE MODE: Items Table -->
+        <div v-if="launchMode === 'SALE'" class="sale-items-section">
+            <label>Itens da Venda</label>
+            <div class="items-table-container">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Item</th>
+                            <th>Qtd</th>
+                            <th>Valor Un.</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in saleItems" :key="item.id">
+                            <td>{{ item.type === 'PRODUCT' ? '📦' : '💇' }}</td>
+                            <td>
+                                {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
+                                <br v-if="item.professionalName">
+                                <small v-if="item.professionalName" class="text-muted">Pro: {{ item.professionalName }}</small>
+                            </td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ formatCurrency(item.unitPrice) }}</td>
+                            <td>{{ formatCurrency(item.unitPrice * item.quantity) }}</td>
+                            <td><button type="button" class="btn-remove" @click="removeSaleItem(index)">×</button></td>
+                        </tr>
+                        <!-- Add New Item Row -->
+                        <tr class="new-item-row">
+                            <td>
+                                <select v-model="newItem.type" class="type-select">
+                                    <option value="PRODUCT">Prod</option>
+                                    <option value="SERVICE">Serv</option>
+                                </select>
+                            </td>
+                            <td>
+                                <BaseLookup
+                                    v-if="newItem.type === 'PRODUCT'"
+                                    v-model="newItem.productId"
+                                    :search-service="productService"
+                                    :initial-description="newItem.productName"
+                                    placeholder="Produto..."
+                                    size="small"
+                                    @select="onProductSelect"
+                                />
+                                <div v-else class="service-selectors">
+                                    <BaseLookup
+                                        v-model="newItem.serviceId"
+                                        :search-service="serviceService"
+                                        :initial-description="newItem.serviceName"
+                                        placeholder="Serviço..."
+                                        size="small"
+                                        @select="onServiceSelect"
+                                    />
+                                    <BaseLookup
+                                        v-if="newItem.serviceId"
+                                        v-model="newItem.professionalId"
+                                        :search-service="professionalService"
+                                        :initial-description="newItem.professionalName"
+                                        placeholder="Profissional..."
+                                        size="small"
+                                        @select="onProfessionalSelect"
+                                    />
+                                </div>
+                            </td>
+                            <td><input type="number" v-model="newItem.quantity" min="1" class="qty-input"></td>
+                            <td class="unit-price-cell"><CurrencyInput v-model="newItem.unitPrice" /></td>
+                            <td>{{ formatCurrency(newItem.unitPrice * newItem.quantity) }}</td>
+                            <td><button type="button" class="btn-add" @click="addSaleItem" :disabled="(newItem.type === 'PRODUCT' && !newItem.productId) || (newItem.type === 'SERVICE' && (!newItem.serviceId || !newItem.professionalId))">+</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="form-row" v-if="isAppointmentTransaction">
@@ -122,6 +230,11 @@ import { useEscapeKey } from '../../composables/useEscapeKey';
 import CurrencyInput from '../common/CurrencyInput.vue';
 import BaseLookup from '../common/BaseLookup.vue';
 import paymentMethodService from '../../services/paymentMethodService';
+import { clientService } from '../../services/clientService';
+import productService from '../../services/productService';
+import { serviceService } from '../../services/serviceService';
+import { professionalService } from '../../services/professionalService';
+import { saleService } from '../../services/saleService';
 
 const props = defineProps({
   transaction: { type: Object, default: () => ({}) }
@@ -140,6 +253,8 @@ const checkUserRole = () => {
     isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
 };
 
+const launchMode = ref('MANUAL'); // 'MANUAL' or 'SALE'
+
 const form = ref({
   description: '',
   amount: 0,
@@ -150,7 +265,22 @@ const form = ref({
   operatingExpenseId: undefined,
   paymentMethodId: undefined,
   paymentMethodName: '',
+  clientId: undefined,
+  clientName: '',
   active: true
+});
+
+const saleItems = ref([]);
+const newItem = ref({
+    type: 'PRODUCT',
+    productId: null,
+    productName: '',
+    serviceId: null,
+    serviceName: '',
+    professionalId: null,
+    professionalName: '',
+    quantity: 1,
+    unitPrice: 0
 });
 
 const selectedPaymentMethod = ref(null);
@@ -245,6 +375,63 @@ onMounted(async () => {
   }
 });
 
+const addSaleItem = () => {
+    if (newItem.value.type === 'PRODUCT' && !newItem.value.productId) return;
+    if (newItem.value.type === 'SERVICE' && (!newItem.value.serviceId || !newItem.value.professionalId)) return;
+    
+    saleItems.value.push({ ...newItem.value, id: Date.now() });
+    
+    // Reset newItem
+    newItem.value = {
+        type: newItem.value.type,
+        productId: null,
+        productName: '',
+        serviceId: null,
+        serviceName: '',
+        professionalId: null,
+        professionalName: '',
+        quantity: 1,
+        unitPrice: 0
+    };
+    
+    calculateAmountFromItems();
+};
+
+const removeSaleItem = (index) => {
+    saleItems.value.splice(index, 1);
+    calculateAmountFromItems();
+};
+
+const calculateAmountFromItems = () => {
+    const total = saleItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    form.value.amount = total;
+};
+
+const onProductSelect = (item) => {
+    newItem.value.productId = item.id;
+    newItem.value.productName = item.name;
+    newItem.value.unitPrice = item.price || 0;
+};
+
+const onServiceSelect = (item) => {
+    newItem.value.serviceId = item.id;
+    newItem.value.serviceName = item.name;
+    newItem.value.unitPrice = item.price || 0;
+};
+
+const onProfessionalSelect = (item) => {
+    newItem.value.professionalId = item.id;
+    newItem.value.professionalName = item.name;
+};
+
+const onClientSelect = (item) => {
+    form.value.clientId = item.id;
+    form.value.clientName = item.name;
+    if (!form.value.description) {
+        form.value.description = `Venda para ${item.name}`;
+    }
+};
+
 const onPaymentMethodSelect = (item) => {
     selectedPaymentMethod.value = item;
 };
@@ -267,28 +454,74 @@ const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 };
 
-const save = () => {
-  // Validate Description or Auto-fill
-  if (!form.value.description) {
-      if (form.value.operatingExpenseId) {
-           const selectedExpense = operatingExpenses.value.find(e => e.id == form.value.operatingExpenseId);
+const save = async () => {
+  // Common Validations
+  if (form.value.status === 'PAID' && !form.value.operatingExpenseId && !form.value.appointmentId && launchMode.value === 'MANUAL') {
+    alert('Por favor, selecione uma Despesa Operacional ou verifique o Agendamento para transações Pagas.');
+    return;
+  }
+
+  // Manual Mode logic
+  if (launchMode.value === 'MANUAL') {
+      if (!form.value.description) {
+          if (form.value.operatingExpenseId) {
+            const selectedExpense = operatingExpenses.value.find(e => e.id == form.value.operatingExpenseId);
             if (selectedExpense) {
                 form.value.description = selectedExpense.name;
             } else {
                 alert('Descrição é obrigatória.');
                 return;
             }
-      } else {
-          alert('Descrição é obrigatória.');
-          return;
+          } else {
+              alert('Descrição é obrigatória.');
+              return;
+          }
       }
+      emit('save', form.value);
+      return;
   }
 
-  if (form.value.status === 'PAID' && !form.value.operatingExpenseId && !form.value.appointmentId) {
-    alert('Por favor, selecione uma Despesa Operacional ou verifique o Agendamento para transações Pagas.');
-    return;
+  // SALE Mode logic
+  if (launchMode.value === 'SALE') {
+      if (!form.value.clientId) {
+          alert('Cliente é obrigatório para vendas.');
+          return;
+      }
+      if (saleItems.value.length === 0) {
+          alert('Adicione pelo menos um item à venda.');
+          return;
+      }
+
+      try {
+          const payload = {
+              sale: {
+                  clientId: form.value.clientId,
+                  notes: form.value.description,
+                  items: saleItems.value.map(item => ({
+                      type: item.type,
+                      productId: item.productId,
+                      serviceId: item.serviceId,
+                      professionalId: item.professionalId,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice
+                  }))
+              },
+              transaction: {
+                  ...form.value,
+                  description: form.value.description || `Venda para ${form.value.clientName}`,
+                  type: 'INCOME',
+                  amount: form.value.amount,
+                  originalAmount: form.value.amount
+              }
+          };
+
+          await saleService.launchSale(payload);
+          emit('save', { refresh: true }); // Notify parent to refresh list
+      } catch (error) {
+          console.error('Error launching sale:', error);
+          alert('Erro ao lançar venda: ' + (error.response?.data?.message || error.message));
+      }
   }
-  emit('save', form.value);
 };
 
 // Keep originalAmount in sync when user edits the Valor field
@@ -474,5 +707,140 @@ input, select {
     padding-top: 0.35rem;
     border-top: 1px solid var(--color-border);
     color: var(--color-success, #16a34a);
+}
+
+/* NEW: Launch Mode and Sale Items Styles */
+.launch-mode-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--color-bg-body, #f8f9fa);
+    padding: 0.35rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0.6rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sale-items-section {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.items-table-container {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.items-table th {
+    background: var(--color-bg-body, #f8f9fa);
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.items-table td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+.btn-remove {
+    background: none;
+    border: none;
+    color: var(--color-error, #ef4444);
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.new-item-row {
+    background: var(--color-bg-body, #f8f9fa);
+}
+
+.new-item-row td {
+    border-bottom: none;
+}
+
+.type-select {
+    padding: 0.35rem;
+    font-size: 0.8rem;
+    width: auto;
+}
+
+.qty-input {
+    width: 60px !important;
+    padding: 0.35rem !important;
+    text-align: center;
+}
+
+.btn-add {
+    background: var(--color-success, #16a34a);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.1s;
+}
+
+.btn-add:active {
+    transform: scale(0.9);
+}
+
+.btn-add:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: var(--color-text-muted);
+}
+
+.service-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.unit-price-cell :deep(input) {
+    width: 90px !important;
+    padding: 0.35rem !important;
+}
+
+.text-muted {
+    color: var(--color-text-muted);
 }
 </style>
