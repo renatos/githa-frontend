@@ -49,7 +49,7 @@
     >
       <template #cell-type="{ item }">
         <span
-            :class="'badge type-' + item.feedbackType.toLowerCase()">{{ formatType(item.feedbackType) }}</span>
+            :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
       </template>
 
       <template #cell-status="{ item }">
@@ -86,7 +86,7 @@ const selectedStatuses = ref([]);
 const columns = [
   {key: 'id', label: '#', width: '50px', sortable: true},
   {key: 'title', label: 'Título', sortable: true, filterable: true},
-  {key: 'feedbackType', label: 'Tipo', sortable: true, filterable: true},
+  {key: 'type', label: 'Tipo', sortable: true, filterable: true},
   {key: 'status', label: 'Status', sortable: true, filterable: true},
   {key: 'reporter', label: 'Relator', sortable: false},
   {key: 'createdAt', label: 'Data', sortable: true},
@@ -129,13 +129,13 @@ const getRowClass = (item) => {
   return `feedback-row-${item.status.toLowerCase()}`;
 };
 
-const formatType = (feedbackType) => {
+const formatType = (type) => {
   const map = {
     'BUG': 'Erro',
     'FEATURE': 'Nova Funcionalidade',
     'IMPROVEMENT': 'Melhoria'
   };
-  return map[feedbackType] || feedbackType;
+  return map[type] || type;
 };
 
 const formatStatus = (status) => {
@@ -231,17 +231,17 @@ defineExpose({refresh});
   font-weight: 600;
 }
 
-.badge.feedbackType-bug {
+.badge.type-bug {
   background-color: #fee2e2;
   color: #ef4444;
 }
 
-.badge.feedbackType-feature {
+.badge.type-feature {
   background-color: #dbeafe;
   color: #3b82f6;
 }
 
-.badge.feedbackType-improvement {
+.badge.type-improvement {
   background-color: #f3e8ff;
   color: #a855f7;
 }

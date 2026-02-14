@@ -11,7 +11,7 @@
             <div class="mb-3" style="flex: 3;">
               <div class="form-group">
                 <label for="name">Nome</label>
-                <input id="name" v-model="form.name" class="form-control" feedbackType="text" required>
+                <input id="name" v-model="form.name" class="form-control" type="text" required>
               </div>
             </div>
             <div class="mb-3" style="flex: 1;">
@@ -33,7 +33,7 @@
             <div class="mb-3" style="flex: 1;">
               <div class="form-group">
                 <label for="stockQuantity">Quantidade em Estoque</label>
-                <input id="stockQuantity" v-model="form.stockQuantity" class="form-control" feedbackType="number"
+                <input id="stockQuantity" v-model="form.stockQuantity" class="form-control" type="number"
                        min="0">
               </div>
             </div>
@@ -41,13 +41,13 @@
           </div>
 
           <div class="mb-3 form-check">
-            <input id="active" v-model="form.active" class="form-check-input" feedbackType="checkbox">
+            <input id="active" v-model="form.active" class="form-check-input" type="checkbox">
             <label class="form-check-label" for="active">Ativo</label>
           </div>
 
           <div class="d-flex justify-content-end gap-3 pt-4 mt-4" style="border-top: 1px solid var(--color-border);">
-            <button class="btn btn-secondary" feedbackType="button" @click="$router.push('/products')">Cancelar</button>
-            <button class="btn btn-primary" feedbackType="submit">Salvar</button>
+            <button class="btn btn-secondary" type="button" @click="$router.push('/products')">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Salvar</button>
           </div>
         </form>
       </div>

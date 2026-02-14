@@ -9,7 +9,7 @@
         <form @submit.prevent="save">
           <div class="mb-3">
             <label class="form-label" for="name">Nome</label>
-            <input id="name" v-model="form.name" class="form-control" feedbackType="text" required>
+            <input id="name" v-model="form.name" class="form-control" type="text" required>
           </div>
 
           <div class="mb-3">
@@ -27,9 +27,9 @@
 
           <div class="d-flex justify-content-start gap-3 pt-4 mt-4" style="border-top: 1px solid #4b5563;">
             <div style="flex-grow: 1;"></div>
-            <button class="btn btn-secondary" feedbackType="button" @click="$router.push('/account-groups')">Cancelar
+            <button class="btn btn-secondary" type="button" @click="$router.push('/account-groups')">Cancelar
             </button>
-            <button class="btn btn-primary" feedbackType="submit">Salvar</button>
+            <button class="btn btn-primary" type="submit">Salvar</button>
           </div>
         </form>
       </div>
@@ -48,7 +48,7 @@ const router = useRouter();
 
 const props = defineProps({
   accountGroup: {
-    feedbackType: Object,
+    type: Object,
     default: () => ({})
   }
 });

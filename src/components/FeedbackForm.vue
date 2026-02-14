@@ -11,12 +11,12 @@
           <div class="form-body">
             <div class="form-group" style="margin-bottom: 8px;">
               <label>Título</label>
-              <input v-model="form.title" :disabled="!!feedback.id" class="form-control" feedbackType="text" required/>
+              <input v-model="form.title" :disabled="!!feedback.id" class="form-control" type="text" required/>
             </div>
             <div class="row">
               <div class="form-group col-12 col-md-4">
                 <label>Tipo</label>
-                <select v-model="form.feedbackType" :disabled="!!feedback.id" class="form-control" required>
+                <select v-model="form.type" :disabled="!!feedback.id" class="form-control" required>
                   <option value="BUG">Erro / Bug</option>
                   <option value="FEATURE">Nova Funcionalidade</option>
                   <option value="IMPROVEMENT">Melhoria</option>
@@ -92,7 +92,7 @@
                             rows="2"
                             @keydown.ctrl.enter="sendReply"
                         ></textarea>
-                  <button :disabled="!newReply.trim() || !replyAuthorId || sendingReply" class="btn btn-primary btn-send" feedbackType="button"
+                  <button :disabled="!newReply.trim() || !replyAuthorId || sendingReply" class="btn btn-primary btn-send" type="button"
                           @click="sendReply">
                     <span v-if="!sendingReply">Enviar</span>
                     <span v-else>...</span>
@@ -104,8 +104,8 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-secondary" feedbackType="button" @click="$emit('close')">Fechar</button>
-            <button v-if="canSave" class="btn btn-primary" feedbackType="submit">Salvar Alterações</button>
+            <button class="btn btn-secondary" type="button" @click="$emit('close')">Fechar</button>
+            <button v-if="canSave" class="btn btn-primary" type="submit">Salvar Alterações</button>
           </div>
         </form>
       </div>
@@ -127,7 +127,7 @@ import {clientService} from '../services/clientService';
 
 const props = defineProps({
   feedback: {
-    feedbackType: Object,
+    type: Object,
     default: () => ({}),
   },
 });
@@ -139,7 +139,7 @@ useEscapeKey(() => emit('close'));
 const form = ref({
   title: '',
   description: '',
-  feedbackType: 'BUG',
+  type: 'BUG',
   status: 'NEW',
   userId: null,
   user: null,

@@ -90,14 +90,14 @@
               <!-- Add New Item Row -->
               <tr class="new-item-row">
                 <td>
-                  <select v-model="newItem.type" class="feedbackType-select">
+                  <select v-model="newItem.type" class="type-select">
                     <option value="PRODUCT">Prod</option>
                     <option value="SERVICE">Serv</option>
                   </select>
                 </td>
                 <td>
                   <BaseLookup
-                      v-if="newItem.feedbackType === 'PRODUCT'"
+                      v-if="newItem.type === 'PRODUCT'"
                       v-model="newItem.productId"
                       :initial-description="newItem.productName"
                       :search-service="productService"
@@ -125,15 +125,15 @@
                     />
                   </div>
                 </td>
-                <td><input v-model="newItem.quantity" class="qty-input" feedbackType="number" min="1"></td>
+                <td><input v-model="newItem.quantity" class="qty-input" type="number" min="1"></td>
                 <td class="unit-price-cell">
                   <CurrencyInput v-model="newItem.unitPrice"/>
                 </td>
                 <td>{{ formatCurrency(newItem.unitPrice * newItem.quantity) }}</td>
                 <td>
                   <button
-                      :disabled="(newItem.feedbackType === 'PRODUCT' && !newItem.productId) || (newItem.feedbackType === 'SERVICE' && (!newItem.serviceId || !newItem.professionalId))"
-                      class="btn-add" feedbackType="button"
+                      :disabled="(newItem.type === 'PRODUCT' && !newItem.productId) || (newItem.type === 'SERVICE' && (!newItem.serviceId || !newItem.professionalId))"
+                      class="btn-add" type="button"
                       @click="addSaleItem">
                     +
                   </button>
@@ -166,10 +166,9 @@
         </div>
 
         <div class="form-row">
-          <div class="form-group">
+          <div v-if="launchMode === 'MANUAL'" class="form-group">
             <label>Natureza</label>
-            <select v-model="form.nature" :disabled="true"
-                    required>
+            <select v-model="form.nature" :disabled="true" required>
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
@@ -178,6 +177,15 @@
           <div class="form-group">
             <label>Valor</label>
             <CurrencyInput v-model="form.amount" :disabled="!canSave" required/>
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <select v-model="form.status" :disabled="!canSave" required>
+              <option value="PENDING">Pendente</option>
+              <option value="PAID">Pago</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
           </div>
         </div>
 
@@ -210,26 +218,14 @@
           </div>
 
           <div class="form-group">
-            <label>Status</label>
-            <select v-model="form.status" :disabled="!canSave" required>
-              <option value="PENDING">Pendente</option>
-              <option value="PAID">Pago</option>
-              <option value="CANCELLED">Cancelado</option>
-            </select>
-          </div>
-        </div>
-
-
-        <div class="form-row">
-          <div class="form-group">
             <label>Pagamento</label>
-            <input v-model="form.paymentDate" :disabled="!canSave" feedbackType="datetime-local" step="1"/>
+            <input v-model="form.paymentDate" :disabled="!canSave" type="datetime-local" step="1"/>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-secondary" feedbackType="button" @click="$emit('close')">Cancelar</button>
-          <button :disabled="!canSave" :title="saveTooltip" class="btn btn-primary" feedbackType="submit">Salvar
+          <button class="btn btn-secondary" type="button" @click="$emit('close')">Cancelar</button>
+          <button :disabled="!canSave" :title="saveTooltip" class="btn btn-primary" type="submit">Salvar
           </button>
         </div>
       </form>
@@ -252,7 +248,7 @@ import {professionalService} from '../../services/professionalService';
 import {saleService} from '../../services/saleService';
 
 const props = defineProps({
-  transaction: {feedbackType: Object, default: () => ({})}
+  transaction: {type: Object, default: () => ({})}
 });
 
 const emit = defineEmits(['close', 'save', 'view-appointment']);
@@ -268,12 +264,12 @@ const checkUserRole = () => {
   isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
 };
 
-const launchMode = ref('MANUAL'); // 'MANUAL' or 'SALE'
+const launchMode = ref('SALE'); // 'MANUAL' or 'SALE'
 
 const form = ref({
   description: '',
   amount: 0,
-  nature: 'EXPENSE',
+  nature: 'INCOME',
   status: 'PENDING',
   category: undefined,
   paymentDate: '',
@@ -288,7 +284,7 @@ const form = ref({
 
 const saleItems = ref([]);
 const newItem = ref({
-  feedbackType: 'PRODUCT',
+  type: 'PRODUCT',
   productId: null,
   productName: '',
   serviceId: null,
@@ -381,12 +377,25 @@ onMounted(async () => {
     form.value = {...props.transaction};
     originalStatus.value = props.transaction.status;
 
+    // Detect Launch Mode
+    if (props.transaction.saleId || props.transaction.sale) {
+      launchMode.value = 'SALE';
+      if (props.transaction.sale && props.transaction.sale.items) {
+          saleItems.value = props.transaction.sale.items.map(item => ({
+              ...item,
+              type: item.type || (item.productId ? 'PRODUCT' : 'SERVICE')
+          }));
+      }
+    } else {
+      launchMode.value = 'MANUAL';
+    }
+
     // Show originalAmount in the Valor field so user sees the pre-discount value
     if (form.value.originalAmount) {
       form.value.amount = form.value.originalAmount;
     }
 
-    // Format LocalDateTime for input feedbackType="datetime-local" (YYYY-MM-DDThh:mm:ss)
+    // Format LocalDateTime for input type="datetime-local" (YYYY-MM-DDThh:mm:ss)
     if (form.value.paymentDate && form.value.paymentDate.length > 16) {
       form.value.paymentDate = form.value.paymentDate.substring(0, 19);
     }
@@ -444,14 +453,14 @@ onMounted(async () => {
 });
 
 const addSaleItem = () => {
-  if (newItem.value.feedbackType === 'PRODUCT' && !newItem.value.productId) return;
-  if (newItem.value.feedbackType === 'SERVICE' && (!newItem.value.serviceId || !newItem.value.professionalId)) return;
+  if (newItem.value.type === 'PRODUCT' && !newItem.value.productId) return;
+  if (newItem.value.type === 'SERVICE' && (!newItem.value.serviceId || !newItem.value.professionalId)) return;
 
   saleItems.value.push({...newItem.value, id: Date.now()});
 
   // Reset newItem
   newItem.value = {
-    feedbackType: newItem.value.feedbackType,
+    type: newItem.value.type,
     productId: null,
     productName: '',
     serviceId: null,
@@ -584,7 +593,7 @@ const save = async () => {
           clientId: form.value.clientId,
           notes: form.value.description,
           items: saleItems.value.map(item => ({
-            feedbackType: item.feedbackType,
+            type: item.type,
             productId: item.productId,
             serviceId: item.serviceId,
             professionalId: item.professionalId,
@@ -642,6 +651,16 @@ watch(() => form.value.status, (newVal) => {
 });
 
 // Watchers
+watch(launchMode, (newVal) => {
+  if (newVal === 'SALE') {
+    form.value.nature = 'INCOME';
+  } else if (!form.value.accountGroupId) {
+    if (!form.value.id) { // Only change default nature for new transactions or if user hasn't set group
+       form.value.nature = 'EXPENSE';
+    }
+  }
+});
+
 watch(() => form.value.nature, (newVal) => {
   if (newVal === 'INCOME') {
      form.value.paymentMethodId = undefined;
@@ -675,7 +694,7 @@ watch(() => form.value.appointmentId, (newVal) => {
   background: var(--color-bg-card, #fff);
   padding: 2rem;
   border-radius: var(--radius-md);
-  width: 500px;
+  width: 800px;
   max-width: 95%;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
@@ -841,7 +860,7 @@ input, select {
 .items-table-container {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  overflow: hidden;
+  overflow: visible;
   margin-top: 0.5rem;
 }
 
@@ -885,7 +904,7 @@ input, select {
   border-bottom: none;
 }
 
-.feedbackType-select {
+.type-select {
   padding: 0.35rem;
   font-size: 0.8rem;
   width: auto;
