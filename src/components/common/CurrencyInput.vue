@@ -1,14 +1,14 @@
 <template>
   <InputText
-    ref="inputRef"
-    type="text"
-    v-bind="$attrs"
+      ref="inputRef"
+      type="text"
+      v-bind="$attrs"
   />
 </template>
 
 <script setup>
-import { useCurrencyInput } from 'vue-currency-input'
-import { watch } from 'vue'
+import {useCurrencyInput} from 'vue-currency-input'
+import {watch} from 'vue'
 import InputText from 'primevue/inputtext'
 
 const props = defineProps({
@@ -16,16 +16,16 @@ const props = defineProps({
   options: Object
 })
 
-const { inputRef, setValue } = useCurrencyInput({
+const {inputRef, setValue} = useCurrencyInput({
   currency: 'BRL',
   autoDecimalDigits: true, // Habilita o preenchimento da direita para a esquerda (cents first)
   ...props.options
 })
 
 watch(
-  () => props.modelValue,
-  (value) => {
-    setValue(value)
-  }
+    () => props.modelValue,
+    (value) => {
+      setValue(value)
+    }
 )
 </script>

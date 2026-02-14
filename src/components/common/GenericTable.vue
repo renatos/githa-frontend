@@ -3,63 +3,66 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr>
-            <th 
-              v-for="col in columns" 
+        <tr>
+          <th
+              v-for="col in columns"
               :key="col.key"
               :class="{ 'sortable': col.sortable !== false }"
               :style="{ width: col.width, textAlign: col.align || 'left' }"
               @click="col.sortable !== false ? toggleSort(col.key) : null"
-            >
-              <div class="header-content" :style="{ justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start' }">
-                <span>{{ col.label }}</span>
-                <span v-if="col.sortable !== false" class="sort-icon">
+          >
+            <div
+                :style="{ justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start' }"
+                class="header-content">
+              <span>{{ col.label }}</span>
+              <span v-if="col.sortable !== false" class="sort-icon">
                   <span v-if="currentSort.key === col.key">
                     {{ currentSort.order === 'asc' ? '↑' : '↓' }}
                   </span>
                   <span v-else class="sort-neutral">↕</span>
                 </span>
-              </div>
-              
-              <div v-if="col.filterable" class="filter-container" @click.stop>
-                <input 
-                  type="text" 
-                  class="filter-input"
-                  :placeholder="'Filtrar ' + col.label"
+            </div>
+
+            <div v-if="col.filterable" class="filter-container" @click.stop>
+              <input
                   v-model="filters[col.key]"
-                >
-              </div>
-            </th>
-            <th v-if="$slots.actions" class="actions-header">Ações</th>
-          </tr>
+                  :placeholder="'Filtrar ' + col.label"
+                  class="filter-input"
+                  type="text"
+              >
+            </div>
+          </th>
+          <th v-if="$slots.actions" class="actions-header">Ações</th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)" class="clickable-row" @click="emit('row-click', item)">
-            <td 
-              v-for="col in columns" 
+        <tr v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)" class="clickable-row"
+            @click="emit('row-click', item)">
+          <td
+              v-for="col in columns"
               :key="col.key"
               :style="{ textAlign: col.align || 'left' }"
-            >
-              <slot :name="'cell-' + col.key" :value="item[col.key]" :item="item">
-                <span :class="{'monospace': col.monospace}">{{ item[col.key] }}</span>
-              </slot>
-            </td>
-            <td v-if="$slots.actions" class="actions-cell" @click.stop>
-              <slot name="actions" :item="item"></slot>
-            </td>
-          </tr>
-          <tr v-if="processedItems.length === 0">
-            <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="empty-cell">
-              <slot name="empty">Nenhum registro encontrado.</slot>
-            </td>
-          </tr>
+          >
+            <slot :item="item" :name="'cell-' + col.key" :value="item[col.key]">
+              <span :class="{'monospace': col.monospace}">{{ item[col.key] }}</span>
+            </slot>
+          </td>
+          <td v-if="$slots.actions" class="actions-cell" @click.stop>
+            <slot :item="item" name="actions"></slot>
+          </td>
+        </tr>
+        <tr v-if="processedItems.length === 0">
+          <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="empty-cell">
+            <slot name="empty">Nenhum registro encontrado.</slot>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
-    
+
     <!-- Mobile Search and Sort Controls -->
-    <div class="mobile-controls" v-if="filterableColumns.length > 0 || sortableColumns.length > 0">
-      <div class="mobile-search" v-if="filterableColumns.length > 0">
+    <div v-if="filterableColumns.length > 0 || sortableColumns.length > 0" class="mobile-controls">
+      <div v-if="filterableColumns.length > 0" class="mobile-search">
         <div class="mobile-search-row">
           <select v-model="mobileSearchField" class="mobile-select">
             <option v-for="col in filterableColumns" :key="col.key" :value="col.key">
@@ -68,17 +71,17 @@
           </select>
           <div class="mobile-search-input-wrapper">
             <span class="search-icon">🔍</span>
-            <input 
-              type="text" 
-              class="mobile-search-input"
-              placeholder="Pesquisar..."
-              v-model="mobileSearchValue"
+            <input
+                v-model="mobileSearchValue"
+                class="mobile-search-input"
+                placeholder="Pesquisar..."
+                type="text"
             >
             <button v-if="mobileSearchValue" class="clear-search" @click="mobileSearchValue = ''">✕</button>
           </div>
         </div>
       </div>
-      <div class="mobile-sort" v-if="sortableColumns.length > 0">
+      <div v-if="sortableColumns.length > 0" class="mobile-sort">
         <span class="mobile-sort-label">Ordenar:</span>
         <select v-model="mobileSortKey" class="mobile-select">
           <option value="">—</option>
@@ -86,10 +89,10 @@
             {{ col.label }}
           </option>
         </select>
-        <button 
-          v-if="mobileSortKey" 
-          class="mobile-sort-dir" 
-          @click="toggleMobileSortOrder"
+        <button
+            v-if="mobileSortKey"
+            class="mobile-sort-dir"
+            @click="toggleMobileSortOrder"
         >
           {{ currentSort.order === 'asc' ? '↑ Crescente' : '↓ Decrescente' }}
         </button>
@@ -98,45 +101,46 @@
 
     <!-- Mobile Card View -->
     <div class="cards-wrapper">
-      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card" @click="emit('row-click', item)">
+      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card"
+           @click="emit('row-click', item)">
         <div v-for="col in columns" :key="col.key" class="card-row">
           <span class="card-label">{{ col.label }}</span>
           <span class="card-value">
-             <slot :name="'cell-' + col.key" :value="item[col.key]" :item="item">
+             <slot :item="item" :name="'cell-' + col.key" :value="item[col.key]">
                 <span :class="{'monospace': col.monospace}">{{ item[col.key] }}</span>
              </slot>
           </span>
         </div>
         <div v-if="$slots.actions" class="card-actions">
-           <slot name="actions" :item="item"></slot>
+          <slot :item="item" name="actions"></slot>
         </div>
       </div>
       <div v-if="processedItems.length === 0" class="empty-state">
-         <slot name="empty">Nenhum registro encontrado.</slot>
+        <slot name="empty">Nenhum registro encontrado.</slot>
       </div>
     </div>
-    
+
     <!-- Pagination -->
     <div v-if="fetchData" class="pagination-footer">
       <div class="pagination-info">
-        Mostrando {{ totalItems === 0 ? 0 : currentPage * pageSize + 1 }} a 
+        Mostrando {{ totalItems === 0 ? 0 : currentPage * pageSize + 1 }} a
         {{ Math.min((currentPage + 1) * pageSize, totalItems) }} de {{ totalItems }} registros
       </div>
       <div class="pagination-controls">
-        <button 
-          class="btn-pagination" 
-          :disabled="currentPage === 0 || loading"
-          @click="currentPage--"
+        <button
+            :disabled="currentPage === 0 || loading"
+            class="btn-pagination"
+            @click="currentPage--"
         >
           ❮ Anterior
         </button>
         <span class="pagination-current">
           Página {{ currentPage + 1 }} de {{ totalPages }}
         </span>
-        <button 
-          class="btn-pagination" 
-          :disabled="currentPage >= totalPages - 1 || loading"
-          @click="currentPage++"
+        <button
+            :disabled="currentPage >= totalPages - 1 || loading"
+            class="btn-pagination"
+            @click="currentPage++"
         >
           Próximo ❯
         </button>
@@ -146,9 +150,9 @@
 </template>
 
 <script setup>
-import { computed, ref, defineProps, watch, onMounted, defineExpose } from 'vue';
-import { systemParameterService } from '../../services/systemParameterService';
-import { SystemParams } from '../../constants/SystemParams';
+import {computed, ref, defineProps, watch, onMounted, defineExpose} from 'vue';
+import {systemParameterService} from '../../services/systemParameterService';
+import {SystemParams} from '../../constants/SystemParams';
 
 const props = defineProps({
 // ... (keep props as is, but I can't reference them easily in replace_file_content if I don't include them or use context. I will assume they are unchanged)
@@ -181,7 +185,7 @@ const pageSize = ref(10);
 const totalPages = ref(0);
 
 // Sorting
-const currentSort = ref({ key: null, order: 'asc' });
+const currentSort = ref({key: null, order: 'asc'});
 
 const toggleSort = (key) => {
   if (currentSort.value.key === key) {
@@ -227,9 +231,9 @@ const loadData = async () => {
       page: currentPage.value,
       size: pageSize.value,
       sort: currentSort.value.key ? `${currentSort.value.key},${currentSort.value.order}` : null,
-      filters: { ...filters.value },
+      filters: {...filters.value},
     };
-    
+
     const result = await props.fetchData(params);
     serverItems.value = result.content;
     totalItems.value = result.totalElements;
@@ -285,7 +289,7 @@ const processedItems = computed(() => {
 // Watchers
 watch([currentPage, pageSize, currentSort], () => {
   if (props.fetchData) loadData();
-}, { deep: true });
+}, {deep: true});
 
 let debounceTimeout = null;
 watch(filters, () => {
@@ -296,7 +300,7 @@ watch(filters, () => {
       loadData();
     }, 500);
   }
-}, { deep: true });
+}, {deep: true});
 
 // Mobile search sync
 watch(mobileSearchValue, (newVal) => {
@@ -315,15 +319,14 @@ watch(mobileSearchField, (newField, oldField) => {
 });
 
 
-
 onMounted(async () => {
   try {
     const response = await systemParameterService.getParameterValue(SystemParams.PAGINATION_SIZE);
     if (response.data && response.data.value) {
-       const configuredSize = parseInt(response.data.value);
-       if (!isNaN(configuredSize) && configuredSize > 0) {
-         pageSize.value = configuredSize;
-       }
+      const configuredSize = parseInt(response.data.value);
+      if (!isNaN(configuredSize) && configuredSize > 0) {
+        pageSize.value = configuredSize;
+      }
     }
   } catch (e) {
     console.warn('Could not load system parameters', e);
@@ -339,7 +342,7 @@ onMounted(async () => {
   }
 });
 
-defineExpose({ loadData });
+defineExpose({loadData});
 </script>
 
 <style scoped>
@@ -650,15 +653,15 @@ tr:hover td {
   .table-wrapper {
     display: none;
   }
-  
+
   .mobile-controls {
     display: flex;
   }
-  
+
   .cards-wrapper {
     display: flex;
   }
-  
+
   .pagination-footer {
     flex-direction: column;
     gap: var(--spacing-md);

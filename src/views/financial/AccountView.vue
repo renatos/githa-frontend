@@ -8,20 +8,20 @@
     </div>
 
     <GenericTable
-      ref="tableRef"
-      :columns="columns"
-      :fetch-data="fetchDataAdapter"
-      @row-click="openForm"
+        ref="tableRef"
+        :columns="columns"
+        :fetch-data="fetchDataAdapter"
+        @row-click="openForm"
     >
       <template #cell-active="{ value }">
-        <span class="badge" :class="value ? 'active' : 'inactive'">
+        <span :class="value ? 'active' : 'inactive'" class="badge">
           {{ value ? 'Ativa' : 'Inativa' }}
         </span>
       </template>
 
       <template #actions="{ item }">
         <div class="actions-group">
-           <button class="btn-icon delete" @click="deleteItem(item.id)">✕</button>
+          <button class="btn-icon delete" @click="deleteItem(item.id)">✕</button>
         </div>
       </template>
     </GenericTable>
@@ -33,17 +33,17 @@
         <form @submit.prevent="saveItem">
           <div class="form-group">
             <label>Nome da Conta</label>
-            <input v-model="editingItem.name" required placeholder="Ex: Nubank, Caixa Pequeno" />
+            <input v-model="editingItem.name" placeholder="Ex: Nubank, Caixa Pequeno" required/>
           </div>
-           <div class="form-group">
+          <div class="form-group">
             <label>
-                <input type="checkbox" v-model="editingItem.active" style="width:auto; margin-right: 0.5rem;" />
-                Ativa
+              <input v-model="editingItem.active" style="width:auto; margin-right: 0.5rem;" type="checkbox"/>
+              Ativa
             </label>
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="closeForm">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button class="btn btn-secondary" type="button" @click="closeForm">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Salvar</button>
           </div>
         </form>
       </div>
@@ -52,18 +52,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {ref} from 'vue';
 import GenericTable from '../../components/common/GenericTable.vue';
 import financialService from '../../services/financialService';
 
 const tableRef = ref(null);
 const showForm = ref(false);
-const editingItem = ref({ active: true });
+const editingItem = ref({active: true});
 
 const columns = [
-  { key: 'id', label: '#', width: '50px', sortable: true },
-  { key: 'name', label: 'Nome', sortable: true },
-  { key: 'active', label: 'Status', sortable: false, align: 'center' },
+  {key: 'id', label: '#', width: '50px', sortable: true},
+  {key: 'name', label: 'Nome', sortable: true},
+  {key: 'active', label: 'Status', sortable: false, align: 'center'},
 ];
 
 const fetchDataAdapter = async () => {
@@ -72,13 +72,13 @@ const fetchDataAdapter = async () => {
 };
 
 const openForm = (item = {}) => {
-  editingItem.value = { active: true, ...item };
+  editingItem.value = {active: true, ...item};
   showForm.value = true;
 };
 
 const closeForm = () => {
   showForm.value = false;
-  editingItem.value = { active: true };
+  editingItem.value = {active: true};
 };
 
 const saveItem = async () => {
@@ -123,7 +123,7 @@ const deleteItem = async (id) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -147,10 +147,10 @@ label {
 }
 
 input[type="text"], input:not([type="checkbox"]) {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .modal-actions {
@@ -166,8 +166,15 @@ input[type="text"], input:not([type="checkbox"]) {
   font-size: 0.75rem;
 }
 
-.badge.active { background-color: #dcfce7; color: #166534; }
-.badge.inactive { background-color: #f3f4f6; color: #374151; }
+.badge.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge.inactive {
+  background-color: #f3f4f6;
+  color: #374151;
+}
 
 .actions-group {
   display: flex;
@@ -176,11 +183,15 @@ input[type="text"], input:not([type="checkbox"]) {
 }
 
 .btn-icon {
-    background: none;
-    border: 1px solid var(--color-border);
-    padding: 0.25rem 0.6rem;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid var(--color-border);
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
 }
-.btn-icon.delete { color: red; border-color: red;}
+
+.btn-icon.delete {
+  color: red;
+  border-color: red;
+}
 </style>

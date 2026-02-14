@@ -58,24 +58,24 @@ export default {
         return api.get(`${resource}/daily-summary`, { params: { day, month, year } });
     },
 
-    // Operating Expenses
-    getOperatingExpenses(params) {
-        return api.get('/operating-expenses', { params });
-    },
-
-    createOperatingExpense(data) {
-        return api.post('/operating-expenses', data);
-    },
-
-    updateOperatingExpense(id, data) {
-        return api.put(`/operating-expenses/${id}`, data);
-    },
-
-    deleteOperatingExpense(id) {
-        return api.delete(`/operating-expenses/${id}`);
-    },
-
     createAppointmentFromTransaction(id, data) {
         return api.post(`${resource}/transactions/${id}/appointment`, data);
+    },
+
+    // Account Groups
+    getAccountGroups() {
+        return api.get('/account-groups');
+    },
+
+    createAccountGroup(data) {
+        return api.post('/account-groups', data);
+    },
+
+    updateAccountGroup(id, data) {
+        return api.put(`/account-groups/${id}`, data);
+    },
+
+    deleteAccountGroup(id) {
+        return api.delete(`/account-groups/${id}`);
     }
 };

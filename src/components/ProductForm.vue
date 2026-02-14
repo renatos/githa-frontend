@@ -11,13 +11,13 @@
             <div class="mb-3" style="flex: 3;">
               <div class="form-group">
                 <label for="name">Nome</label>
-                <input type="text" class="form-control" id="name" v-model="form.name" required>
+                <input id="name" v-model="form.name" class="form-control" feedbackType="text" required>
               </div>
             </div>
             <div class="mb-3" style="flex: 1;">
               <div class="form-group">
                 <label for="price">Preço</label>
-                <CurrencyInput v-model="form.price" class="form-control" required />
+                <CurrencyInput v-model="form.price" class="form-control" required/>
               </div>
             </div>
           </div>
@@ -25,7 +25,7 @@
           <div class="mb-3">
             <div class="form-group">
               <label for="description">Descrição</label>
-              <textarea class="form-control" id="description" v-model="form.description" rows="3"></textarea>
+              <textarea id="description" v-model="form.description" class="form-control" rows="3"></textarea>
             </div>
           </div>
 
@@ -33,20 +33,21 @@
             <div class="mb-3" style="flex: 1;">
               <div class="form-group">
                 <label for="stockQuantity">Quantidade em Estoque</label>
-                <input type="number" class="form-control" id="stockQuantity" v-model="form.stockQuantity" min="0">
+                <input id="stockQuantity" v-model="form.stockQuantity" class="form-control" feedbackType="number"
+                       min="0">
               </div>
             </div>
             <div style="flex: 3;"></div>
           </div>
 
           <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="active" v-model="form.active">
+            <input id="active" v-model="form.active" class="form-check-input" feedbackType="checkbox">
             <label class="form-check-label" for="active">Ativo</label>
           </div>
 
           <div class="d-flex justify-content-end gap-3 pt-4 mt-4" style="border-top: 1px solid var(--color-border);">
-            <button type="button" class="btn btn-secondary" @click="$router.push('/products')">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button class="btn btn-secondary" feedbackType="button" @click="$router.push('/products')">Cancelar</button>
+            <button class="btn btn-primary" feedbackType="submit">Salvar</button>
           </div>
         </form>
       </div>
@@ -55,10 +56,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {ref, onMounted, computed} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import productService from '@/services/productService';
-import { useEscapeKey } from '@/composables/useEscapeKey';
+import {useEscapeKey} from '@/composables/useEscapeKey';
 import CurrencyInput from './common/CurrencyInput.vue';
 
 const route = useRoute();

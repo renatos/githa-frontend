@@ -3,21 +3,21 @@
     <div class="header-actions">
       <h2>Usuários</h2>
       <div class="actions-right">
-          <label class="checkbox-container">
-            <input type="checkbox" v-model="showInactive" @change="refresh">
-            Exibir Inativos
-          </label>
-          <button class="btn btn-primary" @click="$emit('new')">
-            + Novo Usuário
-          </button>
+        <label class="checkbox-container">
+          <input v-model="showInactive" type="checkbox" @change="refresh">
+          Exibir Inativos
+        </label>
+        <button class="btn btn-primary" @click="$emit('new')">
+          + Novo Usuário
+        </button>
       </div>
     </div>
 
     <GenericTable
-      ref="tableRef"
-      :columns="columns"
-      :fetch-data="fetchDataAdapter"
-      @row-click="(item) => $emit('edit', item)"
+        ref="tableRef"
+        :columns="columns"
+        :fetch-data="fetchDataAdapter"
+        @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-active="{ value }">
         <span :class="['status-badge', value ? 'active' : 'inactive']">
@@ -28,7 +28,8 @@
       <template #actions="{ item }">
         <div class="actions-group">
           <button v-if="!showInactive" class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
-          <button v-if="showInactive" class="btn-icon reactivate" title="Reativar" @click="reactivateUser(item.id)">♻</button>
+          <button v-if="showInactive" class="btn-icon reactivate" title="Reativar" @click="reactivateUser(item.id)">♻
+          </button>
         </div>
       </template>
     </GenericTable>
@@ -36,9 +37,9 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose } from 'vue';
+import {ref, defineEmits, defineExpose} from 'vue';
 import GenericTable from './common/GenericTable.vue';
-import { userService } from '../services/userService';
+import {userService} from '../services/userService';
 
 defineEmits(['new', 'edit', 'delete']);
 
@@ -46,10 +47,10 @@ const tableRef = ref(null);
 const showInactive = ref(false);
 
 const columns = [
-  { key: 'id', label: '#', width: '50px', sortable: true },
-  { key: 'name', label: 'Nome', sortable: true, filterable: true },
-  { key: 'email', label: 'Email', sortable: true, filterable: true },
-  { key: 'active', label: 'Status', sortable: true, align: 'center' },
+  {key: 'id', label: '#', width: '50px', sortable: true},
+  {key: 'name', label: 'Nome', sortable: true, filterable: true},
+  {key: 'email', label: 'Email', sortable: true, filterable: true},
+  {key: 'active', label: 'Status', sortable: true, align: 'center'},
 ];
 
 const fetchDataAdapter = async (params) => {
@@ -59,42 +60,42 @@ const fetchDataAdapter = async (params) => {
     sort: params.sort,
     ...params.filters
   };
-  
+
   // Remove empty keys
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
 
   if (showInactive.value) {
-      // Inactive endpoint returns a list, not a page structure yet (based on backend implementation)
-      // So we wrap it to match the expected structure if needed, or component handles list
-      const response = await userService.getInactive();
-      // Mock page response structure for the table
-      return {
-          content: response.data,
-          totalElements: response.data.length,
-          size: response.data.length,
-          number: 0
-      };
+    // Inactive endpoint returns a list, not a page structure yet (based on backend implementation)
+    // So we wrap it to match the expected structure if needed, or component handles list
+    const response = await userService.getInactive();
+    // Mock page response structure for the table
+    return {
+      content: response.data,
+      totalElements: response.data.length,
+      size: response.data.length,
+      number: 0
+    };
   } else {
-      const response = await userService.getAll(query);
-      return response.data;
+    const response = await userService.getAll(query);
+    return response.data;
   }
 };
 
 const reactivateUser = async (id) => {
-    try {
-        await userService.reactivate(id);
-        refresh();
-    } catch (e) {
-        console.error("Failed to reactivate", e);
-        alert("Erro ao reativar usuário");
-    }
+  try {
+    await userService.reactivate(id);
+    refresh();
+  } catch (e) {
+    console.error("Failed to reactivate", e);
+    alert("Erro ao reativar usuário");
+  }
 };
 
 const refresh = () => {
   tableRef.value?.loadData();
 };
 
-defineExpose({ refresh });
+defineExpose({refresh});
 </script>
 
 <style scoped>
@@ -119,7 +120,7 @@ defineExpose({ refresh });
   padding: 0.25rem 0.6rem;
   transition: all 0.2s;
   color: var(--color-text-muted);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-icon:hover {
@@ -129,9 +130,9 @@ defineExpose({ refresh });
 }
 
 .btn-icon.delete {
-    color: var(--color-error, #ef4444);
-    border-color: var(--color-error, #ef4444);
-    opacity: 0.8;
+  color: var(--color-error, #ef4444);
+  border-color: var(--color-error, #ef4444);
+  opacity: 0.8;
 }
 
 .btn-icon.delete:hover {
@@ -159,25 +160,25 @@ defineExpose({ refresh });
 }
 
 .actions-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .btn-icon.reactivate {
-    color: #166534;
-    border-color: #166534;
+  color: #166534;
+  border-color: #166534;
 }
 
 .btn-icon.reactivate:hover {
-    background-color: #dcfce7;
+  background-color: #dcfce7;
 }
 </style>
