@@ -1,50 +1,45 @@
 <template>
-  <div>
-    <div class="mb-4">
-      <h2>{{ isEditing ? 'Editar Grupo' : 'Novo Grupo' }}</h2>
-    </div>
+  <div class="modal-backdrop" @click.self="$emit('close')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ accountGroup.id ? 'Editar Grupo' : 'Novo Grupo' }}</h3>
+        <button class="btn-close" @click="$emit('close')">×</button>
+      </div>
 
-    <div class="card">
-      <div class="card-body">
-        <form @submit.prevent="save">
-          <div class="mb-3">
-            <label class="form-label" for="name">Nome</label>
-            <input id="name" v-model="form.name" class="form-control" type="text" required>
+      <form @submit.prevent="save">
+        <div class="form-body">
+          <div class="form-group">
+            <label for="name">Nome</label>
+            <input id="name" v-model="form.name" class="form-control" type="text" required />
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="nature">Natureza</label>
-            <select id="nature" v-model="form.nature" class="form-select" required>
+          <div class="form-group">
+            <label for="nature">Natureza</label>
+            <select id="nature" v-model="form.nature" class="form-control" required>
               <option value="INCOME">Receita</option>
               <option value="EXPENSE">Despesa</option>
             </select>
           </div>
 
-          <div class="mb-3 form-check">
-            <input id="active" type="checkbox" v-model="form.active" class="form-check-input">
+          <div class="form-check">
+            <input id="active" v-model="form.active" class="form-check-input" type="checkbox" />
             <label class="form-check-label" for="active">Ativo</label>
           </div>
+        </div>
 
-          <div class="d-flex justify-content-start gap-3 pt-4 mt-4" style="border-top: 1px solid #4b5563;">
-            <div style="flex-grow: 1;"></div>
-            <button class="btn btn-secondary" type="button" @click="$router.push('/account-groups')">Cancelar
-            </button>
-            <button class="btn btn-primary" type="submit">Salvar</button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" @click="$emit('close')">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
+import { ref, onMounted } from 'vue';
 import financialService from '@/services/financialService';
-import {useEscapeKey} from '@/composables/useEscapeKey';
-
-const route = useRoute();
-const router = useRouter();
+import { useEscapeKey } from '@/composables/useEscapeKey';
 
 const props = defineProps({
   accountGroup: {
@@ -55,7 +50,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 
-// Add ESC key support
 useEscapeKey(() => emit('close'));
 
 const form = ref({
@@ -64,35 +58,22 @@ const form = ref({
   active: true
 });
 
-const isEditing = computed(() => !!route.params.id);
-
-onMounted(async () => {
-  if (isEditing.value) {
-    try {
-      const listResponse = await financialService.getAccountGroups();
-      const group = listResponse.data.find(e => e.id === Number(route.params.id));
-      if (group) {
-        form.value = {...group};
-      } else {
-        alert('Grupo não encontrado.');
-        router.push('/account-groups');
-      }
-    } catch (error) {
-      console.error('Error loading group:', error);
-    }
+onMounted(() => {
+  if (props.accountGroup.id) {
+    form.value = { ...props.accountGroup };
   }
 });
 
 const save = async () => {
   try {
-    if (isEditing.value) {
-      await financialService.updateAccountGroup(route.params.id, form.value);
+    if (props.accountGroup.id) {
+      await financialService.updateAccountGroup(props.accountGroup.id, form.value);
     } else {
       await financialService.createAccountGroup(form.value);
     }
-    router.push('/account-groups');
+    emit('save');
   } catch (error) {
-    console.error('Error saving group:', error);
+    console.error('Error saving account group:', error);
     alert('Erro ao salvar grupo.');
   }
 };

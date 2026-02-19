@@ -89,54 +89,21 @@ const router = createRouter({
             component: () => import('../views/financial/AccountGroupList.vue'),
             meta: { requiresAuth: true }
         },
-        {
-            path: '/account-groups/new',
-            name: 'NewAccountGroup',
-            component: () => import('../components/financial/AccountGroupForm.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/account-groups/:id',
-            name: 'EditAccountGroup',
-            component: () => import('../components/financial/AccountGroupForm.vue'),
-            meta: { requiresAuth: true }
-        },
+
         {
             path: '/payment-methods',
             name: 'PaymentMethods',
             component: () => import('../views/financial/PaymentMethodList.vue'),
             meta: { requiresAuth: true }
         },
-        {
-            path: '/payment-methods/new',
-            name: 'NewPaymentMethod',
-            component: () => import('../components/financial/PaymentMethodForm.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/payment-methods/:id',
-            name: 'EditPaymentMethod',
-            component: () => import('../components/financial/PaymentMethodForm.vue'),
-            meta: { requiresAuth: true }
-        },
+
         {
             path: '/products',
             name: 'Products',
             component: () => import('../views/ProductList.vue'),
             meta: { requiresAuth: true }
         },
-        {
-            path: '/products/new',
-            name: 'NewProduct',
-            component: () => import('../components/ProductForm.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/products/:id',
-            name: 'EditProduct',
-            component: () => import('../components/ProductForm.vue'),
-            meta: { requiresAuth: true }
-        },
+
         {
             path: '/accounts',
             name: 'accounts',

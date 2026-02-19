@@ -1,51 +1,61 @@
 <template>
-  <div>
-    <div class="mb-4">
-      <h2>{{ isEditing ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento' }}</h2>
-    </div>
+  <div class="modal-backdrop" @click.self="$emit('close')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ paymentMethod.id ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento' }}</h3>
+        <button class="btn-close" @click="$emit('close')">×</button>
+      </div>
 
-    <div class="card">
-      <div class="card-body">
-        <form @submit.prevent="save">
-          <div class="mb-3">
-            <label class="form-label" for="name">Nome</label>
-            <input id="name" v-model="form.name" class="form-control" type="text" required>
+      <form @submit.prevent="save">
+        <div class="form-body">
+          <div class="form-group">
+            <label for="name">Nome</label>
+            <input id="name" v-model="form.name" class="form-control" type="text" required />
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="discountPercentage">Desconto (%)</label>
-            <input id="discountPercentage" v-model="form.discountPercentage" class="form-control" type="number"
-                   max="100" min="0" step="0.01">
+          <div class="form-group">
+            <label for="discountPercentage">Desconto (%)</label>
+            <input
+              id="discountPercentage"
+              v-model="form.discountPercentage"
+              class="form-control"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+            />
           </div>
 
-          <div class="mb-3 form-check">
-            <input id="active" v-model="form.active" class="form-check-input" type="checkbox">
+          <div class="form-check">
+            <input id="active" v-model="form.active" class="form-check-input" type="checkbox" />
             <label class="form-check-label" for="active">Ativo</label>
           </div>
+        </div>
 
-          <div class="d-flex justify-content-end gap-3 pt-4 mt-4" style="border-top: 1px solid #4b5563;">
-            <button class="btn btn-secondary" type="button" @click="$router.push('/payment-methods')">Cancelar
-            </button>
-            <button class="btn btn-primary" type="submit">Salvar</button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" @click="$emit('close')">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
+import { ref, onMounted } from 'vue';
 import paymentMethodService from '@/services/paymentMethodService';
-import {useEscapeKey} from '@/composables/useEscapeKey';
+import { useEscapeKey } from '@/composables/useEscapeKey';
 
-const route = useRoute();
-const router = useRouter();
+const props = defineProps({
+  paymentMethod: {
+    type: Object,
+    default: () => ({})
+  }
+});
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'save']);
 
-useEscapeKey(() => router.push('/payment-methods'));
+useEscapeKey(() => emit('close'));
 
 const form = ref({
   name: '',
@@ -54,38 +64,22 @@ const form = ref({
   active: true
 });
 
-const isEditing = computed(() => !!route.params.id);
-
-onMounted(async () => {
-  if (isEditing.value) {
-    try {
-      const response = await paymentMethodService.getById(route.params.id);
-      form.value = response.data;
-    } catch (error) {
-      console.error('Error loading payment method:', error);
-      alert('Forma de Pagamento não encontrada.');
-      router.push('/payment-methods');
-    }
+onMounted(() => {
+  if (props.paymentMethod.id) {
+    form.value = { ...props.paymentMethod };
   }
 });
 
 const save = async () => {
   try {
-    if (isEditing.value) {
-      await paymentMethodService.update(route.params.id, form.value);
+    if (props.paymentMethod.id) {
+      await paymentMethodService.update(props.paymentMethod.id, form.value);
     } else {
       await paymentMethodService.create(form.value);
     }
-    router.push('/payment-methods');
+    emit('save');
   } catch (error) {
     console.error('Error saving payment method:', error);
-    // Error handling could be better (displaying toast or message from backend)
-    // Assuming interceptor handles 400/500 errors with toasts?
-    // Check api.js: yes, errorHandler handles it.
   }
 };
 </script>
-
-<style scoped>
-/* Scoped styles if needed, mostly using global classes */
-</style>

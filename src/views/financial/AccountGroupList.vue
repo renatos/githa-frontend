@@ -2,7 +2,7 @@
   <div class="account-group-list">
     <div class="header-actions">
       <h2>Grupos de Contas</h2>
-      <button class="btn btn-primary" @click="$router.push('/account-groups/new')">
+      <button class="btn btn-primary" @click="openForm()">
         + Novo Grupo
       </button>
     </div>
@@ -11,7 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
-      @row-click="(item) => $router.push(`/account-groups/${item.id}`)"
+      @row-click="openForm"
     >
       <template #cell-nature="{ value }">
         <span :class="['nature-badge', value.toLowerCase()]">
@@ -27,21 +27,29 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon delete" @click="confirmDelete(item)">✕</button>
+          <button class="btn-icon delete" @click.stop="confirmDelete(item)">✕</button>
         </div>
       </template>
     </GenericTable>
+
+    <AccountGroupForm
+      v-if="showForm"
+      :account-group="editingItem"
+      @close="closeForm"
+      @save="onSave"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import GenericTable from '@/components/common/GenericTable.vue';
+import AccountGroupForm from '@/components/financial/AccountGroupForm.vue';
 import financialService from '@/services/financialService';
 
-const router = useRouter();
 const tableRef = ref(null);
+const showForm = ref(false);
+const editingItem = ref({});
 
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
@@ -53,17 +61,15 @@ const columns = [
 const fetchDataAdapter = async (params) => {
   const response = await financialService.getAccountGroups();
   const allData = response.data;
-  
-  // Apply filtering
+
   let filteredData = allData;
   if (params.filters && params.filters.name) {
     const searchTerm = params.filters.name.toLowerCase();
-    filteredData = allData.filter(item => 
+    filteredData = allData.filter(item =>
       item.name.toLowerCase().includes(searchTerm)
     );
   }
-  
-  // Apply sorting
+
   if (params.sort) {
     const [field, direction] = params.sort.split(',');
     filteredData.sort((a, b) => {
@@ -73,18 +79,30 @@ const fetchDataAdapter = async (params) => {
       return direction === 'desc' ? -comparison : comparison;
     });
   }
-  
-  // Apply pagination
+
   const start = params.page * params.size;
   const end = start + params.size;
-  const paginatedData = filteredData.slice(start, end);
-  
   return {
-    content: paginatedData,
+    content: filteredData.slice(start, end),
     number: params.page,
     size: params.size,
     totalElements: filteredData.length
   };
+};
+
+const openForm = (item = {}) => {
+  editingItem.value = { ...item };
+  showForm.value = true;
+};
+
+const closeForm = () => {
+  showForm.value = false;
+  editingItem.value = {};
+};
+
+const onSave = () => {
+  closeForm();
+  tableRef.value?.loadData();
 };
 
 const confirmDelete = async (group) => {

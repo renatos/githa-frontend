@@ -2,7 +2,7 @@
   <div class="product-list">
     <div class="header-actions">
       <h2>Produtos</h2>
-      <button class="btn btn-primary" @click="$router.push('/products/new')">
+      <button class="btn btn-primary" @click="openForm()">
         + Novo Produto
       </button>
     </div>
@@ -11,7 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
-      @row-click="(item) => $router.push(`/products/${item.id}`)"
+      @row-click="openForm"
     >
       <template #cell-price="{ value }">
         {{ formatCurrency(value) }}
@@ -23,23 +23,31 @@
         </span>
       </template>
 
-      <template #cell-actions="{ item }">
+      <template #actions="{ item }">
         <div class="actions-group">
           <button class="btn-icon delete" @click.stop="confirmDelete(item)">✕</button>
         </div>
       </template>
     </GenericTable>
+
+    <ProductForm
+      v-if="showForm"
+      :product="editingItem"
+      @close="closeForm"
+      @save="onSave"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import GenericTable from '@/components/common/GenericTable.vue';
+import ProductForm from '@/components/ProductForm.vue';
 import productService from '@/services/productService';
 
-const router = useRouter();
 const tableRef = ref(null);
+const showForm = ref(false);
+const editingItem = ref({});
 
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
@@ -47,7 +55,6 @@ const columns = [
   { key: 'price', label: 'Preço', sortable: true, align: 'right' },
   { key: 'stockQuantity', label: 'Estoque', sortable: true, align: 'right', width: '100px' },
   { key: 'active', label: 'Status', sortable: true, align: 'center', width: '100px' },
-  { key: 'actions', label: 'Ações', align: 'center', width: '80px', sortable: false }
 ];
 
 const formatCurrency = (value) => {
@@ -58,15 +65,15 @@ const formatCurrency = (value) => {
 const fetchDataAdapter = async (params) => {
   const response = await productService.getAll();
   const allData = response.data || [];
-  
+
   let filteredData = allData;
   if (params.filters && params.filters.name) {
     const searchTerm = params.filters.name.toLowerCase();
-    filteredData = allData.filter(item => 
+    filteredData = allData.filter(item =>
       item.name.toLowerCase().includes(searchTerm)
     );
   }
-  
+
   if (params.sort) {
     const [field, direction] = params.sort.split(',');
     filteredData.sort((a, b) => {
@@ -76,17 +83,30 @@ const fetchDataAdapter = async (params) => {
       return direction === 'desc' ? -comparison : comparison;
     });
   }
-  
+
   const start = params.page * params.size;
   const end = start + params.size;
-  const paginatedData = filteredData.slice(start, end);
-  
   return {
-    content: paginatedData,
+    content: filteredData.slice(start, end),
     number: params.page,
     size: params.size,
     totalElements: filteredData.length
   };
+};
+
+const openForm = (item = {}) => {
+  editingItem.value = { ...item };
+  showForm.value = true;
+};
+
+const closeForm = () => {
+  showForm.value = false;
+  editingItem.value = {};
+};
+
+const onSave = () => {
+  closeForm();
+  tableRef.value?.loadData();
 };
 
 const confirmDelete = async (item) => {

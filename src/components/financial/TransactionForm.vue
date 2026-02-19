@@ -100,7 +100,7 @@
                       v-if="newItem.type === 'PRODUCT'"
                       v-model="newItem.productId"
                       :initial-description="newItem.productName"
-                      :search-service="productService"
+                      :search-service="productServiceAdapter"
                       placeholder="Produto..."
                       size="small"
                       @select="onProductSelect"
@@ -243,6 +243,32 @@ import BaseLookup from '../common/BaseLookup.vue';
 import paymentMethodService from '../../services/paymentMethodService';
 import {clientService} from '../../services/clientService';
 import productService from '../../services/productService';
+
+const productServiceAdapter = {
+  getAll: async (params) => {
+    const response = await productService.getAll(params);
+    let data = Array.isArray(response.data) ? response.data : (response.data?.content ?? []);
+    // Filter active only
+    data = data.filter(p => p.active);
+    // Apply name filter
+    if (params?.name) {
+      const lower = params.name.toLowerCase();
+      data = data.filter(p => p.name.toLowerCase().includes(lower));
+    }
+    // Enrich name with stock for display
+    const enriched = data.map(p => ({
+      ...p,
+      name: `${p.name} (Estoque: ${p.stockQuantity ?? 0})`
+    }));
+    return { data: { content: enriched, totalElements: enriched.length } };
+  },
+  getById: async (id) => {
+    const response = await productService.getById(id);
+    const p = response.data;
+    if (p) p.name = `${p.name} (Estoque: ${p.stockQuantity ?? 0})`;
+    return { data: p };
+  }
+};
 import {serviceService} from '../../services/serviceService';
 import {professionalService} from '../../services/professionalService';
 import {saleService} from '../../services/saleService';
@@ -487,9 +513,13 @@ const calculateAmountFromItems = () => {
 };
 
 const onProductSelect = (item) => {
+  if (!item) return;
+  // Strip the stock suffix stored in enriched name before saving
+  const cleanName = item.name.replace(/ \(Estoque: \d+\)$/, '');
   newItem.value.productId = item.id;
-  newItem.value.productName = item.name;
+  newItem.value.productName = cleanName;
   newItem.value.unitPrice = item.price || 0;
+  newItem.value.stockQuantity = item.stockQuantity ?? 0;
 };
 
 const onServiceSelect = (item) => {
