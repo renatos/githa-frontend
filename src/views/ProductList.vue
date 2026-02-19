@@ -1,9 +1,9 @@
 <template>
-  <div class="operating-expense-list">
+  <div class="product-list">
     <div class="header-actions">
-      <h2>Contas Operacionais</h2>
-      <button class="btn btn-primary" @click="$router.push('/operating-expenses/new')">
-        + Nova Despesa/Receita
+      <h2>Produtos</h2>
+      <button class="btn btn-primary" @click="$router.push('/products/new')">
+        + Novo Produto
       </button>
     </div>
 
@@ -11,17 +11,21 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
-      @row-click="(item) => $router.push(`/operating-expenses/${item.id}`)"
+      @row-click="(item) => $router.push(`/products/${item.id}`)"
     >
+      <template #cell-price="{ value }">
+        {{ formatCurrency(value) }}
+      </template>
+
       <template #cell-active="{ value }">
         <span :class="['status-badge', value ? 'active' : 'inactive']">
           {{ value ? 'Ativo' : 'Inativo' }}
         </span>
       </template>
 
-      <template #actions="{ item }">
+      <template #cell-actions="{ item }">
         <div class="actions-group">
-          <button class="btn-icon delete" @click="confirmDelete(item)">✕</button>
+          <button class="btn-icon delete" @click.stop="confirmDelete(item)">✕</button>
         </div>
       </template>
     </GenericTable>
@@ -32,7 +36,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GenericTable from '@/components/common/GenericTable.vue';
-import financialService from '@/services/financialService';
+import productService from '@/services/productService';
 
 const router = useRouter();
 const tableRef = ref(null);
@@ -40,16 +44,21 @@ const tableRef = ref(null);
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'name', label: 'Nome', sortable: true, filterable: true },
-  { key: 'active', label: 'Status', sortable: true, align: 'center' },
+  { key: 'price', label: 'Preço', sortable: true, align: 'right' },
+  { key: 'stockQuantity', label: 'Estoque', sortable: true, align: 'right', width: '100px' },
+  { key: 'active', label: 'Status', sortable: true, align: 'center', width: '100px' },
+  { key: 'actions', label: 'Ações', align: 'center', width: '80px', sortable: false }
 ];
 
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
 const fetchDataAdapter = async (params) => {
-  // Backend currently returns a simple list, not paginated
-  // We'll wrap it in a PageResponse structure for GenericTable compatibility
-  const response = await financialService.getOperatingExpenses();
-  const allData = response.data;
+  const response = await productService.getAll();
+  const allData = response.data || [];
   
-  // Apply filtering if needed
   let filteredData = allData;
   if (params.filters && params.filters.name) {
     const searchTerm = params.filters.name.toLowerCase();
@@ -58,7 +67,6 @@ const fetchDataAdapter = async (params) => {
     );
   }
   
-  // Apply sorting if needed
   if (params.sort) {
     const [field, direction] = params.sort.split(',');
     filteredData.sort((a, b) => {
@@ -69,12 +77,10 @@ const fetchDataAdapter = async (params) => {
     });
   }
   
-  // Apply pagination
   const start = params.page * params.size;
   const end = start + params.size;
   const paginatedData = filteredData.slice(start, end);
   
-  // Return PageResponse format
   return {
     content: paginatedData,
     number: params.page,
@@ -83,14 +89,14 @@ const fetchDataAdapter = async (params) => {
   };
 };
 
-const confirmDelete = async (expense) => {
-  if (confirm(`Tem certeza que deseja excluir a despesa "${expense.name}"?`)) {
+const confirmDelete = async (item) => {
+  if (confirm(`Tem certeza que deseja excluir "${item.name}"?`)) {
     try {
-      await financialService.deleteOperatingExpense(expense.id);
+      await productService.delete(item.id);
       tableRef.value?.loadData();
     } catch (error) {
-      console.error('Error deleting operating expense:', error);
-      alert('Erro ao excluir despesa. Verifique se existem transações vinculadas.');
+      console.error('Error deleting product:', error);
+      alert('Erro ao excluir produto. Verifique se existem vendas vinculadas.');
     }
   }
 };

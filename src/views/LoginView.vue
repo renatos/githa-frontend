@@ -1,23 +1,23 @@
 <template>
   <div class="login-view">
-    <AlertMessage 
-      v-if="error" 
-      type="error" 
-      :message="error" 
-      @dismiss="error = ''" 
-      class="mb-4"
+    <AlertMessage
+        v-if="error"
+        :message="error"
+        class="mb-4"
+        type="error"
+        @dismiss="error = ''"
     />
-    
-    <GoogleLoginButton />
-    
+
+    <GoogleLoginButton/>
+
     <!-- Email/Password login removed as per requirements -->
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { authService } from '../services/authService';
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {authService} from '../services/authService';
 import AlertMessage from '../components/common/AlertMessage.vue';
 
 import GoogleLoginButton from '../components/common/GoogleLoginButton.vue';
@@ -32,7 +32,7 @@ const loading = ref(false);
 const handleLogin = async () => {
   loading.value = true;
   error.value = '';
-  
+
   try {
     await authService.login(email.value, password.value);
     router.push('/');

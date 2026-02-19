@@ -3,52 +3,53 @@
     <div class="header-actions">
       <h2>Feedbacks e Suporte</h2>
       <div class="header-buttons">
-          <button class="btn btn-primary" @click="$emit('new')">
-            + Novo Feedback
-          </button>
+        <button class="btn btn-primary" @click="$emit('new')">
+          + Novo Feedback
+        </button>
       </div>
     </div>
 
     <div class="status-legend">
-      <span 
-        class="legend-item new" 
-        :class="{ selected: selectedStatuses.includes('NEW') }"
-        @click="toggleFilter('NEW')"
+      <span
+          :class="{ selected: selectedStatuses.includes('NEW') }"
+          class="legend-item new"
+          @click="toggleFilter('NEW')"
       >
         Novo
       </span>
-      <span 
-        class="legend-item accepted"
-        :class="{ selected: selectedStatuses.includes('ACCEPTED') }"
-        @click="toggleFilter('ACCEPTED')"
+      <span
+          :class="{ selected: selectedStatuses.includes('ACCEPTED') }"
+          class="legend-item accepted"
+          @click="toggleFilter('ACCEPTED')"
       >
         Em Análise
       </span>
-      <span 
-        class="legend-item implemented"
-        :class="{ selected: selectedStatuses.includes('IMPLEMENTED') }"
-        @click="toggleFilter('IMPLEMENTED')"
+      <span
+          :class="{ selected: selectedStatuses.includes('IMPLEMENTED') }"
+          class="legend-item implemented"
+          @click="toggleFilter('IMPLEMENTED')"
       >
         Concluído
       </span>
-      <span 
-        class="legend-item rejected"
-        :class="{ selected: selectedStatuses.includes('REJECTED') }"
-        @click="toggleFilter('REJECTED')"
+      <span
+          :class="{ selected: selectedStatuses.includes('REJECTED') }"
+          class="legend-item rejected"
+          @click="toggleFilter('REJECTED')"
       >
         Rejeitado
       </span>
     </div>
 
     <GenericTable
-      ref="tableRef"
-      :columns="columns"
-      :fetch-data="fetchDataAdapter"
-      :row-class="getRowClass"
-      @row-click="(item) => $emit('edit', item)"
+        ref="tableRef"
+        :columns="columns"
+        :fetch-data="fetchDataAdapter"
+        :row-class="getRowClass"
+        @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-type="{ item }">
-        <span :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
+        <span
+            :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
       </template>
 
       <template #cell-status="{ item }">
@@ -72,10 +73,10 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose } from 'vue';
+import {ref, defineEmits, defineExpose} from 'vue';
 import GenericTable from './common/GenericTable.vue';
-import { feedbackService } from '../services/feedbackService';
-import { formatDateTime } from '../utils/formatters';
+import {feedbackService} from '../services/feedbackService';
+import {formatDateTime} from '../utils/formatters';
 
 defineEmits(['new', 'edit']);
 
@@ -83,12 +84,12 @@ const tableRef = ref(null);
 const selectedStatuses = ref([]);
 
 const columns = [
-  { key: 'id', label: '#', width: '50px', sortable: true },
-  { key: 'title', label: 'Título', sortable: true, filterable: true },
-  { key: 'type', label: 'Tipo', sortable: true, filterable: true },
-  { key: 'status', label: 'Status', sortable: true, filterable: true },
-  { key: 'reporter', label: 'Relator', sortable: false },
-  { key: 'createdAt', label: 'Data', sortable: true },
+  {key: 'id', label: '#', width: '50px', sortable: true},
+  {key: 'title', label: 'Título', sortable: true, filterable: true},
+  {key: 'type', label: 'Tipo', sortable: true, filterable: true},
+  {key: 'status', label: 'Status', sortable: true, filterable: true},
+  {key: 'reporter', label: 'Relator', sortable: false},
+  {key: 'createdAt', label: 'Data', sortable: true},
 ];
 
 const toggleFilter = (status) => {
@@ -107,11 +108,11 @@ const fetchDataAdapter = async (params) => {
     sort: params.sort,
     ...params.filters
   };
-  
+
   if (selectedStatuses.value.length > 0) {
     query.status = selectedStatuses.value.join(',');
   }
-  
+
   // Remove empty keys
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
 
@@ -129,25 +130,25 @@ const getRowClass = (item) => {
 };
 
 const formatType = (type) => {
-    const map = {
-        'BUG': 'Erro',
-        'FEATURE': 'Nova Funcionalidade',
-        'IMPROVEMENT': 'Melhoria'
-    };
-    return map[type] || type;
+  const map = {
+    'BUG': 'Erro',
+    'FEATURE': 'Nova Funcionalidade',
+    'IMPROVEMENT': 'Melhoria'
+  };
+  return map[type] || type;
 };
 
 const formatStatus = (status) => {
-    const map = {
-        'NEW': 'Novo',
-        'ACCEPTED': 'Em Análise',
-        'Rejeitado': 'Rejeitado',
-        'IMPLEMENTED': 'Concluído'
-    };
-    return map[status] || status;
+  const map = {
+    'NEW': 'Novo',
+    'ACCEPTED': 'Em Análise',
+    'Rejeitado': 'Rejeitado',
+    'IMPLEMENTED': 'Concluído'
+  };
+  return map[status] || status;
 };
 
-defineExpose({ refresh });
+defineExpose({refresh});
 </script>
 
 <style scoped>
@@ -199,21 +200,51 @@ defineExpose({ refresh });
 }
 
 /* Status colors - adapt based on status */
-.legend-item.new::before, .badge.status-new { background-color: #3b82f6; border-color: #3b82f6; color: white}
-.legend-item.accepted::before, .badge.status-accepted { background-color: #f59e0b; border-color: #f59e0b; color: white}
-.legend-item.implemented::before, .badge.status-implemented { background-color: #10b981; border-color: #10b981; color: white}
-.legend-item.rejected::before, .badge.status-rejected { background-color: #ef4444; border-color: #ef4444; color: white}
-
-.badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
+.legend-item.new::before, .badge.status-new {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white
 }
 
-.badge.type-bug { background-color: #fee2e2; color: #ef4444; }
-.badge.type-feature { background-color: #dbeafe; color: #3b82f6; }
-.badge.type-improvement { background-color: #f3e8ff; color: #a855f7; }
+.legend-item.accepted::before, .badge.status-accepted {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: white
+}
+
+.legend-item.implemented::before, .badge.status-implemented {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: white
+}
+
+.legend-item.rejected::before, .badge.status-rejected {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: white
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge.type-bug {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.badge.type-feature {
+  background-color: #dbeafe;
+  color: #3b82f6;
+}
+
+.badge.type-improvement {
+  background-color: #f3e8ff;
+  color: #a855f7;
+}
 
 .btn-icon {
   background: white;

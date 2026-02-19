@@ -6,107 +6,107 @@
         <button class="btn-close" @click="$emit('close')">×</button>
       </div>
 
-      <form @submit.prevent="submit" class="modal-body">
-        
+      <form class="modal-body" @submit.prevent="submit">
+
         <!-- Procedimento (Service) -->
         <div class="form-group">
           <label>Procedimento *</label>
-          <BaseLookup 
-            v-model="form.serviceId" 
-            :initial-description="initialServiceName"
-            :search-service="serviceService"
-            placeholder="Pesquisar Procedimento..."
-            @select="onServiceSelect"
+          <BaseLookup
+              v-model="form.serviceId"
+              :initial-description="initialServiceName"
+              :search-service="serviceService"
+              placeholder="Pesquisar Procedimento..."
+              @select="onServiceSelect"
           />
         </div>
 
         <!-- Profissional -->
         <div class="form-group">
           <label>Profissional *</label>
-           <BaseLookup 
-            v-model="form.professionalId" 
-            :initial-description="initialProfessionalName"
-            :search-service="professionalService"
-            placeholder="Pesquisar Profissional..."
-            @select="onProfessionalSelect"
+          <BaseLookup
+              v-model="form.professionalId"
+              :initial-description="initialProfessionalName"
+              :search-service="professionalService"
+              placeholder="Pesquisar Profissional..."
+              @select="onProfessionalSelect"
           />
         </div>
 
         <!-- Descrição (ReadOnly) -->
         <div class="form-group">
           <label>Descrição</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            v-model="form.description" 
+          <input
+              v-model="form.description"
+              class="form-control"
+              type="text"
           >
         </div>
 
         <!-- Tipo e Desconto -->
         <div class="form-row">
-            <div class="form-group col">
-                <label>Tipo</label>
-                <input type="text" class="form-control" value="RECEITA" disabled>
-            </div>
-             <div class="form-group col">
-                <label>Desconto (%)</label>
-                <input 
-                    type="number" 
-                    step="0.01" 
-                    class="form-control" 
-                    v-model.number="form.discount"
-                >
-            </div>
+          <div class="form-group col">
+            <label>Tipo</label>
+            <input class="form-control" disabled type="text" value="RECEITA">
+          </div>
+          <div class="form-group col">
+            <label>Desconto (%)</label>
+            <input
+                v-model.number="form.discount"
+                class="form-control"
+                step="0.01"
+                type="number"
+            >
+          </div>
         </div>
 
         <!-- Valores (ReadOnly) -->
         <!-- Valores -->
         <div class="form-row">
-             <div class="form-group col">
-                <label>Valor Procedimento</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :value="formatCurrency(computedValue)" 
-                    disabled
-                >
-            </div>
-             <div class="form-group col">
-                <label>Pagamento (Valor da Transação) *</label>
-                 <CurrencyInput 
-                    v-model="form.amount" 
-                    required
-                />
-            </div>
+          <div class="form-group col">
+            <label>Valor Procedimento</label>
+            <input
+                :value="formatCurrency(computedValue)"
+                class="form-control"
+                disabled
+                type="text"
+            >
+          </div>
+          <div class="form-group col">
+            <label>Pagamento (Valor da Transação) *</label>
+            <CurrencyInput
+                v-model="form.amount"
+                required
+            />
+          </div>
         </div>
 
         <!-- Valores (ReadOnly) -->
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
-          <button type="submit" class="btn btn-primary" :disabled="loading">
+          <button class="btn btn-secondary" type="button" @click="$emit('close')">Cancelar</button>
+          <button :disabled="loading" class="btn btn-primary" type="submit">
             {{ loading ? 'Salvando...' : 'Gerar' }}
           </button>
         </div>
       </form>
     </div>
-    <ErrorModal 
-        :show="showError" 
-        :message="errorMessage" 
-        @close="closeError" 
+    <ErrorModal
+        :message="errorMessage"
+        :show="showError"
+        @close="closeError"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import {ref, computed, onMounted, watch} from 'vue';
 import BaseLookup from '../common/BaseLookup.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
 import ErrorModal from '../common/ErrorModal.vue';
 import financialService from '../../services/financialService';
-import { serviceService } from '../../services/serviceService';
-import { professionalService } from '../../services/professionalService';
-import { useEscapeKey } from '../../composables/useEscapeKey';
+import {serviceService} from '../../services/serviceService';
+import {professionalService} from '../../services/professionalService';
+import {useEscapeKey} from '../../composables/useEscapeKey';
 
 const props = defineProps({
   transaction: {
@@ -122,11 +122,11 @@ useEscapeKey(() => emit('close'));
 
 const loading = ref(false);
 const form = ref({
-    serviceId: null,
-    professionalId: null,
-    discount: 0,
-    amount: null,
-    description: '' // New editable description
+  serviceId: null,
+  professionalId: null,
+  discount: 0,
+  amount: null,
+  description: '' // New editable description
 });
 
 const selectedService = ref(null);
@@ -140,75 +140,75 @@ const showError = ref(false);
 const errorMessage = ref('');
 
 const closeError = () => {
-    showError.value = false;
-    errorMessage.value = '';
+  showError.value = false;
+  errorMessage.value = '';
 };
 
 onMounted(() => {
-    // Professional is PRE-FILLED from transaction as requested
-    if (props.transaction.professionalId) {
-        form.value.professionalId = props.transaction.professionalId;
-        initialProfessionalName.value = props.transaction.professionalName;
-    }
-    
-    // Service is EMPTY as requested
-    
-    // Payment Amount is EMPTY as requested
-    form.value.amount = null;
+  // Professional is PRE-FILLED from transaction as requested
+  if (props.transaction.professionalId) {
+    form.value.professionalId = props.transaction.professionalId;
+    initialProfessionalName.value = props.transaction.professionalName;
+  }
 
-    // Initialize description if empty (or keep empty until service selected)
-    // Actually, we should probably start with what the computed value WOULD be if we had a service?
-    // Or just default. If service is empty, description "Procedimento - Cliente" is weird.
-    // Let's leave it blank or default to just Client Name until Service is picked?
-    // For now, let's leave blank as valid start, or "Procedimento - Client" if that's generic.
-    form.value.description = `Procedimento - ${props.transaction.clientName || 'Cliente'}`; 
+  // Service is EMPTY as requested
+
+  // Payment Amount is EMPTY as requested
+  form.value.amount = null;
+
+  // Initialize description if empty (or keep empty until service selected)
+  // Actually, we should probably start with what the computed value WOULD be if we had a service?
+  // Or just default. If service is empty, description "Procedimento - Cliente" is weird.
+  // Let's leave it blank or default to just Client Name until Service is picked?
+  // For now, let's leave blank as valid start, or "Procedimento - Client" if that's generic.
+  form.value.description = `Procedimento - ${props.transaction.clientName || 'Cliente'}`;
 });
 
 const onServiceSelect = (service) => {
-    selectedService.value = service;
+  selectedService.value = service;
 };
 
 const onProfessionalSelect = (professional) => {
-    selectedProfessional.value = professional;
+  selectedProfessional.value = professional;
 };
 
 // Removed computedDescription, now using form.description and watcher
 
 // Value of the selected service (Raw Price) - Displayed in "Valor Procedimento"
 const computedValue = computed(() => {
-    if (!selectedService.value) return 0;
-    return selectedService.value.price || 0;
+  if (!selectedService.value) return 0;
+  return selectedService.value.price || 0;
 });
 
 // Watch calculation dependencies to update form.amount automatically
 
 watch([() => selectedService.value, () => form.value.discount], () => {
-    // Update Amount
-    if (!selectedService.value) {
-        form.value.amount = null;
-        // Don't clear description maybe? Or reset to default?
-        // If user clears service, maybe they want to clear description or keep manual edit.
-        // Let's just focus on Amount here as per previous step.
-    } else {
-        const price = selectedService.value.price || 0;
-        const discount = form.value.discount || 0;
-        const calculated = price * (1 - discount/100);
-        form.value.amount = parseFloat(calculated.toFixed(2));
-    }
+  // Update Amount
+  if (!selectedService.value) {
+    form.value.amount = null;
+    // Don't clear description maybe? Or reset to default?
+    // If user clears service, maybe they want to clear description or keep manual edit.
+    // Let's just focus on Amount here as per previous step.
+  } else {
+    const price = selectedService.value.price || 0;
+    const discount = form.value.discount || 0;
+    const calculated = price * (1 - discount / 100);
+    form.value.amount = parseFloat(calculated.toFixed(2));
+  }
 });
 
 // Separate watcher for Description to avoid overwriting manual edits too aggressively?
 // Requirement: "Descrição: aberto para edição".
 // Common pattern: Update description when Service changes.
 watch(() => selectedService.value, (newService) => {
-    if (newService) {
-        form.value.description = `${newService.name} - ${props.transaction.clientName || 'Cliente'}`;
-    }
+  if (newService) {
+    form.value.description = `${newService.name} - ${props.transaction.clientName || 'Cliente'}`;
+  }
 });
 
 const formatCurrency = (val) => {
-    if (val === undefined || val === null) return '';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  if (val === undefined || val === null) return '';
+  return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val);
 };
 
 const submit = async () => {
@@ -223,19 +223,19 @@ const submit = async () => {
     return;
   }
   if (!form.value.amount) {
-      showError.value = true;
-      errorMessage.value = 'Informe o valor do pagamento.';
-      return;
+    showError.value = true;
+    errorMessage.value = 'Informe o valor do pagamento.';
+    return;
   }
 
   loading.value = true;
   try {
     await financialService.createAppointmentFromTransaction(props.transaction.id, {
-        serviceId: form.value.serviceId,
-        professionalId: form.value.professionalId,
-        discount: form.value.discount,
-        amount: form.value.amount,
-        description: form.value.description // Send description
+      serviceId: form.value.serviceId,
+      professionalId: form.value.professionalId,
+      discount: form.value.discount,
+      amount: form.value.amount,
+      description: form.value.description // Send description
     });
     emit('save');
   } catch (error) {
@@ -292,19 +292,18 @@ const submit = async () => {
 }
 
 
-
 .form-group {
   margin-bottom: var(--spacing-md);
 }
 
 .form-row {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: var(--spacing-md);
+  display: flex;
+  gap: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .form-group.col {
-    flex: 1;
+  flex: 1;
 }
 
 label {
@@ -324,11 +323,11 @@ label {
 }
 
 .alert-warning {
-    background-color: #fef3c7;
-    color: #92400e;
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
+  background-color: #fef3c7;
+  color: #92400e;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 </style>

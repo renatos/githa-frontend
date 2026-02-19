@@ -6,26 +6,26 @@
     </div>
 
     <GenericTable
-      ref="tableRef"
-      :columns="columns"
-      :fetch-data="fetchParametersAdapter"
-      @row-click="startEdit"
+        ref="tableRef"
+        :columns="columns"
+        :fetch-data="fetchParametersAdapter"
+        @row-click="startEdit"
     >
       <template #cell-value="{ item }">
         <div class="value-cell">
-           <span v-if="!editingItem || editingItem.id !== item.id">{{ item.value }}</span>
-           <div v-else class="edit-mode">
-             <input 
-                v-model="editValue" 
-                class="edit-input" 
+          <span v-if="!editingItem || editingItem.id !== item.id">{{ item.value }}</span>
+          <div v-else class="edit-mode">
+            <input
+                ref="editInputRef"
+                v-model="editValue"
                 :type="getInputType(item.type)"
+                class="edit-input"
                 @keyup.enter="saveEdit"
                 @keyup.esc="cancelEdit"
-                ref="editInputRef"
-             />
-             <button class="btn-icon save" @click="saveEdit" title="Salvar">✓</button>
-             <button class="btn-icon cancel" @click="cancelEdit" title="Cancelar">✕</button>
-           </div>
+            />
+            <button class="btn-icon save" title="Salvar" @click="saveEdit">✓</button>
+            <button class="btn-icon cancel" title="Cancelar" @click="cancelEdit">✕</button>
+          </div>
         </div>
       </template>
 
@@ -34,9 +34,9 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import {ref, nextTick} from 'vue';
 import GenericTable from '../components/common/GenericTable.vue';
-import { systemParameterService } from '../services/systemParameterService';
+import {systemParameterService} from '../services/systemParameterService';
 
 const tableRef = ref(null);
 const editingItem = ref(null);
@@ -44,10 +44,10 @@ const editValue = ref('');
 const editInputRef = ref(null);
 
 const columns = [
-  { key: 'key', label: 'Chave', sortable: true, width: '250px', monospace: true },
-  { key: 'description', label: 'Descrição', sortable: true },
-  { key: 'type', label: 'Tipo', sortable: true, width: '100px' },
-  { key: 'value', label: 'Valor', sortable: true, width: '200px' },
+  {key: 'key', label: 'Chave', sortable: true, width: '250px', monospace: true},
+  {key: 'description', label: 'Descrição', sortable: true},
+  {key: 'type', label: 'Tipo', sortable: true, width: '100px'},
+  {key: 'value', label: 'Valor', sortable: true, width: '200px'},
 ];
 
 const fetchParametersAdapter = async () => {
@@ -63,12 +63,16 @@ const fetchParametersAdapter = async () => {
 };
 
 const getInputType = (type) => {
-    switch(type) {
-        case 'INTEGER': return 'number';
-        case 'DECIMAL': return 'number';
-        case 'BOOLEAN': return 'text'; // Handle appropriately (select?)
-        default: return 'text';
-    }
+  switch (type) {
+    case 'INTEGER':
+      return 'number';
+    case 'DECIMAL':
+      return 'number';
+    case 'BOOLEAN':
+      return 'text'; // Handle appropriately (select?)
+    default:
+      return 'text';
+  }
 };
 
 const startEdit = (item) => {
@@ -86,7 +90,7 @@ const cancelEdit = () => {
 
 const saveEdit = async () => {
   if (!editingItem.value) return;
-  
+
   try {
     await systemParameterService.update(editingItem.value.id, editValue.value);
     // Update local data simply or refresh? Refresh is safer.
@@ -114,24 +118,24 @@ const saveEdit = async () => {
 }
 
 .value-cell {
-    min-height: 2rem;
-    display: flex;
-    align-items: center;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
 }
 
 .edit-mode {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
 }
 
 .edit-input {
-    flex: 1;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--color-primary);
-    border-radius: var(--radius-sm);
-    outline: none;
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  outline: none;
 }
 
 .btn-icon {
@@ -149,14 +153,14 @@ const saveEdit = async () => {
 }
 
 .btn-icon.save {
-    background-color: #dcfce7;
-    border-color: #16a34a;
-    color: #16a34a;
+  background-color: #dcfce7;
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 .btn-icon.cancel {
-    background-color: #fee2e2;
-    border-color: #dc2626;
-    color: #dc2626;
+  background-color: #fee2e2;
+  border-color: #dc2626;
+  color: #dc2626;
 }
 </style>

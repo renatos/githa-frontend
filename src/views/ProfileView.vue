@@ -3,7 +3,7 @@
     <h1>Meu Perfil</h1>
 
     <div class="profile-card">
-      <div class="user-info" v-if="user">
+      <div v-if="user" class="user-info">
         <div class="avatar-circle">{{ userInitials }}</div>
         <div class="details">
           <h2>{{ user.name || 'Usuário' }}</h2>
@@ -14,7 +14,7 @@
 
     <div class="integrations-section">
       <h2>Integrações</h2>
-      
+
       <div class="integration-card google-card">
         <div class="integration-header">
           <div class="icon-google">G</div>
@@ -22,7 +22,7 @@
             <h3>Google Agenda e Contatos</h3>
             <p>Sincronize seus agendamentos e importe contatos.</p>
           </div>
-          <div class="integration-status" :class="{ connected: isGoogleConnected }">
+          <div :class="{ connected: isGoogleConnected }" class="integration-status">
             {{ isGoogleConnected ? 'Conectado' : 'Desconectado' }}
           </div>
         </div>
@@ -32,18 +32,18 @@
             Conectar conta Google
           </button>
           <div v-else class="connected-actions">
-             <div class="toggles">
-               <label class="toggle-row">
-                 <input type="checkbox" v-model="syncSettings.calendar" disabled checked />
-                 <span>Sincronizar Agenda</span>
-               </label>
-               <label class="toggle-row">
-                 <input type="checkbox" v-model="syncSettings.contacts" disabled checked />
-                 <span>Sincronizar Contatos</span>
-               </label>
-             </div>
-             <!-- Future: Disconnect button -->
-             <!-- <button class="btn btn-outline-danger">Desconectar</button> -->
+            <div class="toggles">
+              <label class="toggle-row">
+                <input v-model="syncSettings.calendar" checked disabled type="checkbox"/>
+                <span>Sincronizar Agenda</span>
+              </label>
+              <label class="toggle-row">
+                <input v-model="syncSettings.contacts" checked disabled type="checkbox"/>
+                <span>Sincronizar Contatos</span>
+              </label>
+            </div>
+            <!-- Future: Disconnect button -->
+            <!-- <button class="btn btn-outline-danger">Desconectar</button> -->
           </div>
         </div>
       </div>
@@ -52,8 +52,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { authService } from '../services/authService';
+import {ref, computed, onMounted} from 'vue';
+import {authService} from '../services/authService';
 
 const user = ref(null);
 const syncSettings = ref({
@@ -77,7 +77,7 @@ onMounted(() => {
     // In a real app, we would fetch fresh profile data from backend to get sync status
     // For now assuming we might have it in token or need an endpoint
     // Assuming authService.getCurrentUser() returns what was stored from login/callback
-    
+
     // Check if we have sync flags in user object (from login response or local storage)
     if (currentUser.calendarSyncEnabled) syncSettings.value.calendar = true;
     if (currentUser.contactsSyncEnabled) syncSettings.value.contacts = true;
@@ -93,9 +93,9 @@ const connectGoogle = () => {
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile'
   ].join(' ');
-  
+
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-  
+
   window.location.href = authUrl;
 };
 </script>

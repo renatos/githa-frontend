@@ -8,23 +8,25 @@
       <div class="card-body">
         <form @submit.prevent="save">
           <div class="mb-3">
-            <label for="name" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="name" v-model="form.name" required>
+            <label class="form-label" for="name">Nome</label>
+            <input id="name" v-model="form.name" class="form-control" type="text" required>
           </div>
 
           <div class="mb-3">
-            <label for="discountPercentage" class="form-label">Desconto (%)</label>
-            <input type="number" class="form-control" id="discountPercentage" v-model="form.discountPercentage" step="0.01" min="0" max="100">
+            <label class="form-label" for="discountPercentage">Desconto (%)</label>
+            <input id="discountPercentage" v-model="form.discountPercentage" class="form-control" type="number"
+                   max="100" min="0" step="0.01">
           </div>
 
           <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="active" v-model="form.active">
+            <input id="active" v-model="form.active" class="form-check-input" type="checkbox">
             <label class="form-check-label" for="active">Ativo</label>
           </div>
 
           <div class="d-flex justify-content-end gap-3 pt-4 mt-4" style="border-top: 1px solid #4b5563;">
-            <button type="button" class="btn btn-secondary" @click="$router.push('/payment-methods')">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button class="btn btn-secondary" type="button" @click="$router.push('/payment-methods')">Cancelar
+            </button>
+            <button class="btn btn-primary" type="submit">Salvar</button>
           </div>
         </form>
       </div>
@@ -33,10 +35,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {ref, onMounted, computed} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import paymentMethodService from '@/services/paymentMethodService';
-import { useEscapeKey } from '@/composables/useEscapeKey';
+import {useEscapeKey} from '@/composables/useEscapeKey';
 
 const route = useRoute();
 const router = useRouter();
