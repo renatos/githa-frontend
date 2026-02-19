@@ -247,7 +247,9 @@ const saveItem = async (data) => {
 };
 
 const deleteItem = async (id) => {
-  if (confirm('Tem certeza que deseja excluir esta transação?')) {
+  const message = 'Tem certeza que deseja excluir esta transação?\n\n' +
+    'Se esta transação estiver vinculada a uma venda, a venda e os agendamentos associados também serão removidos permanentemente.';
+  if (confirm(message)) {
     try {
       await financialService.deleteTransaction(id);
       tableRef.value?.loadData();

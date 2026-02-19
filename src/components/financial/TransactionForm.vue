@@ -590,13 +590,16 @@ const save = async () => {
     try {
       const payload = {
         sale: {
+          id: form.value.saleId,
           clientId: form.value.clientId,
           notes: form.value.description,
           items: saleItems.value.map(item => ({
+            id: item.id && typeof item.id === 'number' && item.id > 1700000000000 ? null : item.id, // Skip temporary Date.now() IDs
             type: item.type,
             productId: item.productId,
             serviceId: item.serviceId,
             professionalId: item.professionalId,
+            appointmentId: item.appointmentId,
             quantity: item.quantity,
             unitPrice: item.unitPrice
           }))
