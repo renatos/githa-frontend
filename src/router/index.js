@@ -116,6 +116,12 @@ const router = createRouter({
             component: () => import('../views/FeedbackView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/ai-insights',
+            name: 'ai-insights',
+            component: () => import('../views/AiCentralView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })

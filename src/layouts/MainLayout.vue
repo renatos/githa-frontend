@@ -40,6 +40,9 @@
         <router-link to="/feedbacks" class="nav-item" active-class="active" @click="closeSidebar">
           Feedbacks e Suporte
         </router-link>
+        <router-link to="/ai-insights" class="nav-item" active-class="active" @click="closeSidebar">
+          <i class="pi pi-sparkles text-sm mr-2" style="color: #8b5cf6"></i> Central Githa AI
+        </router-link>
         <router-link to="/financials" class="nav-item" active-class="active" @click="closeSidebar">
           Financeiro
         </router-link>
@@ -86,6 +89,9 @@
         <slot></slot>
       </div>
     </main>
+
+    <!-- Global AI Chat Assistant -->
+    <FloatingAIChat />
   </div>
 </template>
 
@@ -94,6 +100,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
+import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 
 const router = useRouter();
 const { isDark, toggleTheme } = useTheme();

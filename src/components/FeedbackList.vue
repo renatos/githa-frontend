@@ -1,7 +1,10 @@
 <template>
   <div class="feedback-list">
     <div class="header-actions">
-      <h2>Feedbacks e Suporte</h2>
+      <div class="flex align-items-center gap-3">
+        <h2 class="m-0">Feedbacks e Suporte</h2>
+        <AiContextBadge context="FEEDBACKS" contextName="Feedbacks" />
+      </div>
       <div class="header-buttons">
         <button class="btn btn-primary" @click="$emit('new')">
           + Novo Feedback
@@ -75,6 +78,7 @@
 <script setup>
 import {ref, defineEmits, defineExpose} from 'vue';
 import GenericTable from './common/GenericTable.vue';
+import AiContextBadge from './common/AiContextBadge.vue';
 import {feedbackService} from '../services/feedbackService';
 import {formatDateTime} from '../utils/formatters';
 

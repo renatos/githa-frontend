@@ -1,7 +1,10 @@
 <template>
   <div class="client-list">
     <div class="header-actions">
-      <h2>Clientes</h2>
+      <div class="flex align-items-center gap-3">
+        <h2 class="m-0">Clientes</h2>
+        <AiContextBadge context="CLIENTS" contextName="Clientes" />
+      </div>
       <div class="header-buttons">
           <button class="btn btn-secondary" @click="showImportModal = true">
             Importar do Google
@@ -86,6 +89,7 @@
 import { ref, defineEmits, defineExpose } from 'vue';
 import GenericTable from './common/GenericTable.vue';
 import GoogleContactsModal from './common/GoogleContactsModal.vue';
+import AiContextBadge from './common/AiContextBadge.vue';
 import { clientService } from '../services/clientService';
 import { formatShortName, formatPhone } from '../utils/formatters';
 
