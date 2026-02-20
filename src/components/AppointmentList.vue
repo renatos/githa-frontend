@@ -11,6 +11,7 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      :row-class="rowClass"
       @row-click="(item) => $emit('edit', item)"
     >
 
@@ -69,6 +70,7 @@
 
 <script setup>
 import { ref, defineEmits, defineExpose, defineProps, watch, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import GenericTable from './common/GenericTable.vue';
 import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
@@ -78,6 +80,15 @@ const props = defineProps({
   embedded: { type: Boolean, default: false },
   clientId: { type: Number, default: null }
 });
+
+const route = useRoute();
+
+const rowClass = (item) => {
+    if (route.query.highlight && String(item.id) === String(route.query.highlight)) {
+        return 'highlight-row';
+    }
+    return '';
+};
 
 defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
 
@@ -300,5 +311,10 @@ defineExpose({ refresh });
   opacity: 0.5;
   cursor: not-allowed;
   /* pointer-events: none; - Removed to allow tooltips */
+}
+
+:deep(.highlight-row) td {
+    background-color: var(--color-highlight-row, rgba(234, 179, 8, 0.15)) !important;
+    transition: background-color 0.5s;
 }
 </style>

@@ -29,12 +29,17 @@
 
                 <div class="form-group">
                   <label>Data de Nascimento</label>
-                  <input v-model="form.dateOfBirth" class="form-control" type="date"/>
+                  <input v-model="form.birthday" class="form-control" type="date"/>
                 </div>
 
                 <div class="form-group">
                   <label>Endereço</label>
                   <input v-model="form.address" class="form-control" type="text"/>
+                </div>
+
+                <div class="form-group">
+                  <label>Observações</label>
+                  <input v-model="form.notes" class="form-control" type="text"/>
                 </div>
 
                 <div class="form-group">
@@ -92,8 +97,9 @@ const form = ref({
   name: '',
   email: '',
   phone: '',
-  dateOfBirth: '',
+  birthday: '',
   address: '',
+  notes: '',
   referredById: null,
 });
 

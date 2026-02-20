@@ -39,6 +39,7 @@
                 <select v-model="form.status" class="form-control">
                   <option value="NEW">Novo</option>
                   <option value="ACCEPTED">Em Análise</option>
+                  <option value="IN_PROGRESS">Em Andamento</option>
                   <option value="IMPLEMENTED">Concluído</option>
                   <option value="REJECTED">Rejeitado</option>
                 </select>

@@ -47,13 +47,13 @@
         :row-class="getRowClass"
         @row-click="(item) => $emit('edit', item)"
     >
-      <template #cell-type="{ item }">
+      <template #cell-feedbackType="{ item }">
         <span
-            :class="'badge type-' + item.type.toLowerCase()">{{ formatType(item.type) }}</span>
+            :class="'badge type-' + item.feedbackType.toLowerCase()">{{ formatType(item.feedbackType) }}</span>
       </template>
 
-      <template #cell-status="{ item }">
-        <span :class="'badge status-' + item.status.toLowerCase()">{{ formatStatus(item.status) }}</span>
+      <template #cell-feedbackStatus="{ item }">
+        <span :class="'badge status-' + item.feedbackStatus.toLowerCase()">{{ formatStatus(item.feedbackStatus) }}</span>
       </template>
 
       <template #cell-user="{ item }">
@@ -86,8 +86,8 @@ const selectedStatuses = ref([]);
 const columns = [
   {key: 'id', label: '#', width: '50px', sortable: true},
   {key: 'title', label: 'Título', sortable: true, filterable: true},
-  {key: 'type', label: 'Tipo', sortable: true, filterable: true},
-  {key: 'status', label: 'Status', sortable: true, filterable: true},
+  {key: 'feedbackType', label: 'Tipo', sortable: true, filterable: true},
+  {key: 'feedbackStatus', label: 'Status', sortable: true, filterable: true},
   {key: 'reporter', label: 'Relator', sortable: false},
   {key: 'createdAt', label: 'Data', sortable: true},
 ];
@@ -110,7 +110,7 @@ const fetchDataAdapter = async (params) => {
   };
 
   if (selectedStatuses.value.length > 0) {
-    query.status = selectedStatuses.value.join(',');
+    query.feedbackStatus = selectedStatuses.value.join(',');
   }
 
   // Remove empty keys
@@ -125,8 +125,8 @@ const refresh = () => {
 };
 
 const getRowClass = (item) => {
-  if (!item.status) return '';
-  return `feedback-row-${item.status.toLowerCase()}`;
+  if (!item.feedbackStatus) return '';
+  return `feedback-row-${item.feedbackStatus.toLowerCase()}`;
 };
 
 const formatType = (type) => {
@@ -142,7 +142,8 @@ const formatStatus = (status) => {
   const map = {
     'NEW': 'Novo',
     'ACCEPTED': 'Em Análise',
-    'Rejeitado': 'Rejeitado',
+    'IN_PROGRESS': 'Em Andamento',
+    'REJECTED': 'Rejeitado',
     'IMPLEMENTED': 'Concluído'
   };
   return map[status] || status;
