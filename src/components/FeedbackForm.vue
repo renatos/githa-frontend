@@ -16,7 +16,7 @@
             <div class="row">
               <div class="form-group col-12 col-md-4">
                 <label>Tipo</label>
-                <select v-model="form.type" :disabled="!!feedback.id" class="form-control" required>
+                <select v-model="form.feedbackType" :disabled="!!feedback.id" class="form-control" required>
                   <option value="BUG">Erro / Bug</option>
                   <option value="FEATURE">Nova Funcionalidade</option>
                   <option value="IMPROVEMENT">Melhoria</option>
@@ -36,7 +36,7 @@
 
               <div v-if="feedback.id" class="form-group col-12 col-md-4">
                 <label>Status</label>
-                <select v-model="form.status" class="form-control">
+                <select v-model="form.feedbackStatus" class="form-control">
                   <option value="NEW">Novo</option>
                   <option value="ACCEPTED">Em Análise</option>
                   <option value="IN_PROGRESS">Em Andamento</option>
@@ -140,8 +140,8 @@ useEscapeKey(() => emit('close'));
 const form = ref({
   title: '',
   description: '',
-  type: 'BUG',
-  status: 'NEW',
+  feedbackType: 'BUG',
+  feedbackStatus: 'NEW',
   userId: null,
   user: null,
   reporterId: null,
