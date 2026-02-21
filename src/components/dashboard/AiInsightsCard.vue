@@ -1,6 +1,6 @@
 <template>
   <DashboardCard
-    title="Githa AI Insights (TESTE!!)"
+    title="Githa AI Insights"
     icon="✨"
     :loading="loading"
     :error="error"
@@ -18,13 +18,14 @@
           {{ getInsightIcon(insight.type) }}
         </div>
         <div class="insight-content">
-          <p>{{ insight.content }}</p>
+          <p>{{ insight.title || insight.description }}</p>
         </div>
       </div>
     </div>
     
-    <div class="ai-footer">
+    <div class="ai-footer flex justify-content-between align-items-center mt-3 border-top-1 surface-border pt-2">
       <span class="ai-badge">Gerado por Inteligência Artificial</span>
+      <router-link to="/ai-insights" class="text-sm cursor-pointer p-button-link text-primary no-underline font-medium">Ver Todos <i class="pi pi-arrow-right text-xs ml-1"></i></router-link>
     </div>
   </DashboardCard>
 </template>
@@ -32,6 +33,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import DashboardCard from './DashboardCard.vue';
+import { aiService } from '@/services/aiService';
 
 const loading = ref(true);
 const error = ref(false);
@@ -39,10 +41,13 @@ const insights = ref([]);
 
 const getInsightIcon = (type) => {
   const icons = {
-    'FINANCIAL': '📈',
+    'FINANCIAL_ALERT': '📈',
     'OPERATIONAL': '⚙️',
-    'RETENTION': '🤝',
-    'OPPORTUNITY': '💡'
+    'RETENTION_ALERT': '🤝',
+    'OPPORTUNITY': '💡',
+    'BUG': '🐛',
+    'IMPROVEMENT': '✨',
+    'FEATURE': '🚀'
   };
   return icons[type] || '🔍';
 };
@@ -52,28 +57,8 @@ const fetchInsights = async () => {
   error.value = false;
   
   try {
-    // TODO: Phase 2 - Replace with actual API call to /api/ai/insights
-    // const response = await api.get('/ai/insights');
-    // insights.value = response.data;
-    
-    // Simulating API call for the Mock
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    insights.value = [
-      {
-        type: 'FINANCIAL',
-        content: 'Sua receita na primeira quinzena superou a média dos últimos 3 meses em 15%.'
-      },
-      {
-        type: 'OPERATIONAL',
-        content: 'Notamos que 30% dos seus horários de quarta-feira à tarde estão vagos. Que tal enviar uma promoção?'
-      },
-      {
-        type: 'RETENTION',
-        content: 'Ótimo trabalho! Você recuperou 2 clientes (status Em Risco) na última semana.'
-      }
-    ];
-    
+    const response = await aiService.getDashboardInsights({ page: 0, size: 3, sort: 'createdAt,desc' });
+    insights.value = response.data.content || [];
   } catch (err) {
     console.error('Failed to fetch AI insights:', err);
     error.value = true;

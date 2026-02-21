@@ -1,7 +1,10 @@
 <template>
   <div class="appointment-list">
     <div class="header-actions" v-if="!embedded">
-      <h2>Agendamentos</h2>
+      <div class="flex align-items-center gap-3">
+        <h2 class="m-0">Agendamentos</h2>
+        <AiContextBadge context="APPOINTMENTS" contextName="Agenda" />
+      </div>
       <button class="btn btn-primary" @click="$emit('new')">
         + Novo Agendamento
       </button>
@@ -72,6 +75,7 @@
 import { ref, defineEmits, defineExpose, defineProps, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import GenericTable from './common/GenericTable.vue';
+import AiContextBadge from './common/AiContextBadge.vue';
 import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
 import { formatDateTime } from '../utils/formatters';
