@@ -18,13 +18,13 @@
 
                 <div class="form-group">
                   <label>Email</label>
-                  <input v-model="form.email" class="form-control" type="email"/>
+                  <input v-model="form.email" class="form-control" type="email" inputmode="email"/>
                 </div>
 
                 <div class="form-group">
                   <label>Telefone</label>
                   <input v-model="form.phone" class="form-control" maxlength="15" placeholder="(DD) 99999-9999"
-                         type="tel" @input="onPhoneInput"/>
+                         type="tel" inputmode="tel" @input="onPhoneInput"/>
                 </div>
 
                 <div class="form-group">

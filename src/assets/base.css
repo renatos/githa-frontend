@@ -161,4 +161,11 @@ body {
         border-radius: var(--radius-md) !important;
         box-shadow: var(--shadow-lg) !important;
     }
+
+    /* Larger touch targets for mobile */
+    .btn,
+    .p-button {
+        min-height: 44px;
+        min-width: 44px;
+    }
 }

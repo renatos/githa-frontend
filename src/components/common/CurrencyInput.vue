@@ -2,6 +2,7 @@
   <InputText
       ref="inputRef"
       type="text"
+      inputmode="decimal"
       v-bind="$attrs"
   />
 </template>

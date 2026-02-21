@@ -81,5 +81,19 @@
         max-height: 100vh;
         border-radius: 0;
         border: none;
+        padding-top: env(safe-area-inset-top, var(--spacing-md));
+        padding-bottom: env(safe-area-inset-bottom, var(--spacing-md));
+    }
+
+    .modal-footer {
+        padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Enables horizontal scroll for embedded tables (e.g., Transactions) */
+    .modal-content table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
     }
 }

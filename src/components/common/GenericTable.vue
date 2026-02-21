@@ -662,6 +662,17 @@ tr:hover td {
     display: flex;
   }
 
+  .card-actions {
+    justify-content: space-around;
+  }
+
+  .card-actions :deep(.p-button),
+  .card-actions .btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
   .pagination-footer {
     flex-direction: column;
     gap: var(--spacing-md);

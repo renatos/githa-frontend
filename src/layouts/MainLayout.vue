@@ -92,6 +92,9 @@
 
     <!-- Global AI Chat Assistant -->
     <FloatingAIChat />
+
+    <!-- Mobile Bottom Navigation -->
+    <BottomNav />
   </div>
 </template>
 
@@ -101,6 +104,7 @@ import { useRouter } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
+import BottomNav from '../components/common/BottomNav.vue';
 
 const router = useRouter();
 const { isDark, toggleTheme } = useTheme();
@@ -297,6 +301,7 @@ onMounted(() => {
     margin-left: 0;
     width: 100%;
     margin-top: 60px; /* Space for mobile header */
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav */
   }
 
   .sidebar-backdrop {

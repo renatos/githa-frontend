@@ -125,7 +125,7 @@
                     />
                   </div>
                 </td>
-                <td><input v-model="newItem.quantity" class="qty-input" type="number" min="1"></td>
+                <td><input v-model="newItem.quantity" class="qty-input" type="number" min="1" inputmode="numeric"></td>
                 <td class="unit-price-cell">
                   <CurrencyInput v-model="newItem.unitPrice"/>
                 </td>

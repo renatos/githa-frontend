@@ -27,7 +27,7 @@
           <div class="row">
             <div class="form-group" style="flex: 1;">
               <label for="stockQuantity">Quantidade em Estoque</label>
-              <input id="stockQuantity" v-model="form.stockQuantity" class="form-control" type="number" min="0" />
+              <input id="stockQuantity" v-model="form.stockQuantity" class="form-control" type="number" min="0" inputmode="numeric" />
             </div>
             <div style="flex: 3;"></div>
           </div>
