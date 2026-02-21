@@ -137,7 +137,8 @@ const formatType = (type) => {
   const map = {
     'BUG': 'Erro',
     'FEATURE': 'Nova Funcionalidade',
-    'IMPROVEMENT': 'Melhoria'
+    'IMPROVEMENT': 'Melhoria',
+    'SUGGESTION': 'Sugestão da IA'
   };
   return map[type] || type;
 };
@@ -249,6 +250,11 @@ defineExpose({refresh});
 .badge.type-improvement {
   background-color: #f3e8ff;
   color: #a855f7;
+}
+
+.badge.type-suggestion {
+  background-color: #ecfdf5;
+  color: #059669;
 }
 
 .btn-icon {

@@ -48,7 +48,8 @@
 
             <div class="form-group" style="margin-bottom: 8px;">
               <label>Descrição</label>
-              <textarea v-model="form.description" :disabled="!!feedback.id" class="form-control" required
+              <div v-if="isMarkdown && feedback.id" class="markdown-content" v-html="renderedDescription"></div>
+              <textarea v-else v-model="form.description" :disabled="!!feedback.id" class="form-control" required
                         rows="4"></textarea>
             </div>
 
@@ -125,6 +126,7 @@ import {formatDateTime} from '../utils/formatters';
 import BaseLookup from './common/BaseLookup.vue';
 import {professionalService} from '../services/professionalService';
 import {clientService} from '../services/clientService';
+import {marked} from 'marked';
 
 const props = defineProps({
   feedback: {
@@ -155,11 +157,23 @@ const sendingReply = ref(false);
 const chatContainer = ref(null);
 const currentUser = ref({});
 
+const isMarkdown = computed(() => {
+  return form.value.descriptionFormat === 'MARKDOWN';
+});
+
+const renderedDescription = computed(() => {
+  if (isMarkdown.value && form.value.description) {
+    return marked(form.value.description);
+  }
+  return form.value.description || '';
+});
+
 onMounted(() => {
   currentUser.value = authService.getCurrentUser();
   if (props.feedback.id) {
     form.value = {
       ...props.feedback,
+      descriptionFormat: props.feedback.descriptionFormat || null,
       userId: props.feedback.user?.id,
       user: props.feedback.user,
       reporterId: props.feedback.reporter?.id,
@@ -273,6 +287,40 @@ const scrollToBottom = () => {
   flex-shrink: 0;
   padding: var(--spacing-md);
   background: var(--color-bg-body);
+}
+
+.markdown-content {
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3) {
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+  padding-left: 1.5em;
+}
+
+.markdown-content :deep(code) {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.markdown-content :deep(p) {
+  margin: 0.5em 0;
 }
 
 .feedback-meta {
