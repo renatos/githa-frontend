@@ -18,13 +18,14 @@
           {{ getInsightIcon(insight.type) }}
         </div>
         <div class="insight-content">
-          <p>{{ insight.content }}</p>
+          <p>{{ insight.title || insight.description }}</p>
         </div>
       </div>
     </div>
     
-    <div class="ai-footer">
+    <div class="ai-footer flex justify-content-between align-items-center mt-3 border-top-1 surface-border pt-2">
       <span class="ai-badge">Gerado por Inteligência Artificial</span>
+      <router-link to="/ai-insights" class="text-sm cursor-pointer p-button-link text-primary no-underline font-medium">Ver Todos <i class="pi pi-arrow-right text-xs ml-1"></i></router-link>
     </div>
   </DashboardCard>
 </template>
