@@ -268,6 +268,35 @@ const sendMessage = async () => {
   transform: scale(1.1);
 }
 
+@media (max-width: 768px) {
+  .floating-chat-container {
+    bottom: 5px; /* Aligns vertically within bottom nav */
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%); /* Centers it horizontally */
+    z-index: 1002; /* Ensures it's above the bottom nav */
+  }
+
+  .chat-trigger-button {
+    width: 3.5rem;
+    height: 3.5rem;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    /* Make it pop out of the menubar slightly by translating up, 
+       but not overlapping content as much as before */
+    transform: translateY(-15px);
+  }
+
+  .chat-trigger-button:hover {
+     transform: translateY(-15px) scale(1.05); /* preserve upward translation on hover */
+  }
+
+  :deep(.p-dialog.chat-dialog) {
+      margin: 0 !important;
+      max-height: 90vh;
+      bottom: 70px !important; /* Above bottom nav */
+  }
+}
+
 .chat-header-actions {
   padding: 1rem;
   border-bottom: 1px solid var(--surface-border);

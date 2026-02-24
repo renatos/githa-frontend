@@ -90,7 +90,7 @@
               <!-- Add New Item Row -->
               <tr class="new-item-row">
                 <td>
-                  <select v-model="newItem.type" class="type-select">
+                  <select v-model="newItem.type" class="type-select" @change="checkForUnbilledAppointments">
                     <option value="PRODUCT">Prod</option>
                     <option value="SERVICE">Serv</option>
                   </select>
@@ -141,6 +141,9 @@
               </tr>
               </tbody>
             </table>
+          </div>
+          <div v-if="autoFilledMessage" class="auto-filled-message">
+            <small>✓ {{ autoFilledMessage }}</small>
           </div>
         </div>
 
@@ -243,6 +246,7 @@ import BaseLookup from '../common/BaseLookup.vue';
 import paymentMethodService from '../../services/paymentMethodService';
 import {clientService} from '../../services/clientService';
 import productService from '../../services/productService';
+import {appointmentService} from '../../services/appointmentService';
 
 const productServiceAdapter = {
   getAll: async (params) => {
@@ -318,9 +322,12 @@ const newItem = ref({
   servicePrice: 0,
   professionalId: null,
   professionalName: '',
+  appointmentId: null,
   quantity: 1,
   unitPrice: 0
 });
+
+const autoFilledMessage = ref('');
 
 const selectedPaymentMethod = ref(null);
 
@@ -484,6 +491,9 @@ const addSaleItem = () => {
 
   saleItems.value.push({...newItem.value, id: Date.now()});
 
+  // Clear auto-fill message
+  autoFilledMessage.value = '';
+
   // Reset newItem
   newItem.value = {
     type: newItem.value.type,
@@ -494,6 +504,7 @@ const addSaleItem = () => {
     servicePrice: 0,
     professionalId: null,
     professionalName: '',
+    appointmentId: null,
     quantity: 1,
     unitPrice: 0
   };
@@ -539,6 +550,48 @@ const onClientSelect = (item) => {
   if (!form.value.description) {
     form.value.description = `Venda para ${item.name}`;
   }
+  checkForUnbilledAppointments();
+};
+
+const checkForUnbilledAppointments = async () => {
+    // Clear previous message
+    autoFilledMessage.value = '';
+
+    // Only fetch if mode is SALE, Client is selected, and New Item type is SERVICE
+    if (launchMode.value === 'SALE' && form.value.clientId && newItem.value.type === 'SERVICE') {
+        try {
+            // Fetch unbilled appointments for this client (status COMPLETED, no transaction associated)
+            const response = await appointmentService.getAll({ 
+                clientId: form.value.clientId, 
+                status: 'COMPLETED',
+                size: 50 // Enough to catch any recent unbilled
+            });
+            
+            // Filter appointments that don't have a transactionId yet
+            // and we don't want to re-add ones already added to the saleItems list
+            const unbilled = response.data.content.filter(apt => 
+                !apt.transactionId && 
+                !saleItems.value.some(addedItem => addedItem.appointmentId === apt.id)
+            );
+
+            if (unbilled.length > 0) {
+                // Pre-fill with the first unbilled appointment found
+                const apt = unbilled[0];
+                newItem.value.serviceId = apt.serviceId;
+                newItem.value.serviceName = apt.serviceName;
+                newItem.value.professionalId = apt.professionalId;
+                newItem.value.professionalName = apt.professionalName;
+                newItem.value.unitPrice = apt.price || apt.servicePrice || 0; // Check properties available in DTO
+                newItem.value.appointmentId = apt.id;
+                
+                // Show message
+                const firstName = form.value.clientName.split(' ')[0] || 'o cliente';
+                autoFilledMessage.value = `Dados preenchidos automaticamente referentes a um agendamento concluído para: ${firstName}.`;
+            }
+        } catch (error) {
+            console.error('Failed to auto-fetch unbilled appointments', error);
+        }
+    }
 };
 
 const onAccountGroupSelect = (item) => {
@@ -800,6 +853,13 @@ input, select {
   background-color: #dcfce7;
   color: #166534;
   border: 1px solid #166534;
+}
+
+.auto-filled-message {
+  margin-top: 0.5rem;
+  color: var(--color-success, #16a34a);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .modal-actions {
