@@ -84,13 +84,13 @@
                 <td>{{ formatCurrency(item.unitPrice) }}</td>
                 <td>{{ formatCurrency(item.unitPrice * item.quantity) }}</td>
                 <td>
-                  <button class="btn-remove" type="button" @click="removeSaleItem(index)">×</button>
+                  <button v-if="canSave" class="btn-remove" type="button" @click="removeSaleItem(index)">×</button>
                 </td>
               </tr>
               <!-- Add New Item Row -->
-              <tr class="new-item-row">
+              <tr v-if="canSave" class="new-item-row">
                 <td>
-                  <select v-model="newItem.type" class="type-select" @change="checkForUnbilledAppointments">
+                  <select v-model="newItem.type" class="type-select" @change="checkForUnbilledAppointments" :disabled="!canSave">
                     <option value="PRODUCT">Prod</option>
                     <option value="SERVICE">Serv</option>
                   </select>
@@ -104,6 +104,7 @@
                       placeholder="Produto..."
                       size="small"
                       @select="onProductSelect"
+                      :disabled="!canSave"
                   />
                   <div v-else class="service-selectors">
                     <BaseLookup
@@ -113,6 +114,7 @@
                         placeholder="Serviço..."
                         size="small"
                         @select="onServiceSelect"
+                        :disabled="!canSave"
                     />
                     <BaseLookup
                         v-if="newItem.serviceId"
@@ -122,17 +124,18 @@
                         placeholder="Profissional..."
                         size="small"
                         @select="onProfessionalSelect"
+                        :disabled="!canSave"
                     />
                   </div>
                 </td>
-                <td><input v-model="newItem.quantity" class="qty-input" type="number" min="1" inputmode="numeric"></td>
+                <td><input v-model="newItem.quantity" class="qty-input" type="number" min="1" inputmode="numeric" :disabled="!canSave"></td>
                 <td class="unit-price-cell">
-                  <CurrencyInput v-model="newItem.unitPrice"/>
+                  <CurrencyInput v-model="newItem.unitPrice" :disabled="!canSave"/>
                 </td>
                 <td>{{ formatCurrency(newItem.unitPrice * newItem.quantity) }}</td>
                 <td>
                   <button
-                      :disabled="(newItem.type === 'PRODUCT' && !newItem.productId) || (newItem.type === 'SERVICE' && (!newItem.serviceId || !newItem.professionalId))"
+                      :disabled="!canSave || (newItem.type === 'PRODUCT' && !newItem.productId) || (newItem.type === 'SERVICE' && (!newItem.serviceId || !newItem.professionalId))"
                       class="btn-add" type="button"
                       @click="addSaleItem">
                     +
