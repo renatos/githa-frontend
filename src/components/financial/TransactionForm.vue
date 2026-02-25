@@ -557,7 +557,7 @@ const checkForUnbilledAppointments = async () => {
         try {
             // Fetch unbilled appointments for this client (status COMPLETED, no transaction associated)
             const response = await appointmentService.getAll({ 
-                clientId: form.value.clientId, 
+                'client.id': form.value.clientId, 
                 status: 'COMPLETED',
                 size: 50 // Enough to catch any recent unbilled
             });
