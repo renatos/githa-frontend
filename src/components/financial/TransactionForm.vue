@@ -382,11 +382,6 @@ const canSave = computed(() => {
     return false;
   }
 
-  // If current status is PAID (and changing to it), only ADMIN can save
-  if (form.value.status === 'PAID' && !isAdmin.value) {
-    return false;
-  }
-
   return true;
 });
 
