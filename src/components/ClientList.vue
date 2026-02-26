@@ -39,10 +39,17 @@
       </span>
       <span 
         class="legend-item active"
-        :class="{ selected: selectedStatuses.includes('ACTIVE') }"
-        @click="toggleFilter('ACTIVE')"
+        :class="{ selected: selectedStatuses.includes('true') }"
+        @click="toggleFilter('true')"
       >
         Ativo
+      </span>
+      <span 
+        class="legend-item inactive"
+        :class="{ selected: selectedStatuses.includes('false') }"
+        @click="toggleFilter('false')"
+      >
+        Inativo
       </span>
     </div>
 
@@ -122,6 +129,12 @@ const columns = [
 const selectedStatuses = ref([]);
 
 const toggleFilter = (status) => {
+  if (status === 'true') {
+     selectedStatuses.value = selectedStatuses.value.filter(s => s !== 'false');
+  } else if (status === 'false') {
+     selectedStatuses.value = selectedStatuses.value.filter(s => s !== 'true');
+  }
+
   if (selectedStatuses.value.includes(status)) {
     selectedStatuses.value = selectedStatuses.value.filter(s => s !== status);
   } else {
@@ -139,7 +152,21 @@ const fetchClientsAdapter = async (params) => {
   };
   
   if (selectedStatuses.value.length > 0) {
-    query.status = selectedStatuses.value.join(',');
+    // If true or false are in the selectedStatuses array, we use it for 'active'
+    const hasTrue = selectedStatuses.value.includes('true');
+    const hasFalse = selectedStatuses.value.includes('false');
+    
+    if (hasTrue) {
+      query.active = true;
+    } else if (hasFalse) {
+       query.active = false;
+    }
+  
+    // the rest goes to status
+    const listStatus = selectedStatuses.value.filter(s => s !== 'true' && s !== 'false');
+    if(listStatus.length > 0) {
+        query.status = listStatus.join(',');
+    }
   }
   
   // Remove empty keys
@@ -311,6 +338,11 @@ defineExpose({ refresh });
 
 .legend-item.active::before {
   background-color: var(--color-status-active-bg);
+  border-color: var(--color-text-muted);
+}
+
+.legend-item.inactive::before {
+  background-color: var(--color-bg-body);
   border-color: var(--color-text-muted);
 }
 

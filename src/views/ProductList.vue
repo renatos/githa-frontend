@@ -7,6 +7,23 @@
       </button>
     </div>
 
+    <div class="status-legend">
+      <span 
+        class="legend-item active"
+        :class="{ selected: selectedStatuses.includes('true') }"
+        @click="toggleFilter('true')"
+      >
+        Ativo
+      </span>
+      <span 
+        class="legend-item inactive"
+        :class="{ selected: selectedStatuses.includes('false') }"
+        @click="toggleFilter('false')"
+      >
+        Inativo
+      </span>
+    </div>
+
     <GenericTable
       ref="tableRef"
       :columns="columns"
@@ -48,6 +65,26 @@ import productService from '@/services/productService';
 const tableRef = ref(null);
 const showForm = ref(false);
 const editingItem = ref({});
+const selectedStatuses = ref([]);
+
+const toggleFilter = (status) => {
+  if (status === 'true') {
+     selectedStatuses.value = selectedStatuses.value.filter(s => s !== 'false');
+  } else if (status === 'false') {
+     selectedStatuses.value = selectedStatuses.value.filter(s => s !== 'true');
+  }
+
+  if (selectedStatuses.value.includes(status)) {
+    selectedStatuses.value = selectedStatuses.value.filter(s => s !== status);
+  } else {
+    selectedStatuses.value.push(status);
+  }
+  refresh();
+};
+
+const refresh = () => {
+  tableRef.value?.loadData();
+};
 
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
@@ -63,35 +100,30 @@ const formatCurrency = (value) => {
 };
 
 const fetchDataAdapter = async (params) => {
-  const response = await productService.getAll();
-  const allData = response.data || [];
-
-  let filteredData = allData;
-  if (params.filters && params.filters.name) {
-    const searchTerm = params.filters.name.toLowerCase();
-    filteredData = allData.filter(item =>
-      item.name.toLowerCase().includes(searchTerm)
-    );
-  }
-
-  if (params.sort) {
-    const [field, direction] = params.sort.split(',');
-    filteredData.sort((a, b) => {
-      const aVal = a[field];
-      const bVal = b[field];
-      const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-      return direction === 'desc' ? -comparison : comparison;
-    });
-  }
-
-  const start = params.page * params.size;
-  const end = start + params.size;
-  return {
-    content: filteredData.slice(start, end),
-    number: params.page,
+  const query = {
+    page: params.page,
     size: params.size,
-    totalElements: filteredData.length
+    sort: params.sort,
+    ...params.filters
   };
+  
+  if (selectedStatuses.value.length > 0) {
+    // If true or false are in the selectedStatuses array, we use it for 'active'
+    const hasTrue = selectedStatuses.value.includes('true');
+    const hasFalse = selectedStatuses.value.includes('false');
+    
+    if (hasTrue) {
+      query.active = true;
+    } else if (hasFalse) {
+       query.active = false;
+    }
+  }
+
+  // Remove empty keys
+  Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
+
+  const response = await productService.getAll(query);
+  return response.data;
 };
 
 const openForm = (item = {}) => {
@@ -181,5 +213,55 @@ const confirmDelete = async (item) => {
 .status-badge.inactive {
   background-color: #f1f5f9;
   color: #64748b;
+}
+.status-legend {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  opacity: 0.7; /* Dimmed by default */
+}
+
+.legend-item:hover {
+  background-color: var(--color-bg-body);
+}
+
+.legend-item.selected {
+  opacity: 1;
+  border-color: var(--color-border);
+  background-color: var(--color-bg-card);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-weight: 600;
+}
+
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+}
+
+.legend-item.active::before {
+  background-color: var(--color-status-active-bg, #dcfce7);
+  border-color: var(--color-text-muted);
+}
+
+.legend-item.inactive::before {
+  background-color: var(--color-bg-body, #f1f5f9);
+  border-color: var(--color-text-muted);
 }
 </style>
