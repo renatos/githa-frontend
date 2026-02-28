@@ -232,7 +232,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 useModal(emit);
-useEscapeKey(() => emit('close'));
 
 const maxDate = new Date().toISOString().split('T')[0];
 

@@ -136,6 +136,7 @@ import MicropigmentationAnamnesisForm from './MicropigmentationAnamnesisForm.vue
 import { enumService } from '../../services/enumService';
 import { anamnesisService } from '../../services/anamnesisService';
 import { toastBridge } from '../../services/toastBridge';
+import { useModal } from '../../composables/useModal';
 
 const props = defineProps({
   clientId: {
@@ -153,6 +154,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'save']);
+useModal(emit);
 
 const FORM_MAP = {
   FACIAL: FacialAnamnesisForm,
