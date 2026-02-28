@@ -170,6 +170,18 @@
               </div>
             </TabPanel>
 
+            <TabPanel v-if="form.id" header="Anamneses">
+              <div class="anamneses-tab">
+                <AnamnesisList
+                  ref="anamnesesList"
+                  :client-id="form.id"
+                  @new="openAnamnesisModal(null)"
+                  @edit="openAnamnesisModal($event, false)"
+                  @view="openAnamnesisModal($event, true)"
+                />
+              </div>
+            </TabPanel>
+
             <TabPanel v-if="form.id" header="Histórico">
               <div class="history-tab">
                 <SaleList :client-id="form.id" :embedded="true"/>
@@ -184,6 +196,16 @@
         </form>
       </div>
     </div>
+
+    <!-- Modals -->
+    <AnamnesisFormModal
+      v-if="showAnamnesisModal"
+      :client-id="form.id"
+      :entity="editingAnamnesis"
+      :readonly="readonlyAnamnesis"
+      @close="closeAnamnesisModal"
+      @save="onAnamnesisSaved"
+    />
   </div>
 </template>
 
@@ -193,6 +215,8 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import BaseLookup from './common/BaseLookup.vue';
 import SaleList from './SaleList.vue';
+import AnamnesisList from './anamnesis/AnamnesisList.vue';
+import AnamnesisFormModal from './anamnesis/AnamnesisFormModal.vue';
 import {clientService} from '../services/clientService';
 import {enumService} from '../services/enumService';
 import {useModal} from '../composables/useModal';
@@ -252,6 +276,12 @@ const form = ref({
 const searchQueryResults = ref([]);
 const showSearchResults = ref(false);
 let searchTimeout = null;
+
+// Anamnesis Modal State
+const anamnesesList = ref(null);
+const showAnamnesisModal = ref(false);
+const editingAnamnesis = ref(null);
+const readonlyAnamnesis = ref(false);
 
 const genders = ref([]);
 const primaryObjectives = ref([]);
@@ -374,6 +404,26 @@ const save = () => {
   emit('save', payload);
 };
 
+// Anamnesis methods
+const openAnamnesisModal = (entity = null, readonly = false) => {
+  editingAnamnesis.value = entity;
+  readonlyAnamnesis.value = readonly;
+  showAnamnesisModal.value = true;
+};
+
+const closeAnamnesisModal = () => {
+  showAnamnesisModal.value = false;
+  editingAnamnesis.value = null;
+  readonlyAnamnesis.value = false;
+};
+
+const onAnamnesisSaved = () => {
+  closeAnamnesisModal();
+  if (anamnesesList.value) {
+    anamnesesList.value.refresh();
+  }
+};
+
 const onPhoneInput = (event) => {
   const formatted = formatPhone(event.target.value);
   form.value.phone = formatted;
@@ -439,7 +489,7 @@ const onPhoneInput = (event) => {
   overflow-y: auto;
 }
 
-.history-tab {
+.history-tab, .anamneses-tab {
   padding-top: var(--spacing-md);
 }
 </style>
