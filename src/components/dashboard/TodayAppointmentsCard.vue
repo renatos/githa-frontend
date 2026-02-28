@@ -27,7 +27,7 @@
             class="status-badge" 
             :class="appointment.status ? appointment.status.toLowerCase() : ''"
           >
-            {{ translateStatus(appointment.status) }}
+            {{ statusMap[appointment.status] || appointment.status }}
           </span>
         </div>
       </div>
@@ -46,6 +46,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DashboardCard from './DashboardCard.vue';
 import { appointmentService } from '../../services/appointmentService';
+import { enumService } from '../../services/enumService';
 
 const router = useRouter();
 const loading = ref(true);
@@ -67,16 +68,13 @@ const formatTime = (dateTimeStr) => {
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
 
-const translateStatus = (status) => {
-  const map = {
-    'SCHEDULED': 'Agendado',
-    'CONFIRMED': 'Confirmado',
-    'IN_PROGRESS': 'Em Andamento',
-    'COMPLETED': 'Concluído',
-    'CANCELED': 'Cancelado',
-    'NO_SHOW': 'Faltou'
-  };
-  return map[status] || status;
+const statusMap = ref({});
+
+const loadStatuses = async () => {
+  const options = await enumService.getOptions('AppointmentStatus');
+  options.forEach(opt => {
+    statusMap.value[opt.name] = opt.description;
+  });
 };
 
 const fetchAppointments = async () => {
@@ -116,6 +114,7 @@ const fetchAppointments = async () => {
 
 onMounted(() => {
   fetchAppointments();
+  loadStatuses();
 });
 </script>
 

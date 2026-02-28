@@ -16,8 +16,9 @@
           <div class="form-group">
             <label for="nature">Natureza</label>
             <select id="nature" v-model="form.nature" class="form-control" required>
-              <option value="INCOME">Receita</option>
-              <option value="EXPENSE">Despesa</option>
+              <option v-for="nature in accountNatures" :key="nature.name" :value="nature.name">
+                {{ nature.description }}
+              </option>
             </select>
           </div>
 
@@ -36,45 +37,71 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import { ref, onMounted } from 'vue';
-import financialService from '@/services/financialService';
-import { useEscapeKey } from '@/composables/useEscapeKey';
+import financialService from '../../services/financialService';
+import { enumService } from '../../services/enumService';
+import { useEscapeKey } from '../../composables/useEscapeKey';
 
-const props = defineProps({
-  accountGroup: {
-    type: Object,
-    default: () => ({})
-  }
-});
-
-const emit = defineEmits(['close', 'save']);
-
-useEscapeKey(() => emit('close'));
-
-const form = ref({
-  name: '',
-  nature: 'EXPENSE',
-  active: true
-});
-
-onMounted(() => {
-  if (props.accountGroup.id) {
-    form.value = { ...props.accountGroup };
-  }
-});
-
-const save = async () => {
-  try {
-    if (props.accountGroup.id) {
-      await financialService.updateAccountGroup(props.accountGroup.id, form.value);
-    } else {
-      await financialService.createAccountGroup(form.value);
+export default {
+  name: 'AccountGroupForm',
+  emits: ['close', 'save'],
+  props: {
+    accountGroup: {
+      type: Object,
+      default: () => ({})
     }
-    emit('save');
-  } catch (error) {
-    console.error('Error saving account group:', error);
-    alert('Erro ao salvar grupo.');
+  },
+  setup(props, { emit }) {
+    const isEditing = ref(false);
+    const accountNatures = ref([]);
+
+    useEscapeKey(() => emit('close'));
+
+    const form = ref({
+      name: '',
+      nature: 'EXPENSE',
+      active: true
+    });
+
+    const init = async () => {
+      try {
+        accountNatures.value = await enumService.getOptions('AccountNature');
+      } catch (e) {
+        console.error("Failed to load account natures", e);
+        alert("Erro ao carregar naturezas de conta.");
+      }
+      if (props.accountGroup.id) {
+        isEditing.value = true;
+        form.value = { ...props.accountGroup };
+      }
+    };
+
+    onMounted(() => {
+      init();
+    });
+
+    const save = async () => {
+      try {
+        if (props.accountGroup.id) {
+          await financialService.updateAccountGroup(props.accountGroup.id, form.value);
+        } else {
+          await financialService.createAccountGroup(form.value);
+        }
+        emit('save');
+      } catch (error) {
+        console.error('Error saving account group:', error);
+        alert('Erro ao salvar grupo.');
+      }
+    };
+
+    return {
+      form,
+      isEditing,
+      accountNatures,
+      save,
+      emit
+    };
   }
 };
 </script>

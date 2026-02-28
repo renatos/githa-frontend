@@ -69,9 +69,9 @@
                   <label>Gênero</label>
                   <select v-model="form.personalData.gender" class="form-control">
                     <option :value="null">Selecione</option>
-                    <option value="FEMALE">Feminino</option>
-                    <option value="MALE">Masculino</option>
-                    <option value="OTHER">Outro</option>
+                    <option v-for="gender in genders" :key="gender.name" :value="gender.name">
+                      {{ gender.description }}
+                    </option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -82,14 +82,9 @@
                   <label>Objetivo Principal</label>
                   <select v-model="form.personalData.primaryObjective" class="form-control mb-2">
                     <option :value="null">Selecione o objetivo</option>
-                    <option value="SKIN_CLEANING">Limpeza de Pele</option>
-                    <option value="EYEBROW_DESIGN">Design de Sobrancelhas</option>
-                    <option value="MICROPIGMENTATION">Micropigmentação (Lábios / Olhos / Sobrancelhas)</option>
-                    <option value="PEELING">Peeling</option>
-                    <option value="BROW_LAMINATION">Brow Lamination</option>
-                    <option value="LASH_LIFTING">Lash Lifting</option>
-                    <option value="MICRONEEDLING">Microagulhamento</option>
-                    <option value="OTHER">Outro</option>
+                    <option v-for="objective in primaryObjectives" :key="objective.name" :value="objective.name">
+                      {{ objective.description }}
+                    </option>
                   </select>
                   <input v-if="form.personalData.primaryObjective === 'OTHER'" 
                          v-model="form.personalData.primaryObjectiveOtherDetails" 
@@ -199,6 +194,7 @@ import TabPanel from 'primevue/tabpanel';
 import BaseLookup from './common/BaseLookup.vue';
 import SaleList from './SaleList.vue';
 import {clientService} from '../services/clientService';
+import {enumService} from '../services/enumService';
 import {useModal} from '../composables/useModal';
 import {useEscapeKey} from '../composables/useEscapeKey';
 import {formatPhone} from '../utils/formatters';
@@ -256,6 +252,9 @@ const form = ref({
 const searchQueryResults = ref([]);
 const showSearchResults = ref(false);
 let searchTimeout = null;
+
+const genders = ref([]);
+const primaryObjectives = ref([]);
 
 const onNameInput = () => {
   if (form.value.id) return; // Only search in new mode
@@ -349,7 +348,14 @@ const populateForm = (clientData) => {
   };
 };
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    genders.value = await enumService.getOptions('Gender');
+    primaryObjectives.value = await enumService.getOptions('PrimaryObjective');
+  } catch (error) {
+    console.error('Failed to load enum options', error);
+  }
+
   if (props.client.id) {
     populateForm(props.client);
   }

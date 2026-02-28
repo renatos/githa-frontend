@@ -17,9 +17,9 @@
               <div class="form-group col-12 col-md-4">
                 <label>Tipo</label>
                 <select v-model="form.feedbackType" :disabled="!!feedback.id" class="form-control" required>
-                  <option value="BUG">Erro / Bug</option>
-                  <option value="FEATURE">Nova Funcionalidade</option>
-                  <option value="IMPROVEMENT">Melhoria</option>
+                  <option v-for="type in feedbackTypes" :key="type.name" :value="type.name">
+                    {{ type.description }}
+                  </option>
                 </select>
               </div>
 
@@ -37,11 +37,9 @@
               <div v-if="feedback.id" class="form-group col-12 col-md-4">
                 <label>Status</label>
                 <select v-model="form.feedbackStatus" class="form-control">
-                  <option value="NEW">Novo</option>
-                  <option value="ACCEPTED">Em Análise</option>
-                  <option value="IN_PROGRESS">Em Andamento</option>
-                  <option value="IMPLEMENTED">Concluído</option>
-                  <option value="REJECTED">Rejeitado</option>
+                  <option v-for="status in feedbackStatuses" :key="status.name" :value="status.name">
+                    {{ status.description }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -119,6 +117,7 @@
 import {ref, defineProps, defineEmits, onMounted, computed, nextTick, watch} from 'vue';
 import {feedbackService} from '../services/feedbackService';
 import {authService} from '../services/authService';
+import {enumService} from '../services/enumService';
 import {useModal} from '../composables/useModal';
 import {useEscapeKey} from '../composables/useEscapeKey';
 import {formatDateTime} from '../utils/formatters';
@@ -157,6 +156,9 @@ const sendingReply = ref(false);
 const chatContainer = ref(null);
 const currentUser = ref({});
 
+const feedbackStatuses = ref([]);
+const feedbackTypes = ref([]);
+
 const isMarkdown = computed(() => {
   return form.value.descriptionFormat === 'MARKDOWN';
 });
@@ -168,8 +170,10 @@ const renderedDescription = computed(() => {
   return form.value.description || '';
 });
 
-onMounted(() => {
+onMounted(async () => {
   currentUser.value = authService.getCurrentUser();
+  feedbackStatuses.value = await enumService.getOptions('FeedbackStatus');
+  feedbackTypes.value = await enumService.getOptions('FeedbackType');
   if (props.feedback.id) {
     form.value = {
       ...props.feedback,

@@ -30,7 +30,7 @@
 
       <template #cell-status="{ value }">
          <span :class="['badge', 'status', value.toLowerCase()]">
-          {{ formatStatus(value) }}
+          {{ statusMap[value] || value }}
         </span>
       </template>
 
@@ -89,6 +89,7 @@ import TransactionForm from '../../components/financial/TransactionForm.vue';
 import CreateAppointmentFromTransactionModal from '../../components/financial/CreateAppointmentFromTransactionModal.vue';
 import financialService from '../../services/financialService';
 import { authService } from '../../services/authService';
+import { enumService } from '../../services/enumService';
 
 const props = defineProps({
   month: {
@@ -116,14 +117,19 @@ const editingItem = ref({});
 const showAppointmentModal = ref(false);
 const appointmentTransaction = ref({});
 const isAdmin = ref(false);
+const statusMap = ref({});
 
 const checkUserRole = () => {
     const user = authService.getCurrentUser();
     isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
 };
 
-onMounted(() => {
+onMounted(async () => {
     checkUserRole();
+    const options = await enumService.getOptions('TransactionStatus');
+    options.forEach(opt => {
+        statusMap.value[opt.name] = opt.description;
+    });
 });
 
 const isActionDisabled = (item) => {
@@ -205,14 +211,6 @@ const formatDate = (value) => {
   });
 };
 
-const formatStatus = (value) => {
-    const map = {
-        'PENDING': 'Pendente',
-        'PAID': 'Pago',
-        'CANCELLED': 'Cancelado'
-    };
-    return map[value] || value;
-};
 
 const openForm = (item = {}) => {
   editingItem.value = { ...item };

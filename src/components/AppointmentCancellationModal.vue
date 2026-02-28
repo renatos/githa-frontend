@@ -11,8 +11,9 @@
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status" class="form-control" required>
-              <option value="CANCELED">Cancelado</option>
-              <option value="MISSED">Faltou</option>
+              <option v-for="status in cancellationStatuses" :key="status.name" :value="status.name">
+                {{ status.description }}
+              </option>
             </select>
           </div>
 
@@ -36,6 +37,7 @@
 import {ref, defineProps, defineEmits, onMounted} from 'vue';
 import {useModal} from '../composables/useModal';
 import {useEscapeKey} from '../composables/useEscapeKey';
+import {enumService} from '../services/enumService';
 
 const props = defineProps({
   appointment: {
@@ -53,12 +55,21 @@ const form = ref({
   notes: ''
 });
 
-onMounted(() => {
+const cancellationStatuses = ref([]);
+
+onMounted(async () => {
   if (props.appointment) {
     // Initialize with existing notes if any, generally empty for new cancellation
     if (props.appointment.notes) {
       form.value.notes = props.appointment.notes + '\n\nMotivo do cancelamento: ';
     }
+  }
+
+  try {
+    const statuses = await enumService.getOptions('AppointmentStatus');
+    cancellationStatuses.value = statuses.filter(s => s.name === 'CANCELED' || s.name === 'MISSED');
+  } catch (error) {
+    console.error('Failed to load cancellation statuses', error);
   }
 });
 

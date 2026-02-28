@@ -25,7 +25,7 @@
 
       <template #cell-status="{ value, item }">
         <span :class="['status-badge', value ? value.toLowerCase() : '']">
-          {{ item.statusDescription }}
+          {{ statusMap[value] || value }}
         </span>
       </template>
 
@@ -78,6 +78,7 @@ import GenericTable from './common/GenericTable.vue';
 import AiContextBadge from './common/AiContextBadge.vue';
 import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
+import { enumService } from '../services/enumService';
 import { formatDateTime } from '../utils/formatters';
 
 const props = defineProps({
@@ -98,10 +99,18 @@ defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-proc
 
 const tableRef = ref(null);
 const isAdmin = ref(false);
+const statusMap = ref({});
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
   isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+};
+
+const loadStatuses = async () => {
+  const options = await enumService.getOptions('AppointmentStatus');
+  options.forEach(opt => {
+    statusMap.value[opt.name] = opt.description;
+  });
 };
 
 const isActionDisabled = (item) => {
@@ -124,6 +133,7 @@ const getDeleteTitle = (item) => {
 
 onMounted(() => {
   checkUserRole();
+  loadStatuses();
 });
 
 

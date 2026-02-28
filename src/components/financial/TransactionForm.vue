@@ -91,8 +91,9 @@
               <tr v-if="canSave" class="new-item-row">
                 <td>
                   <select v-model="newItem.type" class="type-select" @change="checkForUnbilledAppointments" :disabled="!canSave">
-                    <option value="PRODUCT">Prod</option>
-                    <option value="SERVICE">Serv</option>
+                    <option v-for="type in saleItemTypes" :key="type.name" :value="type.name">
+                      {{ type.description }}
+                    </option>
                   </select>
                 </td>
                 <td>
@@ -175,8 +176,9 @@
           <div v-if="launchMode === 'MANUAL'" class="form-group">
             <label>Natureza</label>
             <select v-model="form.nature" :disabled="true" required>
-              <option value="INCOME">Receita</option>
-              <option value="EXPENSE">Despesa</option>
+              <option v-for="nature in accountNatures" :key="nature.name" :value="nature.name">
+                {{ nature.description }}
+              </option>
             </select>
           </div>
 
@@ -188,9 +190,9 @@
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status" :disabled="!canSave" required>
-              <option value="PENDING">Pendente</option>
-              <option value="PAID">Pago</option>
-              <option value="CANCELLED">Cancelado</option>
+              <option v-for="status in transactionStatuses" :key="status.name" :value="status.name">
+                {{ status.description }}
+              </option>
             </select>
           </div>
         </div>
@@ -250,6 +252,7 @@ import paymentMethodService from '../../services/paymentMethodService';
 import {clientService} from '../../services/clientService';
 import productService from '../../services/productService';
 import {appointmentService} from '../../services/appointmentService';
+import {enumService} from '../../services/enumService';
 
 const productServiceAdapter = {
   getAll: async (params) => {
@@ -291,6 +294,9 @@ useEscapeKey(() => emit('close'));
 
 const isAdmin = ref(false);
 const originalStatus = ref('');
+const transactionStatuses = ref([]);
+const saleItemTypes = ref([]);
+const accountNatures = ref([]);
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
@@ -397,6 +403,9 @@ const saveTooltip = computed(() => {
 
 onMounted(async () => {
   checkUserRole();
+  transactionStatuses.value = await enumService.getOptions('TransactionStatus');
+  saleItemTypes.value = await enumService.getOptions('SaleItemType');
+  accountNatures.value = await enumService.getOptions('AccountNature');
   try {
     const response = await financialService.getAccountGroups(); // Changed service call
     accountGroups.value = response.data.filter(group => group.active); // Changed from groups

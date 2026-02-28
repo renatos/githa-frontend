@@ -87,11 +87,9 @@
           <div class="form-group">
             <label>Status</label>
             <select v-model="form.status" :disabled="!canSave" class="form-control" required>
-              <option value="SCHEDULED">Agendado</option>
-              <option value="CONFIRMED">Confirmado</option>
-              <option value="CANCELED">Cancelado</option>
-              <option value="COMPLETED">Concluído</option>
-              <option value="MISSED">Faltou</option>
+              <option v-for="status in appointmentStatuses" :key="status.name" :value="status.name">
+                {{ status.description }}
+              </option>
             </select>
           </div>
 
@@ -136,9 +134,9 @@
 import {ref, defineProps, defineEmits, onMounted, computed, watch} from 'vue';
 import {appointmentService} from '../services/appointmentService';
 import {clientService} from '../services/clientService';
-import {professionalService} from '../services/professionalService';
 import {serviceService} from '../services/serviceService';
 import {authService} from '../services/authService';
+import {enumService} from '../services/enumService';
 import BaseLookup from './common/BaseLookup.vue';
 import {useModal} from '../composables/useModal';
 import {useEscapeKey} from '../composables/useEscapeKey';
@@ -179,6 +177,7 @@ const form = ref({
 });
 
 const originalStatus = ref('');
+const appointmentStatuses = ref([]);
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
@@ -267,7 +266,12 @@ onMounted(() => {
   }
 
   checkUserRole();
+  loadStatuses();
 });
+
+const loadStatuses = async () => {
+    appointmentStatuses.value = await enumService.getOptions('AppointmentStatus');
+};
 
 const selectedServiceDuration = ref(0);
 
