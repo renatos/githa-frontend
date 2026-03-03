@@ -135,6 +135,7 @@ import EyelashExtensionAnamnesisForm from './EyelashExtensionAnamnesisForm.vue';
 import MicropigmentationAnamnesisForm from './MicropigmentationAnamnesisForm.vue';
 import { enumService } from '../../services/enumService';
 import { anamnesisService } from '../../services/anamnesisService';
+import { clientService } from '../../services/clientService';
 import { toastBridge } from '../../services/toastBridge';
 import { useModal } from '../../composables/useModal';
 
@@ -142,6 +143,10 @@ const props = defineProps({
   clientId: {
     type: Number,
     required: true
+  },
+  clientData: {
+    type: Object,
+    default: null
   },
   entity: {
     type: Object,
@@ -216,6 +221,28 @@ onMounted(async () => {
        selectedType.value = props.entity.type;
        const { details, ...baseFields } = props.entity;
        form.value = { ...form.value, ...baseFields, ...(details || {}) };
+    }
+  } else {
+    // New Anamnesis: Use passed client data to auto-fill common fields
+    try {
+      if (props.clientData && props.clientData.healthConditions) {
+        const hc = props.clientData.healthConditions;
+        // Map common health conditions to Anamnesis details
+        form.value = {
+          ...form.value,
+          pregnantOrNursing: hc.pregnantOrNursing || false,
+          hasSensitivityOrAllergyToGlue: hc.hasAllergies || false,
+          sensitivityAllergyDetails: hc.allergiesDetails || '',
+          allergyToPigmentsOrAnesthetics: hc.hasAllergies || false,
+          usesContinuousMedication: hc.usesContinuousMedication || false,
+          continuousMedicationDetails: hc.continuousMedicationDetails || '',
+          hasDiabetesHypertensionOrAutoimmune: hc.hasChronicConditions || false,
+          hasDiabetes: hc.hasChronicConditions || false,
+          hasHypertension: hc.hasChronicConditions || false
+        };
+      }
+    } catch (error) {
+      console.error('Failed to parse client health data for auto-fill', error);
     }
   }
 });

@@ -8,7 +8,7 @@
 
       <div class="modal-body-tabs">
         <form @submit.prevent="save">
-          <TabView>
+          <TabView scrollable>
             <TabPanel header="Dados Gerais">
               <div class="form-body">
                 <div class="form-group autocomplete-container">
@@ -96,76 +96,110 @@
             </TabPanel>
 
             <TabPanel header="Condições de Saúde">
-              <div class="form-body p-4 grid gap-4">
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="pregnantOrNursing" v-model="form.healthConditions.pregnantOrNursing" />
-                  <label for="pregnantOrNursing">Está grávida ou amamentando?</label>
+              <div class="form-body p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Health Conditions -->
+                <div class="form-group toggle-group">
+                  <label>Está grávida ou amamentando?</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="pregnantOrNursing" v-model="form.healthConditions.pregnantOrNursing" />
+                    <label for="pregnantOrNursing"></label>
+                  </div>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2">
+                <div class="form-group toggle-group">
+                  <label>Possui alergias conhecidas?</label>
+                  <div class="toggle-switch">
                     <input type="checkbox" id="hasAllergies" v-model="form.healthConditions.hasAllergies" />
-                    <label for="hasAllergies">Possui alergias conhecidas?</label>
+                    <label for="hasAllergies"></label>
                   </div>
-                  <input v-if="form.healthConditions.hasAllergies" v-model="form.healthConditions.allergiesDetails" class="form-control ml-6" type="text" placeholder="Quais?"/>
+                </div>
+                <div v-if="form.healthConditions.hasAllergies" class="form-group">
+                  <input v-model="form.healthConditions.allergiesDetails" class="form-control" type="text" placeholder="Quais?"/>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2">
+                <div class="form-group toggle-group">
+                  <label>Possui problemas de pele (rosácea, dermatite, psoríase, etc.)?</label>
+                  <div class="toggle-switch">
                     <input type="checkbox" id="hasSkinConditions" v-model="form.healthConditions.hasSkinConditions" />
-                    <label for="hasSkinConditions">Possui problemas de pele (rosácea, dermatite, psoríase, etc.)?</label>
+                    <label for="hasSkinConditions"></label>
                   </div>
-                  <input v-if="form.healthConditions.hasSkinConditions" v-model="form.healthConditions.skinConditionsDetails" class="form-control ml-6" type="text" placeholder="Quais?"/>
+                </div>
+                <div v-if="form.healthConditions.hasSkinConditions" class="form-group">
+                  <input v-model="form.healthConditions.skinConditionsDetails" class="form-control" type="text" placeholder="Quais?"/>
                 </div>
 
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="hasChronicConditions" v-model="form.healthConditions.hasChronicConditions" />
-                  <label for="hasChronicConditions">Tem diabetes, hipertensão ou outra condição crônica?</label>
+                <div class="form-group toggle-group">
+                  <label>Tem diabetes, hipertensão ou outra condição crônica?</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="hasChronicConditions" v-model="form.healthConditions.hasChronicConditions" />
+                    <label for="hasChronicConditions"></label>
+                  </div>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2">
+                <div class="form-group toggle-group">
+                  <label>Faz uso de medicamentos contínuos?</label>
+                  <div class="toggle-switch">
                     <input type="checkbox" id="usesContinuousMedication" v-model="form.healthConditions.usesContinuousMedication" />
-                    <label for="usesContinuousMedication">Faz uso de medicamentos contínuos?</label>
+                    <label for="usesContinuousMedication"></label>
                   </div>
-                  <input v-if="form.healthConditions.usesContinuousMedication" v-model="form.healthConditions.continuousMedicationDetails" class="form-control ml-6" type="text" placeholder="Quais?"/>
+                </div>
+                <div v-if="form.healthConditions.usesContinuousMedication" class="form-group">
+                  <input v-model="form.healthConditions.continuousMedicationDetails" class="form-control" type="text" placeholder="Quais?"/>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2">
+                <div class="form-group toggle-group">
+                  <label>Está usando ácidos, antibióticos ou isotretinoína (Roacutan)?</label>
+                  <div class="toggle-switch">
                     <input type="checkbox" id="usesAcidsOrAntibiotics" v-model="form.healthConditions.usesAcidsOrAntibiotics" />
-                    <label for="usesAcidsOrAntibiotics">Está usando ácidos, antibióticos ou isotretinoína (Roacutan)?</label>
+                    <label for="usesAcidsOrAntibiotics"></label>
                   </div>
-                  <input v-if="form.healthConditions.usesAcidsOrAntibiotics" v-model="form.healthConditions.acidsOrAntibioticsDetails" class="form-control ml-6" type="text" placeholder="Quais?"/>
+                </div>
+                <div v-if="form.healthConditions.usesAcidsOrAntibiotics" class="form-group">
+                  <input v-model="form.healthConditions.acidsOrAntibioticsDetails" class="form-control" type="text" placeholder="Quais?"/>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2">
+                <div class="form-group toggle-group">
+                  <label>Realizou cirurgias ou procedimentos estéticos recentes?</label>
+                  <div class="toggle-switch">
                     <input type="checkbox" id="hadRecentProcedures" v-model="form.healthConditions.hadRecentProcedures" />
-                    <label for="hadRecentProcedures">Realizou cirurgias ou procedimentos estéticos recentes?</label>
+                    <label for="hadRecentProcedures"></label>
                   </div>
-                  <input v-if="form.healthConditions.hadRecentProcedures" v-model="form.healthConditions.recentProceduresDetails" class="form-control ml-6" type="text" placeholder="Quais?"/>
+                </div>
+                <div v-if="form.healthConditions.hadRecentProcedures" class="form-group">
+                  <input v-model="form.healthConditions.recentProceduresDetails" class="form-control" type="text" placeholder="Quais?"/>
                 </div>
               </div>
             </TabPanel>
 
             <TabPanel header="Hábitos">
-              <div class="form-body p-4 grid gap-4">
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="sunscreenDaily" v-model="form.personalHabits.sunscreenDaily" />
-                  <label for="sunscreenDaily">Usa protetor solar diariamente</label>
+              <div class="form-body p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group toggle-group">
+                  <label>Usa protetor solar diariamente</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="sunscreenDaily" v-model="form.personalHabits.sunscreenDaily" />
+                    <label for="sunscreenDaily"></label>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="makeupDaily" v-model="form.personalHabits.makeupDaily" />
-                  <label for="makeupDaily">Costuma se maquiar todos os dias</label>
+                <div class="form-group toggle-group">
+                  <label>Costuma se maquiar todos os dias</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="makeupDaily" v-model="form.personalHabits.makeupDaily" />
+                    <label for="makeupDaily"></label>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="skincareRoutine" v-model="form.personalHabits.skincareRoutine" />
-                  <label for="skincareRoutine">Tem rotina de skincare (limpeza, hidratação, etc.)</label>
+                <div class="form-group toggle-group">
+                  <label>Tem rotina de skincare</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="skincareRoutine" v-model="form.personalHabits.skincareRoutine" />
+                    <label for="skincareRoutine"></label>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" id="prescribedProducts" v-model="form.personalHabits.prescribedProducts" />
-                  <label for="prescribedProducts">Usa produtos manipulados ou prescritos por dermatologista</label>
+                <div class="form-group toggle-group">
+                  <label>Usa produtos manipulados/prescritos</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="prescribedProducts" v-model="form.personalHabits.prescribedProducts" />
+                    <label for="prescribedProducts"></label>
+                  </div>
                 </div>
               </div>
             </TabPanel>
@@ -175,9 +209,9 @@
                 <AnamnesisList
                   ref="anamnesesList"
                   :client-id="form.id"
-                  @new="openAnamnesisModal(null)"
-                  @edit="openAnamnesisModal($event, false)"
-                  @view="openAnamnesisModal($event, true)"
+                  :client-data="form"
+                  @new="(cData) => openAnamnesisModal(null, false, cData)"
+                  @view="(entity) => openAnamnesisModal(entity, true)"
                 />
               </div>
             </TabPanel>
@@ -202,6 +236,7 @@
       v-if="showAnamnesisModal"
       :client-id="form.id"
       :entity="editingAnamnesis"
+      :client-data="anamnesisClientData"
       :readonly="readonlyAnamnesis"
       @close="closeAnamnesisModal"
       @save="onAnamnesisSaved"
@@ -281,6 +316,7 @@ const anamnesesList = ref(null);
 const showAnamnesisModal = ref(false);
 const editingAnamnesis = ref(null);
 const readonlyAnamnesis = ref(false);
+const anamnesisClientData = ref(null);
 
 const genders = ref([]);
 const primaryObjectives = ref([]);
@@ -404,9 +440,11 @@ const save = () => {
 };
 
 // Anamnesis methods
-const openAnamnesisModal = (entity = null, readonly = false) => {
+const openAnamnesisModal = (entity = null, readonly = false, clientDataArg = null) => {
   editingAnamnesis.value = entity;
   readonlyAnamnesis.value = readonly;
+  // If no clientDataArg is passed but we have form.value, use form.value
+  anamnesisClientData.value = clientDataArg || form.value;
   showAnamnesisModal.value = true;
 };
 
@@ -491,4 +529,5 @@ const onPhoneInput = (event) => {
 .history-tab, .anamneses-tab {
   padding-top: var(--spacing-md);
 }
+
 </style>

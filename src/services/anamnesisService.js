@@ -12,4 +12,7 @@ export const anamnesisService = {
 
     update: (clientId, id, data) =>
         api.put(`/clients/${clientId}/anamneses/${id}`, data),
+
+    delete: (clientId, id) =>
+        api.delete(`/clients/${clientId}/anamneses/${id}`),
 };

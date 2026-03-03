@@ -1,7 +1,7 @@
 <template>
   <div class="anamnesis-list-container">
     <div class="header-actions">
-      <button type="button" class="btn btn-primary" @click="$emit('new')">+ Nova Anamnese</button>
+      <button type="button" class="btn btn-primary" @click="$emit('new', clientData)">+ Nova Anamnese</button>
     </div>
 
     <!-- GenericTable expects fetchData which returns a boolean or data. 
@@ -24,15 +24,15 @@
         {{ formatDate(item.attendanceDate) }}
       </template>
 
-      <!-- Custom Actions (View, Edit) -->
+      <!-- Custom Actions (Delete) -->
       <template #actions="{ item }">
         <button
           type="button"
-          class="btn-icon-small"
-          title="Editar"
-          @click.stop="$emit('edit', item)"
+          class="btn-icon delete"
+          title="Deletar"
+          @click.stop="deleteItem(item)"
         >
-          ✏️
+          ✕
         </button>
       </template>
     </GenericTable>
@@ -44,12 +44,17 @@ import { ref, onMounted, watch } from 'vue';
 import GenericTable from '../common/GenericTable.vue';
 import { anamnesisService } from '../../services/anamnesisService';
 import { enumService } from '../../services/enumService';
+import { toastBridge } from '../../services/toastBridge';
 import { formatDate } from '../../utils/formatters';
 
 const props = defineProps({
   clientId: {
     type: [Number, String],
     required: true
+  },
+  clientData: {
+    type: Object,
+    default: null
   }
 });
 
@@ -106,6 +111,36 @@ const refresh = () => {
   }
 };
 defineExpose({ refresh });
+
+const deleteItem = async (item) => {
+  if (confirm('Tem certeza que deseja excluir esta anamnese?')) {
+    try {
+      await anamnesisService.delete(props.clientId, item.id);
+      
+      const toast = toastBridge.getToast();
+      if (toast) {
+        toast.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Anamnese excluída com sucesso!',
+          life: 3000
+        });
+      }
+      refresh();
+    } catch (error) {
+      console.error('Erro ao excluir anamnese:', error);
+      const toast = toastBridge.getToast();
+      if (toast) {
+        toast.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível excluir a anamnese',
+          life: 3000
+        });
+      }
+    }
+  }
+};
 
 const formatType = (type) => {
   const map = {

@@ -29,7 +29,7 @@
         <div class="form-group full-width">
           <label>Expectativa com o Procedimento</label>
           <textarea 
-            v-model="modelValue.clientExpectation" 
+            v-model="modelValue.procedureExpectation" 
             class="form-control" 
             rows="2"
             :disabled="readonly"
@@ -46,23 +46,9 @@
         <div class="form-group toggle-group" v-for="field in healthFields" :key="field.key">
           <label>{{ field.label }}</label>
           <div class="toggle-switch">
-             <input type="checkbox" :id="field.key" v-model="modelValue[field.key]" :disabled="readonly"/>
-             <label :for="field.key"></label>
+             <input type="checkbox" :id="'mic_' + field.key" v-model="modelValue[field.key]" :disabled="readonly"/>
+             <label :for="'mic_' + field.key"></label>
           </div>
-        </div>
-      </div>
-
-      <div v-if="modelValue.hasAllergies" class="form-row sub-field">
-        <div class="form-group full-width">
-          <label>Quais alergias/medicamentos?</label>
-          <input type="text" v-model="modelValue.allergiesOrMedicationsDetails" class="form-control" :disabled="readonly" />
-        </div>
-      </div>
-      
-      <div v-if="modelValue.hasOncologicalHistory" class="form-row sub-field">
-        <div class="form-group full-width">
-          <label>Histórico Oncológico (detalhes/autorização médica)</label>
-          <input type="text" v-model="modelValue.oncologicalHistoryDetails" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -75,27 +61,36 @@
         <div class="form-group toggle-group">
           <label>Primeira vez fazendo micropigmentação nesta região?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="firstTime" v-model="modelValue.firstTime" :disabled="readonly"/>
-             <label for="firstTime"></label>
+             <input type="checkbox" id="mic_firstMicropigmentation" v-model="firstTimeComputed" :disabled="readonly"/>
+             <label for="mic_firstMicropigmentation"></label>
           </div>
         </div>
       </div>
 
-      <div v-if="!modelValue.firstTime" class="history-block sub-field">
+      <div v-if="!modelValue.firstMicropigmentation" class="history-block sub-field">
         <div class="form-row">
           <div class="form-group">
             <label>Qual técnica anterior?</label>
             <input type="text" v-model="modelValue.previousTechnique" class="form-control" :disabled="readonly" />
           </div>
           <div class="form-group">
-            <label>Quando fez?</label>
-            <input type="text" v-model="modelValue.dateOfPreviousProcedure" class="form-control" placeholder="Mês/Ano ou data aproximada" :disabled="readonly" />
+            <label>Data aprox. do procedimento anterior?</label>
+            <input type="date" v-model="modelValue.previousProcedureDate" class="form-control" :disabled="readonly" />
           </div>
         </div>
         <div class="form-row">
+          <div class="form-group toggle-group" style="margin-top: 10px; margin-bottom: 5px;">
+             <label>Houve alguma complicação prévia?</label>
+             <div class="toggle-switch">
+                <input type="checkbox" id="mic_hadComplicationsInPrevious" v-model="modelValue.hadComplicationsInPrevious" :disabled="readonly"/>
+                <label for="mic_hadComplicationsInPrevious"></label>
+             </div>
+          </div>
+        </div>
+        <div class="form-row" v-if="modelValue.hadComplicationsInPrevious">
            <div class="form-group full-width">
-             <label>Houve alguma complicação ou insatisfação?</label>
-             <textarea v-model="modelValue.previousComplications" class="form-control" rows="2" :disabled="readonly"></textarea>
+             <label>Detalhes da complicação/insatisfação</label>
+             <textarea v-model="modelValue.complicationsDetails" class="form-control" rows="2" :disabled="readonly"></textarea>
            </div>
         </div>
       </div>
@@ -114,7 +109,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, onMounted, ref, watch } from 'vue';
+import { defineProps, defineEmits, onMounted, ref, watch, computed } from 'vue';
 import { enumService } from '../../services/enumService';
 
 const props = defineProps({
@@ -130,6 +125,25 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
+const firstTimeComputed = computed({
+  get() {
+    return props.modelValue.firstMicropigmentation;
+  },
+  set(newValue) {
+    emit('update:modelValue', {
+      ...props.modelValue,
+      firstMicropigmentation: newValue,
+      // Clear previous history if it's their first time
+      ...(newValue ? {
+        previousTechnique: null,
+        previousProcedureDate: null,
+        hadComplicationsInPrevious: false,
+        complicationsDetails: null
+      } : {})
+    });
+  }
+});
+
 const procedureTypes = ref([]);
 const internalProcedureTypes = ref(props.modelValue.procedureTypes || []);
 
@@ -137,15 +151,17 @@ const healthFields = [
   { key: 'hasDiabetes', label: 'Possui Diabetes?' },
   { key: 'hasHypertension', label: 'Hipertensão?' },
   { key: 'pregnantOrNursing', label: 'Gestante ou lactante?' },
-  { key: 'hasKeloidHistory', label: 'Histórico de queloides?' },
-  { key: 'hasHerpesHistory', label: 'Histórico de herpes labial/ocular?' },
-  { key: 'hasBleedingDisorders', label: 'Distúrbios de coagulação?' },
-  { key: 'usesBloodThinners', label: 'Uso de anticoagulantes?' },
-  { key: 'usesRoaccutane', label: 'Uso de Roacutan nos últimos 6 meses?' },
-  { key: 'hasAutoimmuneDisease', label: 'Doença autoimune?' },
-  { key: 'hasHIVOrHepatitis', label: 'Portador de HIV ou Hepatite?' },
-  { key: 'hasAllergies', label: 'Alergias severas ou uso crônico de medicamentos?' },
-  { key: 'hasOncologicalHistory', label: 'Tratamento oncológico em andamento?' },
+  { key: 'hasKeloidOrHypertrophicScar', label: 'Histórico de queloide/cicatriz hipertrófica?' },
+  { key: 'hasHerpes', label: 'Histórico de herpes labial/ocular?' },
+  { key: 'hasCoagulationProblems', label: 'Problemas de coagulação?' },
+  { key: 'usesAnticoagulants', label: 'Uso de anticoagulantes?' },
+  { key: 'usedAcidRoacutanOrPeelingLast30Days', label: 'Uso de ácidos, Roacutan ou peeling (30 dias)?' },
+  { key: 'hasAutoimmuneDiseases', label: 'Doença autoimune?' },
+  { key: 'hasHepatitis', label: 'Portador de hepatite?' },
+  { key: 'allergyToPigmentsOrAnesthetics', label: 'Alergia a pigmentos ou anestésicos?' },
+  { key: 'hasDermatologicalHistoryInArea', label: 'Histórico dermatológico na área?' },
+  { key: 'hadRecentSurgeryInArea', label: 'Cirurgia recente na área?' },
+  { key: 'hadFillerOrBotoxLast30Days', label: 'Preenchimento ou Botox nos últimos 30 dias?' },
 ];
 
 onMounted(async () => {
@@ -233,73 +249,6 @@ watch(() => props.modelValue.procedureTypes, (newVal) => {
 
 .history-block {
   margin-top: var(--spacing-md);
-}
-
-/* Toggle Switch Styles */
-.toggle-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0px;
-}
-
-.toggle-group label {
-  margin-bottom: 0;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 44px;
-  height: 24px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-switch label {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.toggle-switch label:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-.toggle-switch input:checked + label {
-  background-color: var(--color-primary);
-}
-
-.toggle-switch input:focus + label {
-  box-shadow: 0 0 1px var(--color-primary);
-}
-
-.toggle-switch input:checked + label:before {
-  transform: translateX(20px);
-}
-
-.toggle-switch input:disabled + label {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* Chips Container */

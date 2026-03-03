@@ -33,32 +33,32 @@
         <div class="form-group toggle-group">
           <label>Usa protetor solar diariamente?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesSunscreen" v-model="modelValue.usesSunscreen" :disabled="readonly"/>
-             <label for="usesSunscreen"></label>
+             <input type="checkbox" id="fac_usesSunscreenDaily" v-model="modelValue.usesSunscreenDaily" :disabled="readonly"/>
+             <label for="fac_usesSunscreenDaily"></label>
           </div>
         </div>
         
         <div class="form-group toggle-group">
           <label>Usa maquiagem com frequência?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesMakeup" v-model="modelValue.usesMakeup" :disabled="readonly"/>
-             <label for="usesMakeup"></label>
+             <input type="checkbox" id="fac_usesMakeupFrequently" v-model="modelValue.usesMakeupFrequently" :disabled="readonly"/>
+             <label for="fac_usesMakeupFrequently"></label>
           </div>
         </div>
         
         <div class="form-group toggle-group">
           <label>Faz uso de cosméticos/ácidos?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesSkincareProducts" v-model="modelValue.usesSkincareProducts" :disabled="readonly"/>
-             <label for="usesSkincareProducts"></label>
+             <input type="checkbox" id="fac_usesAcidsOrManipulatedCosmetics" v-model="modelValue.usesAcidsOrManipulatedCosmetics" :disabled="readonly"/>
+             <label for="fac_usesAcidsOrManipulatedCosmetics"></label>
           </div>
         </div>
       </div>
 
-      <div v-if="modelValue.usesSkincareProducts" class="form-row sub-field">
+      <div v-if="modelValue.usesAcidsOrManipulatedCosmetics" class="form-row sub-field">
         <div class="form-group full-width">
           <label>Quais cosméticos/ácidos?</label>
-          <input type="text" v-model="modelValue.skincareProductsDetails" class="form-control" :disabled="readonly" />
+          <input type="text" v-model="modelValue.acidsOrCosmeticsDetails" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -69,82 +69,65 @@
       
       <div class="boolean-grid">
         <div class="form-group toggle-group">
-          <label>Está gestante ou lactante?</label>
+          <label>Possui diabetes, hipertensão ou doença autoimune?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="pregnantOrNursing" v-model="modelValue.pregnantOrNursing" :disabled="readonly"/>
-             <label for="pregnantOrNursing"></label>
+             <input type="checkbox" id="fac_hasDiabetesHypertensionOrAutoimmune" v-model="modelValue.hasDiabetesHypertensionOrAutoimmune" :disabled="readonly"/>
+             <label for="fac_hasDiabetesHypertensionOrAutoimmune"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Portador de marcapasso?</label>
+          <label>Faz uso de anticoagulantes?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasPacemaker" v-model="modelValue.hasPacemaker" :disabled="readonly"/>
-             <label for="hasPacemaker"></label>
+             <input type="checkbox" id="fac_usesAnticoagulants" v-model="modelValue.usesAnticoagulants" :disabled="readonly"/>
+             <label for="fac_usesAnticoagulants"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Distúrbio hormonal?</label>
+          <label>Realizou procedimentos faciais anteriores?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasHormonalChanges" v-model="modelValue.hasHormonalChanges" :disabled="readonly"/>
-             <label for="hasHormonalChanges"></label>
+             <input type="checkbox" id="fac_hadPreviousFacialProcedures" v-model="modelValue.hadPreviousFacialProcedures" :disabled="readonly"/>
+             <label for="fac_hadPreviousFacialProcedures"></label>
           </div>
         </div>
         
         <div class="form-group toggle-group">
-          <label>Possui alergias?</label>
+          <label>Usa sabonete facial?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasAllergies" v-model="modelValue.hasAllergies" :disabled="readonly"/>
-             <label for="hasAllergies"></label>
+             <input type="checkbox" id="fac_usesFacialSoap" v-model="modelValue.usesFacialSoap" :disabled="readonly"/>
+             <label for="fac_usesFacialSoap"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Problemas oncológicos?</label>
+          <label>Usa hidratante?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasOncologicalHistory" v-model="modelValue.hasOncologicalHistory" :disabled="readonly"/>
-             <label for="hasOncologicalHistory"></label>
+             <input type="checkbox" id="fac_usesMoisturizer" v-model="modelValue.usesMoisturizer" :disabled="readonly"/>
+             <label for="fac_usesMoisturizer"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Uso de Roacutan?</label>
+          <label>Fumante?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesRoaccutane" v-model="modelValue.usesRoaccutane" :disabled="readonly"/>
-             <label for="usesRoaccutane"></label>
-          </div>
-        </div>
-        
-        <div class="form-group toggle-group">
-          <label>Qualidade do sono ruim?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="poorSleepQuality" v-model="modelValue.poorSleepQuality" :disabled="readonly"/>
-             <label for="poorSleepQuality"></label>
-          </div>
-        </div>
-        
-        <div class="form-group toggle-group">
-          <label>Baixa ingestão de água?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="lowWaterIntake" v-model="modelValue.lowWaterIntake" :disabled="readonly"/>
-             <label for="lowWaterIntake"></label>
-          </div>
-        </div>
-        
-        <div class="form-group toggle-group">
-          <label>Funcionamento intestinal irregular?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="irregularBowelFunction" v-model="modelValue.irregularBowelFunction" :disabled="readonly"/>
-             <label for="irregularBowelFunction"></label>
+             <input type="checkbox" id="fac_smoker" v-model="modelValue.smoker" :disabled="readonly"/>
+             <label for="fac_smoker"></label>
           </div>
         </div>
       </div>
 
-      <div v-if="modelValue.hasAllergies" class="form-row sub-field">
+      <div v-if="modelValue.hasDiabetesHypertensionOrAutoimmune" class="form-row sub-field">
         <div class="form-group full-width">
-          <label>Quais alergias?</label>
-          <input type="text" v-model="modelValue.allergiesDetails" class="form-control" :disabled="readonly" />
+          <label>Quais alterações?</label>
+          <input type="text" v-model="modelValue.diabetesHypertensionAutoimmuneDetails" class="form-control" :disabled="readonly" />
+        </div>
+      </div>
+
+      <div v-if="modelValue.hadPreviousFacialProcedures" class="form-row sub-field">
+        <div class="form-group full-width">
+          <label>Quais procedimentos faciais?</label>
+          <input type="text" v-model="modelValue.previousFacialProceduresDetails" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -272,72 +255,6 @@ watch(() => props.modelValue.skinTypes, (newVal) => {
   margin-top: var(--spacing-sm);
   padding-left: var(--spacing-md);
   border-left: 2px solid var(--color-primary);
-}
-
-/* Toggle Switch Styles */
-.toggle-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-.toggle-group label {
-  margin-bottom: 0;
-  font-weight: 500;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 44px;
-  height: 24px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-switch label {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.toggle-switch label:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-.toggle-switch input:checked + label {
-  background-color: var(--color-primary);
-}
-
-.toggle-switch input:focus + label {
-  box-shadow: 0 0 1px var(--color-primary);
-}
-
-.toggle-switch input:checked + label:before {
-  transform: translateX(20px);
-}
-
-.toggle-switch input:disabled + label {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* Chips Container */

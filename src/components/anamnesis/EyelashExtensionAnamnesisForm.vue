@@ -8,21 +8,27 @@
         <div class="form-group toggle-group">
           <label>Primeira vez fazendo extensão de cílios?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="firstTime" v-model="modelValue.firstTime" :disabled="readonly"/>
-             <label for="firstTime"></label>
+             <input type="checkbox" id="eye_firstTime" v-model="firstTimeComputed" :disabled="readonly"/>
+             <label for="eye_firstTime"></label>
           </div>
         </div>
       </div>
       
-      <div v-if="!modelValue.firstTime" class="form-row sub-field">
+      <div v-if="modelValue.hadPreviousLashExtension" class="form-row sub-field">
         <div class="form-group full-width">
           <label>Qual a experiência anterior? Teve alguma reação?</label>
-          <textarea 
-            v-model="modelValue.previousExperience" 
-            class="form-control" 
-            rows="2"
-            :disabled="readonly"
-          ></textarea>
+          <div style="display: flex; gap: 16px;">
+             <div class="form-group toggle-group" style="min-width: 200px;">
+               <label>Teve reação?</label>
+               <div class="toggle-switch">
+                  <input type="checkbox" id="eye_hadReactionToPrevious" v-model="modelValue.hadReactionToPrevious" :disabled="readonly"/>
+                  <label for="eye_hadReactionToPrevious"></label>
+               </div>
+             </div>
+             <input type="text" v-model="modelValue.reactionDetails" class="form-control" placeholder="Detalhes da reação" :disabled="readonly" v-if="modelValue.hadReactionToPrevious" style="flex: 1;" />
+          </div>
+          <label style="margin-top: 12px; display: block;">Técnica anterior utilizada</label>
+          <input type="text" v-model="modelValue.previousTechniqueUsed" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -35,56 +41,48 @@
         <div class="form-group toggle-group">
           <label>Usa lentes de contato?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="wearsContactLenses" v-model="modelValue.wearsContactLenses" :disabled="readonly"/>
-             <label for="wearsContactLenses"></label>
+             <input type="checkbox" id="eye_wearsContactLenses" v-model="modelValue.wearsContactLenses" :disabled="readonly"/>
+             <label for="eye_wearsContactLenses"></label>
+          </div>
+        </div>
+
+        <div class="form-group toggle-group">
+          <label>Usa colírio regularmente?</label>
+          <div class="toggle-switch">
+             <input type="checkbox" id="eye_usesEyeDropsRegularly" v-model="modelValue.usesEyeDropsRegularly" :disabled="readonly"/>
+             <label for="eye_usesEyeDropsRegularly"></label>
           </div>
         </div>
         
         <div class="form-group toggle-group">
-          <label>Usa óculos?</label>
+          <label>Esfrega os olhos com frequência?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="wearsGlasses" v-model="modelValue.wearsGlasses" :disabled="readonly"/>
-             <label for="wearsGlasses"></label>
+             <input type="checkbox" id="eye_rubsEyesFrequently" v-model="modelValue.rubsEyesFrequently" :disabled="readonly"/>
+             <label for="eye_rubsEyesFrequently"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Tem sensibilidade à luz?</label>
+          <label>Infecção ocular recente?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasLightSensitivity" v-model="modelValue.hasLightSensitivity" :disabled="readonly"/>
-             <label for="hasLightSensitivity"></label>
-          </div>
-        </div>
-
-        <div class="form-group toggle-group">
-          <label>Olhos lacrimejam frequentemente?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="hasWateryEyes" v-model="modelValue.hasWateryEyes" :disabled="readonly"/>
-             <label for="hasWateryEyes"></label>
+             <input type="checkbox" id="eye_hasOcularInfection" v-model="modelValue.hasOcularInfection" :disabled="readonly"/>
+             <label for="eye_hasOcularInfection"></label>
           </div>
         </div>
         
         <div class="form-group toggle-group">
           <label>Dorme de lado / bruços?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="sleepsOnSideOrStomach" v-model="modelValue.sleepsOnSideOrStomach" :disabled="readonly"/>
-             <label for="sleepsOnSideOrStomach"></label>
-          </div>
-        </div>
-
-        <div class="form-group toggle-group">
-          <label>Tratamento oftalmológico recente?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="recentEyeTreatment" v-model="modelValue.recentEyeTreatment" :disabled="readonly"/>
-             <label for="recentEyeTreatment"></label>
+             <input type="checkbox" id="eye_sleepsFaceDown" v-model="modelValue.sleepsFaceDown" :disabled="readonly"/>
+             <label for="eye_sleepsFaceDown"></label>
           </div>
         </div>
       </div>
 
-      <div v-if="modelValue.recentEyeTreatment" class="form-row sub-field">
+      <div v-if="modelValue.hasOcularInfection" class="form-row sub-field">
         <div class="form-group full-width">
-          <label>Qual tratamento oftalmológico?</label>
-          <input type="text" v-model="modelValue.eyeTreatmentDetails" class="form-control" :disabled="readonly" />
+          <label>Detalhes da infecção oftalmológica?</label>
+          <input type="text" v-model="modelValue.ocularInfectionDetails" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -95,27 +93,54 @@
       
       <div class="boolean-grid">
         <div class="form-group toggle-group">
-          <label>Alergia a cianoacrilato (cola)?</label>
+          <label>Alergia ou sensibilidade a cola?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="allergicToCyanoacrylate" v-model="modelValue.allergicToCyanoacrylate" :disabled="readonly"/>
-             <label for="allergicToCyanoacrylate"></label>
+             <input type="checkbox" id="eye_hasSensitivityOrAllergyToGlue" v-model="modelValue.hasSensitivityOrAllergyToGlue" :disabled="readonly"/>
+             <label for="eye_hasSensitivityOrAllergyToGlue"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Distúrbio na tireoide?</label>
+          <label>Uso de medicação contínua?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="hasThyroidDisorder" v-model="modelValue.hasThyroidDisorder" :disabled="readonly"/>
-             <label for="hasThyroidDisorder"></label>
+             <input type="checkbox" id="eye_usesContinuousMedication" v-model="modelValue.usesContinuousMedication" :disabled="readonly"/>
+             <label for="eye_usesContinuousMedication"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
           <label>Gestante ou lactante?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="pregnantOrNursing" v-model="modelValue.pregnantOrNursing" :disabled="readonly"/>
-             <label for="pregnantOrNursing"></label>
+             <input type="checkbox" id="eye_pregnantOrNursing" v-model="modelValue.pregnantOrNursing" :disabled="readonly"/>
+             <label for="eye_pregnantOrNursing"></label>
           </div>
+        </div>
+
+        <div class="form-group toggle-group">
+          <label>Doença autoimune, dermatológica ou ocular?</label>
+          <div class="toggle-switch">
+             <input type="checkbox" id="eye_hasAutoimmuneDermatologicalOrOcularDisease" v-model="modelValue.hasAutoimmuneDermatologicalOrOcularDisease" :disabled="readonly"/>
+             <label for="eye_hasAutoimmuneDermatologicalOrOcularDisease"></label>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="modelValue.hasSensitivityOrAllergyToGlue" class="form-row sub-field">
+        <div class="form-group full-width">
+          <label>Quais alergias/sensibilidades?</label>
+          <input type="text" v-model="modelValue.sensitivityAllergyDetails" class="form-control" :disabled="readonly" />
+        </div>
+      </div>
+      <div v-if="modelValue.usesContinuousMedication" class="form-row sub-field">
+        <div class="form-group full-width">
+          <label>Quais medicações?</label>
+          <input type="text" v-model="modelValue.continuousMedicationDetails" class="form-control" :disabled="readonly" />
+        </div>
+      </div>
+      <div v-if="modelValue.hasAutoimmuneDermatologicalOrOcularDisease" class="form-row sub-field">
+        <div class="form-group full-width">
+          <label>Quais doenças?</label>
+          <input type="text" v-model="modelValue.diseaseDetails" class="form-control" :disabled="readonly" />
         </div>
       </div>
     </div>
@@ -126,26 +151,42 @@
       
       <div class="boolean-grid">
         <div class="form-group toggle-group">
-          <label>Usa rímel à prova d'água?</label>
+          <label>Usa maquiagem nos olhos diariamente?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesWaterproofMascara" v-model="modelValue.usesWaterproofMascara" :disabled="readonly"/>
-             <label for="usesWaterproofMascara"></label>
+             <input type="checkbox" id="eye_usesEyeMakeupDaily" v-model="modelValue.usesEyeMakeupDaily" :disabled="readonly"/>
+             <label for="eye_usesEyeMakeupDaily"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Usa demaquilante bifásico/óleo?</label>
+          <label>Usa curvex ou rímel à prova d'água?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesOilyMakeupRemover" v-model="modelValue.usesOilyMakeupRemover" :disabled="readonly"/>
-             <label for="usesOilyMakeupRemover"></label>
+             <input type="checkbox" id="eye_usesCurvexOrWaterproofMascara" v-model="modelValue.usesCurvexOrWaterproofMascara" :disabled="readonly"/>
+             <label for="eye_usesCurvexOrWaterproofMascara"></label>
           </div>
         </div>
 
         <div class="form-group toggle-group">
-          <label>Usa curvex frequentemente?</label>
+          <label>Usa demaquilante bifásico/oleoso?</label>
           <div class="toggle-switch">
-             <input type="checkbox" id="usesEyelashCurler" v-model="modelValue.usesEyelashCurler" :disabled="readonly"/>
-             <label for="usesEyelashCurler"></label>
+             <input type="checkbox" id="eye_usesBiphasicOrOilyMakeupRemover" v-model="modelValue.usesBiphasicOrOilyMakeupRemover" :disabled="readonly"/>
+             <label for="eye_usesBiphasicOrOilyMakeupRemover"></label>
+          </div>
+        </div>
+
+        <div class="form-group toggle-group">
+          <label>Fez permanente/tintura de cílios recente?</label>
+          <div class="toggle-switch">
+             <input type="checkbox" id="eye_hadLashPermanentOrTinting" v-model="modelValue.hadLashPermanentOrTinting" :disabled="readonly"/>
+             <label for="eye_hadLashPermanentOrTinting"></label>
+          </div>
+        </div>
+
+        <div class="form-group toggle-group">
+          <label>Faz limpeza facial frequente?</label>
+          <div class="toggle-switch">
+             <input type="checkbox" id="eye_doesFrequentFacialCleansing" v-model="modelValue.doesFrequentFacialCleansing" :disabled="readonly"/>
+             <label for="eye_doesFrequentFacialCleansing"></label>
           </div>
         </div>
       </div>
@@ -184,7 +225,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, computed } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -198,6 +239,18 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+
+const firstTimeComputed = computed({
+  get() {
+    return !props.modelValue.hadPreviousLashExtension;
+  },
+  set(newValue) {
+    emit('update:modelValue', {
+      ...props.modelValue,
+      hadPreviousLashExtension: !newValue
+    });
+  }
+});
 
 // Using static options because the backend stores this as a plain String, not an Enum.
 const techniques = ref([
@@ -251,71 +304,7 @@ const techniques = ref([
   border-left: 2px solid var(--color-primary);
 }
 
-/* Toggle Switch Styles */
-.toggle-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0px;
-}
-
-.toggle-group label {
-  margin-bottom: 0;
-  font-weight: 500;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 44px;
-  height: 24px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-switch label {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.toggle-switch label:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-.toggle-switch input:checked + label {
-  background-color: var(--color-primary);
-}
-
-.toggle-switch input:focus + label {
-  box-shadow: 0 0 1px var(--color-primary);
-}
-
-.toggle-switch input:checked + label:before {
-  transform: translateX(20px);
-}
-
-.toggle-switch input:disabled + label {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* End of specific styles */
 
 .full-width {
   flex: 1 1 100%;

@@ -140,11 +140,48 @@ body {
 
 .p-tabview-nav-link {
     color: var(--color-text-muted) !important;
+    white-space: nowrap !important;
 }
 
 .p-tabview-selected .p-tabview-nav-link {
     color: var(--color-primary) !important;
     border-color: var(--color-primary) !important;
+}
+
+/* PrimeVue v4 TabView scrollable layout fix */
+.p-tabview-tablist-container {
+    display: flex !important;
+    align-items: stretch !important;
+}
+
+.p-tabview-tablist-scroll-container {
+    overflow: hidden !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+/* PrimeVue v4 TabView scroll button styling */
+.p-tabview-prev-button,
+.p-tabview-next-button {
+    background: var(--color-bg-card) !important;
+    color: var(--color-text-main) !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 2rem !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 2;
+}
+
+.p-tabview-prev-button:hover,
+.p-tabview-next-button:hover {
+    background: var(--color-bg-body) !important;
+    color: var(--color-primary) !important;
+}
+
+.p-tabview-prev-button:focus,
+.p-tabview-next-button:focus {
+    box-shadow: none !important;
 }
 
 /* Mobile Toast Overrides - Centered */
