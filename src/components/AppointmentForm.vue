@@ -134,6 +134,7 @@
 import {ref, defineProps, defineEmits, onMounted, computed, watch} from 'vue';
 import {appointmentService} from '../services/appointmentService';
 import {clientService} from '../services/clientService';
+import {professionalService} from '../services/professionalService';
 import {serviceService} from '../services/serviceService';
 import {authService} from '../services/authService';
 import {enumService} from '../services/enumService';
