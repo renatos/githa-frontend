@@ -64,73 +64,91 @@
     </div>
 
     <!-- LIST VIEW -->
-    <div v-else-if="viewMode === 'list'" class="flex flex-col gap-3">
+    <div v-else-if="viewMode === 'list'" class="flex flex-col gap-6">
       <div v-if="appointments.length === 0" class="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         <span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-3">event_busy</span>
-        <p class="text-slate-500 dark:text-slate-400 font-medium">Nenhum agendamento neste dia.</p>
+        <p class="text-slate-500 dark:text-slate-400 font-medium">Nenhum agendamento neste período.</p>
         <button @click="$emit('new')" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
           <span class="material-symbols-outlined text-[16px]">add</span>
           Novo Agendamento
         </button>
       </div>
 
-      <div v-for="item in appointments" :key="item.id"
-           class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer"
-           @click="$emit('edit', item)">
-        <!-- Time Block -->
-        <div class="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-lg w-20 py-2 px-1 border border-slate-100 dark:border-slate-600">
-          <p class="text-base font-bold text-slate-900 dark:text-white">{{ formatTime(item.startTime) }}</p>
-          <p class="text-xs text-slate-400">{{ formatTime(item.endTime) }}</p>
+      <div v-for="group in groupedAppointments" :key="group.date" class="flex flex-col gap-3">
+        <!-- Date Header -->
+        <div class="flex items-center gap-3 px-1 py-1">
+          <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
+          <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+            <span class="text-xs font-bold uppercase tracking-widest">
+              Dia {{ formatDate(group.date) }} — {{ group.items.length }} 
+              {{ group.items.length === 1 ? 'Agendamento' : 'Agendamentos' }}
+            </span>
+          </div>
+          <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
         </div>
 
-        <!-- Status left accent -->
-        <div class="w-1 h-12 rounded-full flex-shrink-0" :class="statusAccentColor(item.status)"></div>
+        <div v-for="item in group.items" :key="item.id"
+             class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
+             @click="$emit('edit', item)">
+          
+          <!-- Status indicator bar (discrete) -->
+          <div class="absolute left-0 top-0 bottom-0 w-1" :class="statusAccentColor(item.status)"></div>
 
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-slate-900 dark:text-white text-sm truncate">{{ item.clientName }}</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-            {{ item.serviceName }} • {{ item.professionalName }}
-          </p>
-        </div>
+          <!-- Time Block -->
+          <div class="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-lg w-20 py-2 px-1 border border-slate-100 dark:border-slate-600">
+            <p class="text-base font-bold text-slate-900 dark:text-white">{{ formatTime(item.startTime) }}</p>
+            <p class="text-[10px] text-slate-400 uppercase font-medium tracking-tighter">{{ formatTime(item.endTime) }}</p>
+          </div>
 
-        <!-- Status Badge -->
-        <div class="flex-shrink-0">
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
-                :class="statusBadgeClass(item.status)">
-            <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
-            {{ statusMap[item.status] || item.status }}
-          </span>
-        </div>
+          <!-- Info -->
+          <div class="flex-1 min-w-0 px-1">
+            <p class="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
+            <div class="flex items-center gap-2 mt-0.5 min-w-0">
+               <span class="text-[11px] text-indigo-500/80 dark:text-indigo-400/80 font-bold uppercase tracking-tight truncate">{{ item.serviceName }}</span>
+               <span class="text-[10px] text-slate-400">•</span>
+               <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ item.professionalName }}</span>
+            </div>
+          </div>
 
-        <!-- Actions -->
-        <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
-          <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
-                  class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                  title="Confirmar" @click="$emit('confirm', item)">
-            <span class="material-symbols-outlined text-[18px]">check_circle</span>
-          </button>
-          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
-                  class="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
-                  title="Concluir" @click="$emit('complete', item)">
-            <span class="material-symbols-outlined text-[18px]">star</span>
-          </button>
-          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
-                  class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="Cancelar" @click="$emit('cancel', item)">
-            <span class="material-symbols-outlined text-[18px]">cancel</span>
-          </button>
-          <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
-          <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                  title="Adicionar Procedimento" @click="$emit('add-procedure', item)">
-            <span class="material-symbols-outlined text-[18px]">add_circle</span>
-          </button>
-          <button class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  :disabled="isActionDisabled(item)"
-                  :title="getDeleteTitle(item)"
-                  @click="!isActionDisabled(item) && $emit('delete', item.id)">
-            <span class="material-symbols-outlined text-[18px]">delete</span>
-          </button>
+          <!-- Status Badge -->
+          <div class="flex-shrink-0">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border"
+                  :class="statusBadgeClass(item.status)">
+              <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
+              {{ statusMap[item.status] || item.status }}
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+            <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
+                    class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                    title="Confirmar" @click="$emit('confirm', item)">
+              <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            </button>
+            <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+                    class="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                    title="Concluir" @click="$emit('complete', item)">
+              <span class="material-symbols-outlined text-[18px]">star</span>
+            </button>
+            <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+                    class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Cancelar" @click="$emit('cancel', item)">
+              <span class="material-symbols-outlined text-[18px]">cancel</span>
+            </button>
+            <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
+            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    title="Adicionar Procedimento" @click="$emit('add-procedure', item)">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span>
+            </button>
+            <button class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    :disabled="isActionDisabled(item)"
+                    :title="getDeleteTitle(item)"
+                    @click="!isActionDisabled(item) && $emit('delete', item.id)">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -226,18 +244,43 @@ const statusLegend = {
   MISSED: 'Falta',
 };
 
+// --- Grouping ---
+const groupedAppointments = computed(() => {
+  if (!appointments.value.length) return [];
+  
+  const groups = {};
+  appointments.value.forEach(appt => {
+    const dateStr = appt.startTime.split('T')[0];
+    if (!groups[dateStr]) {
+      groups[dateStr] = [];
+    }
+    groups[dateStr].push(appt);
+  });
+
+  // Sort groups by date
+  return Object.keys(groups)
+    .sort()
+    .map(date => ({
+      date,
+      items: groups[date].sort((a, b) => a.startTime.localeCompare(b.startTime))
+    }));
+});
+
 // --- Date Navigation ---
 const dateRangeLabel = computed(() => {
-  const d = currentDate.value;
+  const start = getMonday(currentDate.value);
+  const end = new Date(start);
+
   if (viewMode.value === 'list') {
-    return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    end.setDate(end.getDate() + 13);
+  } else {
+    end.setDate(end.getDate() + 5);
   }
-  const monday = getMonday(d);
-  const saturday = new Date(monday);
-  saturday.setDate(saturday.getDate() + 5);
-  const start = monday.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const end = saturday.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-  return `${start} – ${end}`;
+
+  const startStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const endStr = end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  return `${startStr} – ${endStr}`;
 });
 
 const getMonday = (date) => {
@@ -251,11 +294,7 @@ const getMonday = (date) => {
 
 const navigateDate = (direction) => {
   const d = new Date(currentDate.value);
-  if (viewMode.value === 'list') {
-    d.setDate(d.getDate() + direction);
-  } else {
-    d.setDate(d.getDate() + direction * 7);
-  }
+  d.setDate(d.getDate() + direction * 7);
   currentDate.value = d;
 };
 
@@ -297,20 +336,25 @@ const loadAppointments = async () => {
   loading.value = true;
   try {
     let query = {};
+    const start = getMonday(currentDate.value);
+    let end = new Date(start);
+
     if (viewMode.value === 'list') {
-      const d = currentDate.value;
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      query.date = dateStr;
+      // Lista → 2 semanas
+      end.setDate(end.getDate() + 13);
     } else {
-      const monday = getMonday(currentDate.value);
-      const saturday = new Date(monday);
-      saturday.setDate(saturday.getDate() + 5);
-      query.startDate = monday.toISOString().split('T')[0];
-      query.endDate = saturday.toISOString().split('T')[0];
+      // Calendário → semana atual (seg a sáb)
+      end.setDate(end.getDate() + 5);
     }
 
+    query.startDate = start.toISOString().split('T')[0];
+    query.endDate = end.toISOString().split('T')[0];
+
     if (props.clientId) query['client.id'] = props.clientId;
-    query.size = 500;
+    // Omit size to use backend default (50), or set a specific limit for calendar
+    if (viewMode.value === 'calendar') {
+      query.size = 100; // A reasonable limit for a week view
+    }
 
     const response = await appointmentService.getAll(query);
     appointments.value = response.data?.content || [];
@@ -354,6 +398,12 @@ const formatTime = (isoString) => {
   return isoString.split('T')[1]?.substring(0, 5) || '--:--';
 };
 
+const formatDate = (isoDate) => {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 const isActionDisabled = (item) => item.status === 'COMPLETED' && !isAdmin.value;
 
 const getDeleteTitle = (item) => {
@@ -364,11 +414,11 @@ const getDeleteTitle = (item) => {
 // --- Status Styles ---
 const statusBadgeClass = (status) => {
   const map = {
-    SCHEDULED: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300',
-    CONFIRMED: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-    COMPLETED: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
-    CANCELED: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-    MISSED: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+    SCHEDULED: 'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-500/20',
+    CONFIRMED: 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20',
+    COMPLETED: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20',
+    CANCELED: 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20',
+    MISSED: 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20',
   };
   return map[status] || map.SCHEDULED;
 };
@@ -376,8 +426,8 @@ const statusBadgeClass = (status) => {
 const statusDotClass = (status) => {
   const map = {
     SCHEDULED: 'bg-sky-500',
-    CONFIRMED: 'bg-emerald-500',
-    COMPLETED: 'bg-slate-400',
+    CONFIRMED: 'bg-indigo-500',
+    COMPLETED: 'bg-emerald-500',
     CANCELED: 'bg-red-500',
     MISSED: 'bg-orange-500',
   };
@@ -387,8 +437,8 @@ const statusDotClass = (status) => {
 const statusAccentColor = (status) => {
   const map = {
     SCHEDULED: 'bg-sky-400',
-    CONFIRMED: 'bg-emerald-400',
-    COMPLETED: 'bg-slate-300 dark:bg-slate-600',
+    CONFIRMED: 'bg-indigo-400',
+    COMPLETED: 'bg-emerald-400',
     CANCELED: 'bg-red-400',
     MISSED: 'bg-orange-400',
   };
