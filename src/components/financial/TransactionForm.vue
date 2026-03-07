@@ -390,9 +390,10 @@ onMounted(async () => {
        if (group) form.value.accountGroupName = group.name;
     }
   } else {
-    // Default date
+    // Default date — usar horário local (toISOString retornaria UTC, causando shift de +3h no Brasil)
     const now = new Date();
-    form.value.paymentDate = now.toISOString().substring(0, 19);
+    const pad = (n) => String(n).padStart(2, '0');
+    form.value.paymentDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
   }
 });
 

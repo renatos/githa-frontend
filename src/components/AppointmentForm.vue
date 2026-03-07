@@ -107,13 +107,15 @@
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Início</p>
             <input v-model="form.start" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-                   required type="time"/>
+                   required type="text" placeholder="HH:MM" maxlength="5"
+                   @input="e => form.start = maskTime(e)"/>
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Fim</p>
             <input v-model="form.end" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-                   required type="time" @focus="calculateEndTime"/>
+                   required type="text" placeholder="HH:MM" maxlength="5"
+                   @input="e => form.end = maskTime(e)" @focus="calculateEndTime"/>
           </label>
         </div>
 
@@ -366,6 +368,13 @@ const onServiceSelect = (item) => {
   calculateEndTime();
 };
 
+const maskTime = (e) => {
+  let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+  if (v.length >= 3) v = v.substring(0, 2) + ':' + v.substring(2);
+  e.target.value = v;
+  return v;
+};
+
 watch(() => form.value.start, () => {
   calculateEndTime();
 });
@@ -375,6 +384,21 @@ const save = () => {
     if (!date || !time) return null;
     return `${date}T${time}:00`;
   };
+
+  // Valida que o horário de fim é posterior ao de início
+  if (form.value.start && form.value.end) {
+    const [sh, sm] = form.value.start.split(':').map(Number);
+    const [eh, em] = form.value.end.split(':').map(Number);
+    if (eh * 60 + em <= sh * 60 + sm) {
+      confirmBridge.alert({
+        title: 'Horário inválido',
+        message: 'O horário de fim deve ser posterior ao horário de início.',
+        type: 'warning'
+      });
+      return;
+    }
+  }
+
   const dto = {
     id: form.value.id,
     clientId: form.value.client?.id || null,

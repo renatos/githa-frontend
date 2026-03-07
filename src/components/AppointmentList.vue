@@ -171,7 +171,7 @@
       </div>
 
       <!-- Time Grid -->
-      <div class="overflow-y-auto max-h-[600px] relative scrollbar-hide">
+      <div class="overflow-y-auto max-h-[600px] relative [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:hidden" style="scrollbar-width:none">
         <div class="grid" :style="`grid-template-columns: 64px repeat(${weekDays.length}, 1fr)`">
 
           <!-- Rows for each hour -->
@@ -257,12 +257,13 @@ const groupedAppointments = computed(() => {
     groups[dateStr].push(appt);
   });
 
-  // Sort groups by date
+  // Sort groups by date descending (newest first)
   return Object.keys(groups)
     .sort()
+    .reverse()
     .map(date => ({
       date,
-      items: groups[date].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      items: groups[date].sort((a, b) => b.startTime.localeCompare(a.startTime))
     }));
 });
 
@@ -329,7 +330,7 @@ const weekDays = computed(() => {
   return days;
 });
 
-const calendarHours = Array.from({ length: 12 }, (_, i) => 8 + i); // 08 to 19
+const calendarHours = Array.from({ length: 14 }, (_, i) => 8 + i); // 08 to 21
 
 // --- Data Loading ---
 const loadAppointments = async () => {
@@ -351,9 +352,10 @@ const loadAppointments = async () => {
     query.endDate = end.toISOString().split('T')[0];
 
     if (props.clientId) query['client.id'] = props.clientId;
-    // Omit size to use backend default (50), or set a specific limit for calendar
-    if (viewMode.value === 'calendar') {
-      query.size = 100; // A reasonable limit for a week view
+    if (viewMode.value === 'list') {
+      query.size = 20; // 20 registros por página na visão lista
+    } else {
+      query.size = 100; // Limite maior para a visão calendário
     }
 
     const response = await appointmentService.getAll(query);
