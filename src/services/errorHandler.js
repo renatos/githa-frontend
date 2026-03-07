@@ -9,6 +9,10 @@ const ERROR_MESSAGES = {
     default: 'Ocorreu um erro inesperado.'
 };
 
+let lastError = null;
+let lastErrorTime = 0;
+const DEDUPLICATION_INTERVAL = 3000; // 3 seconds
+
 export const errorHandler = {
     handle(error, toast) {
         console.error('API Error:', error);
@@ -27,8 +31,17 @@ export const errorHandler = {
                 message = error.response.data.error;
             }
         } else if (error.request) {
-            message = 'Erro de conexão. Verifique sua internet.';
+            message = 'Servidor indisponível. Verifique se o backend está rodando.';
         }
+
+        const now = Date.now();
+        if (lastError === message && (now - lastErrorTime) < DEDUPLICATION_INTERVAL) {
+            // Deduplicate: same message within short interval
+            return message;
+        }
+
+        lastError = message;
+        lastErrorTime = now;
 
         if (toast) {
             toast.add({

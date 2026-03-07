@@ -88,7 +88,7 @@ import { onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   show: { type: Boolean, required: true },
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   icon: { type: String, default: '' },
   maxWidth: { type: String, default: 'max-w-lg' }, // e.g., max-w-lg, max-w-2xl, max-w-4xl
