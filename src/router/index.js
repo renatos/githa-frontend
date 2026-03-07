@@ -105,12 +105,6 @@ const router = createRouter({
         },
 
         {
-            path: '/accounts',
-            name: 'accounts',
-            component: () => import('../views/financial/AccountView.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
             path: '/feedbacks',
             name: 'feedbacks',
             component: () => import('../views/FeedbackView.vue'),

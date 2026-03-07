@@ -1,105 +1,117 @@
 <template>
-  <div class="sub-form micropigmentation-form">
+  <div class="flex flex-col gap-6">
     
-    <!-- Procedimentos -->
-    <div class="form-section">
-      <h3 class="section-title">🖌 Tipo de Procedimento</h3>
-      <div class="form-row">
-        <div class="form-group full-width">
-          <div class="chips-container">
-            <label 
-              v-for="procType in procedureTypes" 
-              :key="procType.name" 
-              class="chip-label"
-              :class="{ 'selected': modelValue.procedureTypes && modelValue.procedureTypes.includes(procType.name), 'disabled': readonly }"
-            >
-              <input 
-                type="checkbox" 
-                :value="procType.name" 
-                v-model="internalProcedureTypes"
-                :disabled="readonly"
-                class="hidden-input"
-              />
-              {{ procType.description }}
-            </label>
-          </div>
+    <!-- Tipo de Procedimento -->
+    <div class="p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      <h3 class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-base font-semibold mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
+        <span>🖌</span> Tipo de Procedimento
+      </h3>
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap gap-2">
+          <label 
+            v-for="procType in procedureTypes" 
+            :key="procType.name" 
+            class="px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all select-none border"
+            :class="[
+              modelValue.procedureTypes && modelValue.procedureTypes.includes(procType.name)
+                ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-400 dark:border-indigo-600 font-medium'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600',
+              readonly ? 'opacity-70 cursor-not-allowed' : ''
+            ]"
+          >
+            <input 
+              type="checkbox" 
+              :value="procType.name" 
+              v-model="internalProcedureTypes"
+              :disabled="readonly"
+              class="hidden"
+            />
+            {{ procType.description }}
+          </label>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group full-width">
-          <label>Expectativa com o Procedimento</label>
+        <label class="flex flex-col">
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Expectativa com o Procedimento</p>
           <textarea 
             v-model="modelValue.procedureExpectation" 
-            class="form-control" 
+            class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 py-3 text-sm font-normal leading-normal transition-colors resize-y min-h-[60px]"
             rows="2"
             :disabled="readonly"
           ></textarea>
-        </div>
+        </label>
       </div>
     </div>
 
     <!-- Avaliação de Saúde -->
-    <div class="form-section">
-      <h3 class="section-title">⚠️ Avaliação de Saúde Clínica</h3>
+    <div class="p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      <h3 class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-base font-semibold mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
+        <span>⚠️</span> Avaliação de Saúde Clínica
+      </h3>
       
-      <div class="boolean-grid">
-        <div class="form-group toggle-group" v-for="field in healthFields" :key="field.key">
-          <label>{{ field.label }}</label>
-          <div class="toggle-switch">
-             <input type="checkbox" :id="'mic_' + field.key" v-model="modelValue[field.key]" :disabled="readonly"/>
-             <label :for="'mic_' + field.key"></label>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div v-for="field in healthFields" :key="field.key"
+             class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+             :class="modelValue[field.key] ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ field.label }}</p>
+          <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
+            <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
+            <input class="invisible absolute" type="checkbox" :id="'mic_' + field.key" v-model="modelValue[field.key]" :disabled="readonly"/>
+          </label>
         </div>
       </div>
     </div>
 
-    <!-- Histórico de Micropigmentação -->
-    <div class="form-section">
-      <h3 class="section-title">🕒 Histórico Estético</h3>
+    <!-- Histórico Estético -->
+    <div class="p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      <h3 class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-base font-semibold mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
+        <span>🕒</span> Histórico Estético
+      </h3>
       
-      <div class="form-row">
-        <div class="form-group toggle-group">
-          <label>Primeira vez fazendo micropigmentação nesta região?</label>
-          <div class="toggle-switch">
-             <input type="checkbox" id="mic_firstMicropigmentation" v-model="firstTimeComputed" :disabled="readonly"/>
-             <label for="mic_firstMicropigmentation"></label>
-          </div>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+             :class="modelValue.firstMicropigmentation ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Primeira vez fazendo micropigmentação nesta região?</p>
+          <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
+            <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
+            <input class="invisible absolute" type="checkbox" id="mic_firstMicropigmentation" v-model="firstTimeComputed" :disabled="readonly"/>
+          </label>
         </div>
-      </div>
 
-      <div v-if="!modelValue.firstMicropigmentation" class="history-block sub-field">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Qual técnica anterior?</label>
-            <input type="text" v-model="modelValue.previousTechnique" class="form-control" :disabled="readonly" />
+        <div v-if="!modelValue.firstMicropigmentation" class="ml-4 pl-4 border-l-2 border-indigo-500 flex flex-col gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="flex flex-col">
+              <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Qual técnica anterior?</p>
+              <input type="text" v-model="modelValue.previousTechnique" 
+                     class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
+                     :disabled="readonly" />
+            </label>
+            <label class="flex flex-col">
+              <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Data aprox. do procedimento anterior?</p>
+              <input type="date" v-model="modelValue.previousProcedureDate" 
+                     class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
+                     :disabled="readonly" />
+            </label>
           </div>
-          <div class="form-group">
-            <label>Data aprox. do procedimento anterior?</label>
-            <input type="date" v-model="modelValue.previousProcedureDate" class="form-control" :disabled="readonly" />
+          <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+               :class="modelValue.hadComplicationsInPrevious ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Houve alguma complicação prévia?</p>
+            <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
+              <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
+              <input class="invisible absolute" type="checkbox" id="mic_hadComplicationsInPrevious" v-model="modelValue.hadComplicationsInPrevious" :disabled="readonly"/>
+            </label>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group toggle-group" style="margin-top: 10px; margin-bottom: 5px;">
-             <label>Houve alguma complicação prévia?</label>
-             <div class="toggle-switch">
-                <input type="checkbox" id="mic_hadComplicationsInPrevious" v-model="modelValue.hadComplicationsInPrevious" :disabled="readonly"/>
-                <label for="mic_hadComplicationsInPrevious"></label>
-             </div>
-          </div>
-        </div>
-        <div class="form-row" v-if="modelValue.hadComplicationsInPrevious">
-           <div class="form-group full-width">
-             <label>Detalhes da complicação/insatisfação</label>
-             <textarea v-model="modelValue.complicationsDetails" class="form-control" rows="2" :disabled="readonly"></textarea>
-           </div>
+          <textarea v-if="modelValue.hadComplicationsInPrevious" v-model="modelValue.complicationsDetails" 
+                    class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 px-3 py-2 text-sm transition-shadow resize-y min-h-[60px]" 
+                    rows="2" :disabled="readonly" placeholder="Detalhes da complicação/insatisfação"></textarea>
         </div>
       </div>
     </div>
 
     <!-- Orientações Informativas -->
-    <div class="form-section informative-section">
-      <h3 class="section-title">ℹ️ Orientações e Cuidados Pré e Pós</h3>
-      <div class="informative-content">
+    <div class="p-4 rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700">
+      <h3 class="flex items-center gap-2 text-sky-700 dark:text-sky-300 text-base font-semibold mb-4 pb-2 border-b border-sky-200 dark:border-sky-700">
+        <span>ℹ️</span> Orientações e Cuidados Pré e Pós
+      </h3>
+      <div class="text-sm text-sky-800 dark:text-sky-200 leading-relaxed space-y-2">
         <p><strong>Pré-Procedimento:</strong> Evitar álcool e cafeína nas 24h anteriores. Não utilizar ácidos na região por 7 dias. Suspender ginkgo biloba, ômega 3 e aspirina (podem aumentar sangramento).</p>
         <p><strong>Pós-Procedimento:</strong> Não coçar, não arrancar casquinhas. Evitar sol, piscina, sauna, mar e exercícios com suor excessivo por 7 a 10 dias. Aplicar pomada recomendada conforme orientação (se aplicável).</p>
       </div>
@@ -133,7 +145,6 @@ const firstTimeComputed = computed({
     emit('update:modelValue', {
       ...props.modelValue,
       firstMicropigmentation: newValue,
-      // Clear previous history if it's their first time
       ...(newValue ? {
         previousTechnique: null,
         previousProcedureDate: null,
@@ -187,111 +198,3 @@ watch(() => props.modelValue.procedureTypes, (newVal) => {
 }, { deep: true });
 
 </script>
-
-<style scoped>
-.sub-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.form-section {
-  background-color: var(--color-bg-card);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-}
-
-.informative-section {
-  background-color: var(--color-bg-info, #e0f2fe);
-  border-color: #bae6fd;
-}
-
-.informative-content {
-  font-size: 0.9rem;
-  color: #0c4a6e;
-  line-height: 1.5;
-}
-
-.informative-content p {
-  margin-top: 0;
-  margin-bottom: var(--spacing-sm);
-}
-
-.informative-content p:last-child {
-  margin-bottom: 0;
-}
-
-.section-title {
-  margin-top: 0;
-  margin-bottom: var(--spacing-md);
-  color: var(--color-primary);
-  font-size: 1.1rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid var(--color-border-light, #eee);
-  padding-bottom: 8px;
-}
-
-.boolean-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.sub-field {
-  margin-top: var(--spacing-sm);
-  padding-left: var(--spacing-md);
-  border-left: 2px solid var(--color-primary);
-}
-
-.history-block {
-  margin-top: var(--spacing-md);
-}
-
-/* Chips Container */
-.chips-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.hidden-input {
-  display: none;
-}
-
-.chip-label {
-  padding: 6px 12px;
-  border-radius: 20px;
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #334155;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.chip-label:hover:not(.disabled) {
-  background-color: #e2e8f0;
-}
-
-.chip-label.selected {
-  background-color: var(--color-primary-light, #e0e7ff);
-  color: var(--color-primary-dark, #3730a3);
-  border-color: var(--color-primary, #6366f1);
-  font-weight: 500;
-}
-
-.chip-label.disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-
-.full-width {
-  flex: 1 1 100%;
-}
-</style>

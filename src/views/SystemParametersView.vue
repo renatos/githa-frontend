@@ -37,6 +37,7 @@
 import {ref, nextTick} from 'vue';
 import GenericTable from '../components/common/GenericTable.vue';
 import {systemParameterService} from '../services/systemParameterService';
+import { confirmBridge } from '../services/confirmBridge';
 
 const tableRef = ref(null);
 const editingItem = ref(null);
@@ -98,7 +99,11 @@ const saveEdit = async () => {
     cancelEdit();
   } catch (error) {
     console.error("Failed to update parameter", error);
-    alert("Erro ao salvar parâmetro.");
+    confirmBridge.alert({
+      title: 'Erro ao Salvar',
+      message: 'Não foi possível salvar as alterações no parâmetro.',
+      type: 'danger'
+    });
   }
 };
 </script>

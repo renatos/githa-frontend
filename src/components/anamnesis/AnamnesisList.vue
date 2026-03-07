@@ -1,11 +1,14 @@
 <template>
-  <div class="anamnesis-list-container">
-    <div class="header-actions">
-      <button type="button" class="btn btn-primary" @click="$emit('new', clientData)">+ Nova Anamnese</button>
+  <div class="flex flex-col gap-4">
+    <div class="flex justify-end">
+      <button type="button" 
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+              @click="$emit('new', clientData)">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        Nova Anamnese
+      </button>
     </div>
 
-    <!-- GenericTable expects fetchData which returns a boolean or data. 
-         We wrap anamnesisService.getAllByClient to inject the clientId. -->
     <GenericTable
       ref="tableRef"
       :columns="columns"
@@ -15,7 +18,7 @@
     >
       <!-- Custom rendering for Type column to show colored badges -->
       <template #cell-type="{ item }">
-        <span class="badge" :class="getTypeBadgeClass(item.type)">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium" :class="getTypeBadgeClass(item.type)">
           {{ getTypeIcon(item.type) }} {{ item.typeDescription || formatType(item.type) }}
         </span>
       </template>
@@ -28,11 +31,11 @@
       <template #actions="{ item }">
         <button
           type="button"
-          class="btn-icon delete"
+          class="p-1.5 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           title="Deletar"
           @click.stop="deleteItem(item)"
         >
-          ✕
+          <span class="material-symbols-outlined text-[18px]">delete</span>
         </button>
       </template>
     </GenericTable>
@@ -45,6 +48,7 @@ import GenericTable from '../common/GenericTable.vue';
 import { anamnesisService } from '../../services/anamnesisService';
 import { enumService } from '../../services/enumService';
 import { toastBridge } from '../../services/toastBridge';
+import { confirmBridge } from '../../services/confirmBridge';
 import { formatDate } from '../../utils/formatters';
 
 const props = defineProps({
@@ -81,7 +85,6 @@ const fetchAnamneses = async (params) => {
   
   try {
     const response = await anamnesisService.getAllByClient(props.clientId, params);
-    // Enrich with type descriptions if not provided by backend DTO
     if (response.data && response.data.content) {
       response.data.content = response.data.content.map(item => {
         const typeOpt = anamnesisTypes.value.find(t => t.name === item.type);
@@ -104,7 +107,6 @@ watch(() => props.clientId, () => {
   }
 });
 
-// Method exposed to parent to refresh the list after a save
 const refresh = () => {
   if (tableRef.value) {
     tableRef.value.loadData();
@@ -113,33 +115,39 @@ const refresh = () => {
 defineExpose({ refresh });
 
 const deleteItem = async (item) => {
-  if (confirm('Tem certeza que deseja excluir esta anamnese?')) {
-    try {
-      await anamnesisService.delete(props.clientId, item.id);
-      
-      const toast = toastBridge.getToast();
-      if (toast) {
-        toast.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Anamnese excluída com sucesso!',
-          life: 3000
-        });
-      }
-      refresh();
-    } catch (error) {
-      console.error('Erro ao excluir anamnese:', error);
-      const toast = toastBridge.getToast();
-      if (toast) {
-        toast.add({
-          severity: 'error',
-          summary: 'Erro',
-          detail: 'Não foi possível excluir a anamnese',
-          life: 3000
-        });
+  confirmBridge.confirm({
+    title: 'Excluir Anamnese',
+    message: 'Tem certeza que deseja excluir esta anamnese?',
+    type: 'danger',
+    confirmLabel: 'Excluir',
+    onConfirm: async () => {
+      try {
+        await anamnesisService.delete(props.clientId, item.id);
+        
+        const toast = toastBridge.getToast();
+        if (toast) {
+          toast.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Anamnese excluída com sucesso!',
+            life: 3000
+          });
+        }
+        refresh();
+      } catch (error) {
+        console.error('Erro ao excluir anamnese:', error);
+        const toast = toastBridge.getToast();
+        if (toast) {
+          toast.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Não foi possível excluir a anamnese',
+            life: 3000
+          });
+        }
       }
     }
-  }
+  });
 };
 
 const formatType = (type) => {
@@ -162,50 +170,11 @@ const getTypeIcon = (type) => {
 
 const getTypeBadgeClass = (type) => {
   const map = {
-    FACIAL: 'badge-success', // Green
-    EYELASH_EXTENSION: 'badge-purple', // Purple
-    MICROPIGMENTATION: 'badge-warning' // Orange/Yellow
+    FACIAL: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+    EYELASH_EXTENSION: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+    MICROPIGMENTATION: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
   };
-  return map[type] || 'badge-secondary';
+  return map[type] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
 };
 
 </script>
-
-<style scoped>
-.anamnesis-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.header-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--spacing-md);
-}
-
-.badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 99px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.badge-purple {
-  background-color: #f3e8ff;
-  color: #7e22ce;
-}
-
-.badge-success {
-  background-color: #dcfce7 !important;
-  color: #166534 !important;
-}
-
-.badge-warning {
-  background-color: #fef9c3 !important;
-  color: #854d0e !important;
-}
-</style>

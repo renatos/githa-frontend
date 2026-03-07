@@ -134,8 +134,6 @@ const goBack = () => {
   const from = route.query.from;
   if (from === 'dashboard') {
     router.push({ name: 'home' });
-  } else if (from === 'strategic-clients') {
-    router.push({ name: 'strategic-clients', query: { highlight: client.value.id } });
   } else {
     router.push({ name: 'clients' });
   }

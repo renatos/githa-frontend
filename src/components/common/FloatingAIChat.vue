@@ -1,17 +1,21 @@
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { aiService } from '../../services/aiService';
-import { useToast } from 'primevue/usetoast';
-
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Skeleton from 'primevue/skeleton';
-import Select from 'primevue/select';
+import { toastBridge } from '../../services/toastBridge';
+import BaseModal from './BaseModal.vue';
 import { professionalService } from '../../services/professionalService';
 import { appointmentService } from '../../services/appointmentService';
+import { 
+  Sparkles, 
+  Send, 
+  Check, 
+  Trash2, 
+  Percent, 
+  MessageSquare,
+  ChevronDown
+} from 'lucide-vue-next';
 
-const toast = useToast();
+const toast = toastBridge.getToast();
 
 const isChatVisible = ref(false);
 const messageInput = ref('');
@@ -149,41 +153,51 @@ const sendMessage = async () => {
 <template>
   <div class="floating-chat-container">
     <!-- Chat Button -->
-    <Button
-      icon="pi pi-sparkles"
-      class="p-button-rounded p-button-primary chat-trigger-button"
+    <button
+      class="chat-trigger-button flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg overflow-hidden"
       @click="toggleChat"
-      v-tooltip.left="'Assistente de Inteligência Artificial'"
-    />
-
-    <!-- Chat Dialog -->
-    <Dialog
-      v-model:visible="isChatVisible"
-      header="Githa AI Assistant"
-      :style="{ width: '400px' }"
-      :breakpoints="{ '600px': '100vw' }"
-      position="bottomright"
-      :modal="false"
-      :draggable="false"
-      class="chat-dialog"
-      :pt="{
-        root: { style: 'margin: 0 20px 80px 0;' }
-      }"
+      title="Assistente de Inteligência Artificial"
     >
-      <!-- Professional Selector -->
-      <div class="chat-header-actions" v-if="professionals.length > 0">
-          <label class="professional-label">Atuando como (Profissional):</label>
-          <Select 
-            v-model="selectedProfessional" 
-            :options="professionals" 
-            optionLabel="name" 
-            placeholder="Selecione um Profissional" 
-            class="w-full" 
-            :disabled="messages.length > 1 || isLoading || isProfessionalsLoading" 
-          />
-      </div>
+      <Sparkles :size="24" />
+    </button>
 
-      <div class="chat-messages" ref="chatContainer">
+    <!-- Chat Modal -->
+    <BaseModal
+      :show="isChatVisible"
+      title="Githa AI Assistant"
+      @close="toggleChat"
+      maxWidth="max-w-md"
+      :bodyPadding="false"
+    >
+      <template #header-content>
+        <div class="flex items-center gap-3">
+          <Sparkles class="text-indigo-600 dark:text-indigo-400" :size="20" />
+          <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 m-0">Githa AI Assistant</h2>
+        </div>
+      </template>
+
+      <template #sub-header>
+        <!-- Professional Selector -->
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50" v-if="professionals.length > 0">
+            <label class="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2 block">Atuando como (Profissional):</label>
+            <div class="relative">
+              <select 
+                v-model="selectedProfessional" 
+                class="w-full appearance-none rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors cursor-pointer" 
+                :disabled="messages.length > 1 || isLoading || isProfessionalsLoading" 
+              >
+                <option v-for="prof in professionals" :key="prof.id" :value="prof">
+                  {{ prof.name }}
+                </option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                <ChevronDown :size="16" />
+              </div>
+            </div>
+        </div>
+      </template>
+
+      <div class="chat-messages p-4 flex flex-col gap-4 overflow-y-auto max-h-[50vh]" ref="chatContainer">
         <div 
           v-for="(msg, index) in messages" 
           :key="index"
@@ -193,59 +207,86 @@ const sendMessage = async () => {
              <span style="white-space: pre-wrap;">{{ msg.content }}</span>
              
              <!-- Action Confirmation Card -->
-             <div v-if="msg.action" class="mt-3 p-3 surface-ground border-round shadow-1">
+             <div v-if="msg.action" class="mt-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
                 <div v-if="msg.action.type === 'SCHEDULE_APPOINTMENT'">
-                    <p class="text-sm font-semibold mb-2"> Confirmar Agendamento</p>
-                    <p class="text-xs mb-1"><strong>ID Cliente:</strong> {{ msg.action.params.clientId }}</p>
-                    <p class="text-xs mb-1"><strong>ID Serviço:</strong> {{ msg.action.params.serviceId }}</p>
-                    <p class="text-xs mb-1"><strong>Início:</strong> {{ msg.action.params.startTime }}</p>
-                    <p class="text-xs mb-3"><strong>Fim:</strong> {{ msg.action.params.endTime }}</p>
-                    <Button label="Confirmar" icon="pi pi-check" size="small" class="w-full" @click="confirmAction(msg)" :loading="isLoading" />
+                    <p class="text-sm font-semibold mb-2 text-slate-900 dark:text-slate-100"> Confirmar Agendamento</p>
+                    <div class="space-y-1 mb-3">
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>ID Cliente:</strong> {{ msg.action.params.clientId }}</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>ID Serviço:</strong> {{ msg.action.params.serviceId }}</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Início:</strong> {{ msg.action.params.startTime }}</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Fim:</strong> {{ msg.action.params.endTime }}</p>
+                    </div>
+                    <button 
+                      class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
+                      @click="confirmAction(msg)" 
+                      :disabled="isLoading"
+                    >
+                      <Check :size="14" />
+                      {{ isLoading ? 'Confirmando...' : 'Confirmar' }}
+                    </button>
                 </div>
                 
                 <div v-else-if="msg.action.type === 'CANCEL_APPOINTMENT'">
-                    <p class="text-sm font-semibold mb-2 text-red-500"> Cancelar Agendamento</p>
-                    <p class="text-xs mb-3"><strong>ID do Agendamento:</strong> {{ msg.action.params.appointmentId }}</p>
-                    <Button label="Confirmar Cancelamento" severity="danger" icon="pi pi-trash" size="small" class="w-full" @click="confirmAction(msg)" :loading="isLoading" />
+                    <p class="text-sm font-semibold mb-2 text-rose-600 dark:text-rose-400"> Cancelar Agendamento</p>
+                    <p class="text-xs mb-3 text-slate-600 dark:text-slate-400"><strong>ID do Agendamento:</strong> {{ msg.action.params.appointmentId }}</p>
+                    <button 
+                      class="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
+                      @click="confirmAction(msg)" 
+                      :disabled="isLoading"
+                    >
+                      <Trash2 :size="14" />
+                      {{ isLoading ? 'Cancelando...' : 'Confirmar Cancelamento' }}
+                    </button>
                 </div>
                 
                 <div v-else-if="msg.action.type === 'APPLY_DISCOUNT'">
-                    <p class="text-sm font-semibold mb-2 text-green-600"> Aplicar Desconto</p>
-                    <p class="text-xs mb-1"><strong>ID da Transação:</strong> {{ msg.action.params.transactionId }}</p>
-                    <p class="text-xs mb-3"><strong>Desconto:</strong> {{ msg.action.params.discountPercentage }}%</p>
-                    <Button label="Confirmar Desconto" severity="success" icon="pi pi-percentage" size="small" class="w-full" @click="confirmAction(msg)" :loading="isLoading" />
+                    <p class="text-sm font-semibold mb-2 text-emerald-600 dark:text-emerald-400"> Aplicar Desconto</p>
+                    <div class="space-y-1 mb-3">
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>ID da Transação:</strong> {{ msg.action.params.transactionId }}</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Desconto:</strong> {{ msg.action.params.discountPercentage }}%</p>
+                    </div>
+                    <button 
+                      class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
+                      @click="confirmAction(msg)" 
+                      :disabled="isLoading"
+                    >
+                      <Percent :size="14" />
+                      {{ isLoading ? 'Aplicando...' : 'Confirmar Desconto' }}
+                    </button>
                 </div>
              </div>
           </div>
           <small class="message-time">{{ msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</small>
         </div>
         
-        <div v-if="isLoading" class="message-bubble-wrapper assistant-message">
-           <div class="message-bubble typing-indicator">
-              <Skeleton width="10rem" height="1rem" class="mb-2"></Skeleton>
-              <Skeleton width="5rem" height="1rem"></Skeleton>
+        <!-- Loading State / Skeleton -->
+        <div v-if="isLoading" class="message-bubble-wrapper assistant-message animate-pulse">
+           <div class="message-bubble bg-slate-100 dark:bg-slate-800 space-y-2">
+              <div class="h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full w-32"></div>
+              <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full w-24"></div>
            </div>
         </div>
       </div>
 
       <template #footer>
-        <div class="chat-input-area">
-          <InputText 
+        <div class="flex items-center gap-2 w-full p-4 border-t border-slate-200 dark:border-slate-700">
+          <input 
             v-model="messageInput" 
             placeholder="Digite sua mensagem..." 
             @keyup.enter="sendMessage"
-            class="chat-input"
+            class="flex-1 rounded-full px-4 py-2 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors outline-none"
             :disabled="isLoading"
           />
-          <Button 
-            icon="pi pi-send" 
+          <button 
             @click="sendMessage" 
-            :loading="isLoading"
-            class="p-button-rounded p-button-text"
-          />
+            class="p-2 rounded-full text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50"
+            :disabled="isLoading"
+          >
+            <Send :size="20" />
+          </button>
         </div>
       </template>
-    </Dialog>
+    </BaseModal>
   </div>
 </template>
 
@@ -289,115 +330,5 @@ const sendMessage = async () => {
   .chat-trigger-button:hover {
      transform: translateY(-15px) scale(1.05); /* preserve upward translation on hover */
   }
-
-  :deep(.p-dialog.chat-dialog) {
-      margin: 0 !important;
-      max-height: 90vh;
-      bottom: 70px !important; /* Above bottom nav */
   }
-}
-
-.chat-header-actions {
-  padding: 1rem;
-  border-bottom: 1px solid var(--surface-border);
-  background-color: var(--surface-section);
-}
-
-.professional-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-color-secondary);
-}
-
-.chat-messages {
-  height: 400px;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background-color: var(--surface-card);
-  border-radius: 8px;
-}
-
-.message-bubble-wrapper {
-  display: flex;
-  flex-direction: column;
-  max-width: 85%;
-}
-
-.user-message {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.assistant-message {
-  align-self: flex-start;
-  align-items: flex-start;
-}
-
-.message-bubble {
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-.user-message .message-bubble {
-  background-color: var(--primary-color);
-  color: var(--primary-color-text);
-  border-bottom-right-radius: 2px;
-}
-
-.assistant-message .message-bubble {
-  background-color: var(--surface-container);
-  color: var(--text-color);
-  border-bottom-left-radius: 2px;
-}
-
-.error-bubble {
-    background-color: var(--red-100) !important;
-    color: var(--red-700) !important;
-    border: 1px solid var(--red-200);
-}
-
-.dark .error-bubble {
-    background-color: rgba(255, 99, 132, 0.2) !important;
-    color: var(--red-300) !important;
-    border: 1px solid rgba(255, 99, 132, 0.4);
-}
-
-.message-time {
-  font-size: 0.7rem;
-  color: var(--text-color-secondary);
-  margin-top: 0.25rem;
-}
-
-.chat-input-area {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid var(--surface-border);
-  width: 100%;
-}
-
-.chat-input {
-  flex: 1;
-  border-radius: 20px;
-}
-
-.typing-indicator {
-    background-color: transparent !important;
-    padding: 0 0.5rem !important;
-}
-
-/* Base modal overrides for specific chat look */
-:deep(.p-dialog-content) {
-  padding: 0;
-  overflow: hidden;
-}
-:deep(.p-dialog-footer) {
-  padding: 0.5rem 1rem;
-}
 </style>

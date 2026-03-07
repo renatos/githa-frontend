@@ -1,109 +1,326 @@
 <template>
-  <div class="appointment-list">
-    <div class="header-actions" v-if="!embedded">
-      <div class="flex align-items-center gap-3">
-        <h2 class="m-0">Agendamentos</h2>
-        <AiContextBadge context="APPOINTMENTS" contextName="Agenda" />
-      </div>
-      <button class="btn btn-primary" @click="$emit('new')">
-        + Novo Agendamento
-      </button>
-    </div>
+  <div class="p-4 md:p-6 flex flex-col gap-6">
 
-    <GenericTable
-      ref="tableRef"
-      :columns="columns"
-      :fetch-data="fetchDataAdapter"
-      :row-class="rowClass"
-      @row-click="(item) => $emit('edit', item)"
-    >
+    <!-- Header -->
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col gap-4 z-10" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Agendamentos</h2>
+            <AiContextBadge context="APPOINTMENTS" />
+          </div>
+          <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os agendamentos da clínica.</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Date Navigator -->
+          <div class="flex items-center gap-1">
+            <button @click="navigateDate(-1)"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            <button @click="goToToday"
+                    class="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap">
+              {{ dateRangeLabel }}
+            </button>
+            <button @click="navigateDate(1)"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
 
+          <!-- View Toggle -->
+          <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+            <button @click="viewMode = 'list'"
+                    :class="viewMode === 'list' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all">
+              <span class="material-symbols-outlined text-[16px]">view_list</span>
+              Lista
+            </button>
+            <button @click="viewMode = 'calendar'"
+                    :class="viewMode === 'calendar' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all">
+              <span class="material-symbols-outlined text-[16px]">calendar_view_week</span>
+              Calendário
+            </button>
+          </div>
 
-      <template #cell-startTime="{ value }">
-        {{ formatDateTime(value) }}
-      </template>
-
-      <template #cell-status="{ value, item }">
-        <span :class="['status-badge', value ? value.toLowerCase() : '']">
-          {{ statusMap[value] || value }}
-        </span>
-      </template>
-
-      <template #actions="{ item }" v-if="!embedded">
-        <div class="actions-group">
-          <!-- Quick actions -->
-          <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)" 
-                  class="btn-icon confirm" 
-                  title="Confirmar" 
-                  @click="$emit('confirm', item)">
-            ✓
-          </button>
-          
-          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)" 
-                  class="btn-icon complete" 
-                  title="Concluir" 
-                  @click="$emit('complete', item)">
-            ★
-          </button>
-          
-          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)" 
-                  class="btn-icon cancel" 
-                  title="Cancelar" 
-                  @click="$emit('cancel', item)">
-            ✕
-          </button>
-
-          <div class="divider"></div>
-
-          <button class="btn-icon" title="Adicionar Procedimento" @click="$emit('add-procedure', item)">+</button>
-          
-          <button 
-            class="btn-icon delete" 
-            :title="getDeleteTitle(item)"
-            :disabled="isActionDisabled(item)"
-            :class="{ 'disabled': isActionDisabled(item) }"
-            @click="!isActionDisabled(item) && $emit('delete', item.id)">
-            ✕
+          <button
+            @click="$emit('new')"
+            class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+            <span class="material-symbols-outlined text-[18px] mr-2">add</span>
+            Novo Agendamento
           </button>
         </div>
-      </template>
-    </GenericTable>
+      </div>
+    </header>
+
+
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Carregando agendamentos...</p>
+      </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div v-else-if="viewMode === 'list'" class="flex flex-col gap-3">
+      <div v-if="appointments.length === 0" class="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+        <span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-3">event_busy</span>
+        <p class="text-slate-500 dark:text-slate-400 font-medium">Nenhum agendamento neste dia.</p>
+        <button @click="$emit('new')" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          Novo Agendamento
+        </button>
+      </div>
+
+      <div v-for="item in appointments" :key="item.id"
+           class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer"
+           @click="$emit('edit', item)">
+        <!-- Time Block -->
+        <div class="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-lg w-20 py-2 px-1 border border-slate-100 dark:border-slate-600">
+          <p class="text-base font-bold text-slate-900 dark:text-white">{{ formatTime(item.startTime) }}</p>
+          <p class="text-xs text-slate-400">{{ formatTime(item.endTime) }}</p>
+        </div>
+
+        <!-- Status left accent -->
+        <div class="w-1 h-12 rounded-full flex-shrink-0" :class="statusAccentColor(item.status)"></div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-slate-900 dark:text-white text-sm truncate">{{ item.clientName }}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+            {{ item.serviceName }} • {{ item.professionalName }}
+          </p>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="flex-shrink-0">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+                :class="statusBadgeClass(item.status)">
+            <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
+            {{ statusMap[item.status] || item.status }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+          <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
+                  class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                  title="Confirmar" @click="$emit('confirm', item)">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+          </button>
+          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+                  class="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                  title="Concluir" @click="$emit('complete', item)">
+            <span class="material-symbols-outlined text-[18px]">star</span>
+          </button>
+          <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+                  class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="Cancelar" @click="$emit('cancel', item)">
+            <span class="material-symbols-outlined text-[18px]">cancel</span>
+          </button>
+          <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
+          <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  title="Adicionar Procedimento" @click="$emit('add-procedure', item)">
+            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+          </button>
+          <button class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  :disabled="isActionDisabled(item)"
+                  :title="getDeleteTitle(item)"
+                  @click="!isActionDisabled(item) && $emit('delete', item.id)">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div v-else class="bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <!-- Week Day Header -->
+      <div class="grid border-b-2 border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800"
+           :style="`grid-template-columns: 64px repeat(${weekDays.length}, 1fr)`">
+        <div class="border-r border-slate-300 dark:border-slate-700"></div>
+        <div v-for="day in weekDays" :key="day.iso"
+             :class="['px-3 py-3 text-center border-r border-slate-300 dark:border-slate-700/50 last:border-r-0',
+                       day.isToday ? 'bg-indigo-100 dark:bg-indigo-900/20' : '']">
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">{{ day.dayName }}</p>
+          <p :class="['text-lg font-bold mt-0.5',
+                       day.isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-white']">
+            {{ day.dayNumber }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Time Grid -->
+      <div class="overflow-y-auto max-h-[600px] relative scrollbar-hide">
+        <div class="grid" :style="`grid-template-columns: 64px repeat(${weekDays.length}, 1fr)`">
+
+          <!-- Rows for each hour -->
+          <template v-for="(hour, idx) in calendarHours" :key="hour">
+            <!-- Time Label -->
+            <div :class="['border-r border-b border-slate-300 dark:border-slate-700/50 py-3 px-2 text-right', idx % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800/60' : 'bg-white dark:bg-slate-800']">
+              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ String(hour).padStart(2, '0') }}:00</span>
+            </div>
+            <!-- Day cell per hour -->
+            <div v-for="day in weekDays" :key="day.iso"
+                 :class="['border-r border-b border-slate-300 dark:border-slate-700/50 last:border-r-0 relative min-h-[56px] transition-colors cursor-pointer',
+                           day.isToday ? (idx % 2 === 0 ? 'bg-indigo-100/60 dark:bg-indigo-900/10 hover:bg-indigo-200/50 dark:hover:bg-indigo-900/30' : 'bg-indigo-50/60 dark:bg-indigo-900/5 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/20') : (idx % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30')]"
+                 @click.stop="onCellClick(day.iso, hour)">  
+              <!-- Appointment blocks for this cell -->
+              <div v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
+                   class="absolute rounded-md px-2 py-1 cursor-pointer text-xs border-l-2 transition-all duration-200 z-10 hover:z-30 hover:scale-[1.05] hover:shadow-lg group/appt"
+                   :class="calendarCardClass(appt.status)"
+                   :style="getCardStyle(appt)"
+                   @click.stop="$emit('edit', appt)">
+                <p class="font-semibold truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.clientName }}</p>
+                <p class="opacity-75 truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.serviceName }}</p>
+              </div>
+            </div>
+          </template>
+
+        </div>
+      </div>
+
+      <!-- Calendar legend -->
+      <div class="flex items-center gap-4 px-4 py-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
+        <div v-for="(label, key) in statusLegend" :key="key" class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm" :class="statusDotClass(key)"></span>
+          <span class="text-xs text-slate-500 dark:text-slate-400">{{ label }}</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose, defineProps, watch, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import GenericTable from './common/GenericTable.vue';
-import AiContextBadge from './common/AiContextBadge.vue';
+import { ref, computed, onMounted, watch, defineEmits, defineExpose, defineProps } from 'vue';
 import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
 import { enumService } from '../services/enumService';
-import { formatDateTime } from '../utils/formatters';
+import AiContextBadge from './common/AiContextBadge.vue';
 
 const props = defineProps({
   embedded: { type: Boolean, default: false },
   clientId: { type: Number, default: null }
 });
 
-const route = useRoute();
+const emit = defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
 
-const rowClass = (item) => {
-    if (route.query.highlight && String(item.id) === String(route.query.highlight)) {
-        return 'highlight-row';
-    }
-    return '';
-};
-
-defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
-
-const tableRef = ref(null);
+// --- State ---
+const viewMode = ref('calendar');
+const loading = ref(false);
+const appointments = ref([]);
+const appointmentLayout = ref({});
 const isAdmin = ref(false);
 const statusMap = ref({});
+const currentDate = ref(new Date());
 
-const checkUserRole = () => {
-  const user = authService.getCurrentUser();
-  isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
+// --- Status Legend ---
+const statusLegend = {
+  SCHEDULED: 'Agendado',
+  CONFIRMED: 'Confirmado',
+  COMPLETED: 'Finalizado',
+  CANCELED: 'Cancelado',
+  MISSED: 'Falta',
+};
+
+// --- Date Navigation ---
+const dateRangeLabel = computed(() => {
+  const d = currentDate.value;
+  if (viewMode.value === 'list') {
+    return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  const monday = getMonday(d);
+  const saturday = new Date(monday);
+  saturday.setDate(saturday.getDate() + 5);
+  const start = monday.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const end = saturday.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return `${start} – ${end}`;
+});
+
+const getMonday = (date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const navigateDate = (direction) => {
+  const d = new Date(currentDate.value);
+  if (viewMode.value === 'list') {
+    d.setDate(d.getDate() + direction);
+  } else {
+    d.setDate(d.getDate() + direction * 7);
+  }
+  currentDate.value = d;
+};
+
+const goToToday = () => {
+  currentDate.value = new Date();
+};
+
+const onCellClick = (isoDate, hour) => {
+  // ISO string is YYYY-MM-DD
+  const startTime = `${isoDate}T${String(hour).padStart(2, '0')}:00:00`;
+  emit('new', { startTime });
+};
+
+const weekDays = computed(() => {
+  const monday = getMonday(currentDate.value);
+  const days = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    const iso = d.toISOString().split('T')[0];
+    const isToday = d.getTime() === today.getTime();
+    days.push({
+      iso,
+      isToday,
+      dayName: d.toLocaleDateString('pt-BR', { weekday: 'short' }),
+      dayNumber: d.getDate(),
+    });
+  }
+  return days;
+});
+
+const calendarHours = Array.from({ length: 12 }, (_, i) => 8 + i); // 08 to 19
+
+// --- Data Loading ---
+const loadAppointments = async () => {
+  loading.value = true;
+  try {
+    let query = {};
+    if (viewMode.value === 'list') {
+      const d = currentDate.value;
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      query.date = dateStr;
+    } else {
+      const monday = getMonday(currentDate.value);
+      const saturday = new Date(monday);
+      saturday.setDate(saturday.getDate() + 5);
+      query.startDate = monday.toISOString().split('T')[0];
+      query.endDate = saturday.toISOString().split('T')[0];
+    }
+
+    if (props.clientId) query['client.id'] = props.clientId;
+    query.size = 500;
+
+    const response = await appointmentService.getAll(query);
+    appointments.value = response.data?.content || [];
+    calculateLayout(appointments.value);
+  } catch (e) {
+    console.error('Failed to load appointments', e);
+    appointments.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 const loadStatuses = async () => {
@@ -113,222 +330,183 @@ const loadStatuses = async () => {
   });
 };
 
-const isActionDisabled = (item) => {
-  return item.status === 'COMPLETED' && !isAdmin.value;
-};
-
-const getEditTitle = (item) => {
-  if (isActionDisabled(item)) {
-    return 'Atendimento concluído, acesso permitido apenas para ADMIN';
-  }
-  return 'Editar';
-};
-
-const getDeleteTitle = (item) => {
-  if (isActionDisabled(item)) {
-    return 'Atendimento concluído, acesso permitido apenas para ADMIN';
-  }
-  return 'Excluir';
+const checkUserRole = () => {
+  const user = authService.getCurrentUser();
+  isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
 };
 
 onMounted(() => {
   checkUserRole();
   loadStatuses();
+  loadAppointments();
 });
 
-
-
-const columns = computed(() => {
-  const cols = [];
-  if (!props.embedded) {
-    cols.push({ key: 'id', label: '#', width: '50px', sortable: true });
-  }
-  cols.push({ key: 'startTime', label: 'Data', sortable: true });
-  
-  if (!props.clientId) {
-    cols.push({ key: 'clientName', label: 'Cliente', sortable: false });
-  }
-
-  cols.push(
-    { key: 'professionalName', label: 'Profissional', sortable: false },
-    { key: 'serviceName', label: 'Serviço', sortable: false },
-    { key: 'status', label: 'Status', sortable: true, align: 'center' }
-  );
-  
-  return cols;
+watch([currentDate, viewMode], () => {
+  loadAppointments();
 });
 
-const fetchDataAdapter = async (params) => {
-  const query = {
-    page: params.page,
-    size: params.size,
-    sort: params.sort,
-    ...params.filters
-  };
-  
-  // Enforce client filtter
-  if (props.clientId) {
-    query['client.id'] = props.clientId;
-  }
-  
-  Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
-
-  const response = await appointmentService.getAll(query);
-  return response.data;
-};
-
-const refresh = () => {
-  tableRef.value?.loadData();
-};
-
-// Reload if clientId changes (e.g. route change)
-watch(() => props.clientId, () => {
-  refresh();
-});
-
+const refresh = () => loadAppointments();
 defineExpose({ refresh });
+
+// --- Helpers ---
+const formatTime = (isoString) => {
+  if (!isoString) return '--:--';
+  return isoString.split('T')[1]?.substring(0, 5) || '--:--';
+};
+
+const isActionDisabled = (item) => item.status === 'COMPLETED' && !isAdmin.value;
+
+const getDeleteTitle = (item) => {
+  if (isActionDisabled(item)) return 'Atendimento concluído, acesso permitido apenas para ADMIN';
+  return 'Excluir';
+};
+
+// --- Status Styles ---
+const statusBadgeClass = (status) => {
+  const map = {
+    SCHEDULED: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300',
+    CONFIRMED: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+    COMPLETED: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+    CANCELED: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+    MISSED: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+  };
+  return map[status] || map.SCHEDULED;
+};
+
+const statusDotClass = (status) => {
+  const map = {
+    SCHEDULED: 'bg-sky-500',
+    CONFIRMED: 'bg-emerald-500',
+    COMPLETED: 'bg-slate-400',
+    CANCELED: 'bg-red-500',
+    MISSED: 'bg-orange-500',
+  };
+  return map[status] || 'bg-slate-400';
+};
+
+const statusAccentColor = (status) => {
+  const map = {
+    SCHEDULED: 'bg-sky-400',
+    CONFIRMED: 'bg-emerald-400',
+    COMPLETED: 'bg-slate-300 dark:bg-slate-600',
+    CANCELED: 'bg-red-400',
+    MISSED: 'bg-orange-400',
+  };
+  return map[status] || 'bg-slate-300';
+};
+
+const calendarCardClass = (status) => {
+  const map = {
+    SCHEDULED: 'bg-sky-50 dark:bg-sky-900/30 border-sky-500 text-sky-900 dark:text-sky-100',
+    CONFIRMED: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-900 dark:text-emerald-100',
+    COMPLETED: 'bg-slate-100 dark:bg-slate-700 border-slate-400 text-slate-700 dark:text-slate-300',
+    CANCELED: 'bg-red-50 dark:bg-red-900/20 border-red-400 text-red-800 dark:text-red-200',
+    MISSED: 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 text-orange-800 dark:text-orange-200',
+  };
+  return map[status] || map.SCHEDULED;
+};
+
+// --- Calendar Cell Logic ---
+const calculateLayout = (apptsList) => {
+  const byDay = {};
+  apptsList.forEach(appt => {
+    if (!appt.startTime || !appt.endTime) return;
+    const day = appt.startTime.split('T')[0];
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(appt);
+  });
+
+  const layoutDict = {};
+
+  Object.values(byDay).forEach(dayAppts => {
+    dayAppts.sort((a, b) => {
+      const aStart = new Date(a.startTime).getTime();
+      const bStart = new Date(b.startTime).getTime();
+      if (aStart !== bStart) return aStart - bStart;
+      const aEnd = new Date(a.endTime).getTime();
+      const bEnd = new Date(b.endTime).getTime();
+      return bEnd - aEnd;
+    });
+
+    const packEvents = (columns) => {
+      const numColumns = columns.length;
+      columns.forEach((col, colIdx) => {
+        col.forEach(appt => {
+          layoutDict[appt.id] = { col: colIdx, numColumns: numColumns };
+        });
+      });
+    };
+
+    let columns = [];
+    let lastEventEnding = null;
+
+    dayAppts.forEach(appt => {
+      const start = new Date(appt.startTime).getTime();
+      if (lastEventEnding !== null && start >= lastEventEnding) {
+        packEvents(columns);
+        columns = [];
+        lastEventEnding = null;
+      }
+
+      let placed = false;
+      for (const col of columns) {
+        const lastInCol = col[col.length - 1];
+        if (new Date(lastInCol.endTime).getTime() <= start) {
+          col.push(appt);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([appt]);
+      }
+
+      const end = new Date(appt.endTime).getTime();
+      if (lastEventEnding === null || end > lastEventEnding) {
+        lastEventEnding = end;
+      }
+    });
+
+    if (columns.length > 0) {
+      packEvents(columns);
+    }
+  });
+  
+  appointmentLayout.value = layoutDict;
+};
+
+const getAppointmentsForCell = (dayIso, hour) => {
+  return appointments.value.filter(appt => {
+    if (!appt.startTime) return false;
+    const apptDate = appt.startTime.split('T')[0];
+    const apptHour = parseInt(appt.startTime.split('T')[1]?.substring(0, 2) || '0');
+    return apptDate === dayIso && apptHour === hour;
+  });
+};
+
+const getCardStyle = (appt) => {
+  if (!appt.startTime || !appt.endTime) return { top: '2px', height: '52px', left: '4px', width: 'calc(100% - 8px)' };
+  const startH = parseInt(appt.startTime.split('T')[1]?.substring(0, 2) || '8');
+  const startM = parseInt(appt.startTime.split('T')[1]?.substring(3, 5) || '0');
+  const endH = parseInt(appt.endTime.split('T')[1]?.substring(0, 2) || '8');
+  const endM = parseInt(appt.endTime.split('T')[1]?.substring(3, 5) || '30');
+  const cellHeight = 56; // min-h in px
+  const startMin = (startH - Math.floor(startH)) * 60 + startM;
+  const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+  const top = (startM / 60) * cellHeight;
+  const minHeight = Math.max((durationMin / 60) * cellHeight, 30);
+
+  const layout = appointmentLayout.value[appt.id] || { col: 0, numColumns: 1 };
+  
+  const leftPercent = (layout.col / layout.numColumns) * 100;
+  const widthPercent = (1 / layout.numColumns) * 100;
+
+  return { 
+    top: `${top}px`, 
+    minHeight: `${minHeight}px`,
+    height: 'auto',
+    left: `calc(${leftPercent}% + 4px)`,
+    width: `calc(${widthPercent}% - 8px)`
+  };
+};
 </script>
-
-<style scoped>
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.header-actions h2 {
-  color: var(--color-text-main);
-  margin: 0;
-}
-
-.actions-group {
-  display: flex;
-  gap: var(--spacing-xs);
-  justify-content: center;
-}
-
-.btn-icon {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 0.25rem 0.6rem;
-  transition: all 0.2s;
-  color: var(--color-text-muted);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.btn-icon:hover {
-  background-color: var(--color-bg-body);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.btn-icon.delete {
-    color: var(--color-error, #ef4444);
-    border-color: var(--color-error, #ef4444);
-    opacity: 0.8;
-}
-
-.btn-icon.delete:hover {
-  background-color: #fee2e2;
-  border-color: #ef4444;
-  color: #ef4444;
-  opacity: 1;
-}
-
-.btn-icon.confirm:hover {
-    background-color: #dcfce7;
-    border-color: #166534;
-    color: #166534;
-}
-
-.btn-icon.complete:hover {
-    background-color: #e0f2fe;
-    border-color: #0369a1;
-    color: #0369a1;
-}
-
-.btn-icon.cancel:hover {
-    background-color: #fee2e2;
-    border-color: #991b1b;
-    color: #991b1b;
-    opacity: 1;
-}
-
-.divider {
-    width: 1px;
-    background-color: var(--color-border);
-    margin: 0 4px;
-}
-
-.status-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.scheduled {
-  background-color: #e0f2fe;
-  color: #0369a1;
-}
-
-.status-badge.confirmed {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.canceled {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.status-badge.completed {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.status-badge.missed {
-  background-color: #ffedd5;
-  color: #9a3412;
-}
-
-/* Dark theme adjustments for badges if necessary */
-:global([data-theme="dark"]) .status-badge.scheduled {
-  background-color: #0c4a6e;
-  color: #e0f2fe;
-}
-
-:global([data-theme="dark"]) .status-badge.confirmed {
-  background-color: #14532d;
-  color: #dcfce7;
-}
-
-:global([data-theme="dark"]) .status-badge.canceled {
-  background-color: #7f1d1d;
-  color: #fee2e2;
-}
-
-:global([data-theme="dark"]) .status-badge.completed {
-  background-color: #374151;
-  color: #f3f4f6;
-}
-
-:global([data-theme="dark"]) .status-badge.missed {
-  background-color: #7c2d12;
-  color: #ffedd5;
-}
-
-.btn-icon.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  /* pointer-events: none; - Removed to allow tooltips */
-}
-
-:deep(.highlight-row) td {
-    background-color: var(--color-highlight-row, rgba(234, 179, 8, 0.15)) !important;
-    transition: background-color 0.5s;
-}
-</style>

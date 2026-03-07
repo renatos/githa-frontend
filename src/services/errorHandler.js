@@ -1,3 +1,4 @@
+import { confirmBridge } from './confirmBridge';
 
 const ERROR_MESSAGES = {
     400: 'Dados inválidos. Verifique as informações e tente novamente.',
@@ -38,7 +39,11 @@ export const errorHandler = {
             });
         } else {
             // Fallback if toast is not available (e.g. during boot)
-            alert(message);
+            confirmBridge.alert({
+                title: 'Erro',
+                message: message,
+                type: 'danger'
+            });
         }
 
         return message;

@@ -1,135 +1,142 @@
 <template>
-  <div class="modal-overlay" @mousedown.self="$emit('close')">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h2>Ficha de Anamnese{{ typeLabel }}</h2>
-        <button class="btn-close" @click="$emit('close')">&times;</button>
+  <BaseModal
+    :show="true"
+    @close="$emit('close')"
+    :maxWidth="entity?.id ? 'max-w-2xl' : 'max-w-lg'"
+    :bodyPadding="false"
+    :zIndex="10000"
+  >
+    <template #header-content>
+      <div class="flex items-center gap-4 min-w-0">
+        <span class="material-symbols-outlined text-[24px] shrink-0 text-indigo-600 dark:text-indigo-400">description</span>
+        <div class="min-w-0">
+          <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
+            Ficha de Anamnese{{ typeLabel }}
+          </h2>
+        </div>
       </div>
-      <div class="modal-body">
-        <div class="anamnesis-form">
-          <div v-if="readonly" class="readonly-banner">
-            <span class="icon">ℹ️</span>
-            <span>Ficha de Anamnese — Apenas Leitura</span>
-          </div>
+    </template>
+    <!-- Body Content -->
+    <div class="p-6 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-6">
+      <!-- Readonly Banner -->
+      <div v-if="readonly" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700 text-sky-700 dark:text-sky-300">
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        <span class="text-sm font-medium">Ficha de Anamnese — Apenas Leitura</span>
+      </div>
 
       <!-- Type Selector (Only on Creation) -->
-      <div v-if="!entity?.id" class="form-row">
-        <div class="form-group">
-          <label>Tipo de Anamnese <span class="required">*</span></label>
-          <select 
-            v-model="selectedType" 
-            class="form-control" 
-            :disabled="readonly"
-            required
+      <label v-if="!entity?.id" class="flex flex-col">
+        <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">
+          Tipo de Anamnese <span class="text-red-500">*</span>
+        </p>
+        <select 
+          v-model="selectedType" 
+          class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-base font-normal leading-normal transition-colors"
+          :disabled="readonly"
+          required
+        >
+          <option :value="null">Selecione o tipo de anamnese</option>
+          <option 
+            v-for="type in anamnesisTypes" 
+            :key="type.name" 
+            :value="type.name"
           >
-            <option :value="null">Selecione o tipo de anamnese</option>
-            <option 
-              v-for="type in anamnesisTypes" 
-              :key="type.name" 
-              :value="type.name"
-            >
-              {{ type.description }}
-            </option>
-          </select>
-        </div>
-      </div>
+            {{ type.description }}
+          </option>
+        </select>
+      </label>
 
-      <div v-if="selectedType">
+      <div v-if="selectedType" class="flex flex-col gap-6">
         <!-- Common Fields -->
-        <div class="form-row">
-          <div class="form-group">
-            <label>Data do Atendimento</label>
-            <input 
-              type="date" 
-              v-model="form.attendanceDate" 
-              class="form-control"
-              :disabled="readonly"
-              required 
-            />
-          </div>
-        </div>
+        <label class="flex flex-col">
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">Data do Atendimento</p>
+          <input 
+            type="date" 
+            v-model="form.attendanceDate" 
+            class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-base font-normal leading-normal transition-colors"
+            :disabled="readonly"
+            required 
+          />
+        </label>
 
-        <hr class="section-divider" />
+        <hr class="border-slate-200 dark:border-slate-700" />
 
         <!-- Dynamic Form Component Based on Type -->
-        <div class="dynamic-form-section">
-          <component 
-            v-if="currentForm" 
-            :is="currentForm" 
-            v-model="form" 
-            :readonly="readonly"
-          />
-        </div>
+        <component 
+          v-if="currentForm" 
+          :is="currentForm" 
+          v-model="form" 
+          :readonly="readonly"
+        />
 
-        <hr class="section-divider" />
+        <hr class="border-slate-200 dark:border-slate-700" />
 
         <!-- Common Observables -->
-        <div class="form-row">
-          <div class="form-group full-width">
-            <label>Observações da Profissional</label>
-            <textarea 
-              v-model="form.professionalNotes" 
-              class="form-control"
-              rows="3" 
-              :disabled="readonly"
-              placeholder="Adicione notas visíveis apenas para a clínica..."
-            ></textarea>
-          </div>
-        </div>
+        <label class="flex flex-col">
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">Observações da Profissional</p>
+          <textarea 
+            v-model="form.professionalNotes" 
+            class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 py-3 text-base font-normal leading-normal transition-colors resize-y min-h-[80px]"
+            rows="3" 
+            :disabled="readonly"
+            placeholder="Adicione notas visíveis apenas para a clínica..."
+          ></textarea>
+        </label>
 
         <!-- Consents -->
-        <div class="consent-section">
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input 
-                type="checkbox" 
-                v-model="form.consentGranted" 
-                :disabled="readonly"
-                required 
-              />
-              <span class="checkbox-text">
-                Declaro que as informações fornecidas são verdadeiras e estou ciente dos procedimentos, riscos e cuidados necessários. <span class="required">*</span>
-              </span>
-            </label>
-          </div>
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input 
-                type="checkbox" 
-                v-model="form.photoAuthorizationGranted" 
-                :disabled="readonly"
-              />
-              <span class="checkbox-text">
-                Autorizo registro fotográfico e divulgação nas mídias sociais.
-              </span>
-            </label>
-          </div>
+        <div class="p-4 rounded-lg bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              v-model="form.consentGranted" 
+              :disabled="readonly"
+              required
+              class="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-600"
+            />
+            <span class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+              Declaro que as informações fornecidas são verdadeiras e estou ciente dos procedimentos, riscos e cuidados necessários. <span class="text-red-500">*</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              v-model="form.photoAuthorizationGranted" 
+              :disabled="readonly"
+              class="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-600"
+            />
+            <span class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+              Autorizo registro fotográfico e divulgação nas mídias sociais.
+            </span>
+          </label>
         </div>
-      </div>
-
-        </div>
-      </div>
-      <!-- Action Buttons -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" @click="$emit('close')">
-          {{ readonly ? 'Fechar' : 'Cancelar' }}
-        </button>
-        <button 
-          v-if="!readonly" 
-          type="button" 
-          class="btn btn-primary" 
-          :disabled="!canSave"
-          @click="save"
-        >
-          Salvar
-        </button>
       </div>
     </div>
-  </div>
+
+    <!-- Footer -->
+    <template #footer>
+      <button 
+        type="button" 
+        class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors"
+        @click="$emit('close')"
+      >
+        {{ readonly ? 'Fechar' : 'Cancelar' }}
+      </button>
+      <button 
+        v-if="!readonly" 
+        type="button" 
+        class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!canSave"
+        @click="save"
+      >
+        Salvar
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, defineProps, defineEmits } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import BaseModal from '../common/BaseModal.vue';
 import FacialAnamnesisForm from './FacialAnamnesisForm.vue';
 import EyelashExtensionAnamnesisForm from './EyelashExtensionAnamnesisForm.vue';
 import MicropigmentationAnamnesisForm from './MicropigmentationAnamnesisForm.vue';
@@ -137,6 +144,7 @@ import { enumService } from '../../services/enumService';
 import { anamnesisService } from '../../services/anamnesisService';
 import { clientService } from '../../services/clientService';
 import { toastBridge } from '../../services/toastBridge';
+import { confirmBridge } from '../../services/confirmBridge';
 import { useModal } from '../../composables/useModal';
 
 const props = defineProps({
@@ -175,7 +183,6 @@ const typeLabel = computed(() => {
   const opt = anamnesisTypes.value.find(t => t.name === selectedType.value);
   if (opt) return ` - ${opt.description}`;
   
-  // Fallback map if the enum data isn't loaded yet
   const map = {
     FACIAL: 'Facial',
     EYELASH_EXTENSION: 'Extensão de Cílios',
@@ -194,7 +201,6 @@ const form = ref({
   consentGranted: false,
   photoAuthorizationGranted: false,
   professionalNotes: '',
-  // Fields will be dynamically added here by sub-forms via v-model="form"
 });
 
 onMounted(async () => {
@@ -205,7 +211,6 @@ onMounted(async () => {
   }
 
   if (props.entity) {
-    // Check if we need to fetch the full details since lists might only have summarized DTOs
     if (props.entity.id) {
        try {
          const res = await anamnesisService.getById(props.clientId, props.entity.id);
@@ -215,7 +220,11 @@ onMounted(async () => {
          form.value = { ...baseFields, ...(details || {}) };
        } catch(error) {
          console.error('Failed to fetch full anamnesis details', error);
-         alert('Erro ao carregar detalhes da ficha');
+         confirmBridge.alert({
+           title: 'Erro de Carregamento',
+           message: 'Não foi possível carregar os detalhes da ficha de anamnese.',
+           type: 'danger'
+         });
        }
     } else {
        selectedType.value = props.entity.type;
@@ -223,11 +232,9 @@ onMounted(async () => {
        form.value = { ...form.value, ...baseFields, ...(details || {}) };
     }
   } else {
-    // New Anamnesis: Use passed client data to auto-fill common fields
     try {
       if (props.clientData && props.clientData.healthConditions) {
         const hc = props.clientData.healthConditions;
-        // Map common health conditions to Anamnesis details
         form.value = {
           ...form.value,
           pregnantOrNursing: hc.pregnantOrNursing || false,
@@ -258,7 +265,6 @@ const canSave = computed(() => {
 const save = async () => {
   if (!canSave.value) return;
 
-  // Split form.value into base fields and details
   const { 
     id, type, attendanceDate, consentGranted, 
     photoAuthorizationGranted, professionalNotes, 
@@ -294,121 +300,11 @@ const save = async () => {
     emit('save');
   } catch (error) {
     console.error('Error saving anamnesis:', error);
-    alert('Erro ao salvar ficha de anamnese.');
+    confirmBridge.alert({
+      title: 'Erro ao Salvar',
+      message: 'Ocorreu um erro ao tentar salvar a ficha de anamnese.',
+      type: 'danger'
+    });
   }
 };
 </script>
-
-<style scoped>
-.anamnesis-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  max-width: 800px;
-}
-
-.readonly-banner {
-  background-color: var(--color-bg-info, #e0f2fe);
-  color: var(--color-text-info, #0369a1);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-weight: 500;
-  margin-bottom: var(--spacing-sm);
-}
-
-.section-divider {
-  border: 0;
-  border-top: 1px solid var(--color-border);
-  margin: var(--spacing-md) 0;
-}
-
-.consent-section {
-  background-color: var(--color-bg-body);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  margin-top: var(--spacing-md);
-}
-
-.checkbox-group {
-  margin-bottom: var(--spacing-sm);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
-  cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-  margin-top: 4px;
-}
-
-.checkbox-text {
-  flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.required {
-  color: var(--color-danger);
-}
-
-/* Modal styles included inside common forms.css/modal.css mostly, but added here for safety */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  z-index: 1000;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-.modal-container {
-  background-color: var(--color-bg-card, #fff);
-  border-radius: var(--radius-lg, 8px);
-  width: 100%;
-  max-width: 800px;
-  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--color-text-main, #1e293b);
-}
-
-.modal-body {
-  padding: var(--spacing-lg, 24px);
-  overflow-y: auto;
-  max-height: calc(100vh - 200px);
-}
-
-.modal-footer {
-  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
-  border-top: 1px solid var(--color-border, #e2e8f0);
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md, 16px);
-}
-</style>

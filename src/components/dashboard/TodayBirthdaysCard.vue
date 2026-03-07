@@ -1,54 +1,55 @@
 <template>
-  <DashboardCard
-    title="Aniversariantes (Mês Atual)"
-    icon="🎂"
-    :loading="loading"
-    :error="error"
-    @retry="fetchBirthdays"
-  >
-    <div v-if="clients.length === 0 && !loading && !error" class="empty-state">
-      <p>Nenhum aniversariante este mês.</p>
-    </div>
+  <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
+    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+      <span>🎂</span> Aniversariantes (Mês Atual)
+    </h2>
 
-    <div v-else class="birthdays-list">
-      <div 
-        v-for="client in clients" 
-        :key="client.id" 
-        class="birthday-item"
-        @click="goToClient(client)"
-      >
-        <div class="calendar-icon">
-          <span class="month">{{ extractMonth(client.birthday) }}</span>
-          <strong class="day">{{ extractDay(client.birthday) }}</strong>
-        </div>
-        
-        <div class="client-details">
-          <p class="client-name">
-            {{ client.name }} 
-            <span v-if="isToday(client.birthday)" class="today-badge">Hoje! 🎉</span>
-          </p>
-          <div class="contact-info">
-            <span v-if="client.phone" title="WhatsApp" class="phone-block">
-               <i class="pi pi-whatsapp"></i> {{ formatPhone(client.phone) }}
-            </span>
-            <span v-else class="no-contact text-muted">Sem telefone</span>
-          </div>
-        </div>
+    <div v-if="loading" class="flex-1 flex items-center justify-center py-8">
+      <div class="text-center text-gray-400 dark:text-slate-500 text-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i>
+        Carregando...
       </div>
     </div>
 
-    <template #actions>
-      <router-link to="/clients" class="btn-icon" title="Ver Clientes">
-        <i class="pi pi-users"></i>
-      </router-link>
-    </template>
-  </DashboardCard>
+    <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
+      <button @click="fetchBirthdays" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+        <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
+      </button>
+    </div>
+
+    <div v-else-if="clients.length === 0" class="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
+      Nenhum aniversariante este mês.
+    </div>
+
+    <div v-else class="space-y-5 flex-1">
+      <div v-for="client in clients" :key="client.id">
+        <div class="flex items-center gap-3 mb-3 cursor-pointer" @click="goToClient(client)">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+               :class="getAvatarColor(client.name)">
+            {{ getInitials(client.name) }}
+          </div>
+          <div>
+            <p class="text-gray-800 dark:text-white font-medium">
+              {{ client.name }}
+              <span v-if="client.birthday" class="text-gray-400 dark:text-slate-500 text-sm"> - {{ extractDay(client.birthday) }}/{{ extractMonthNum(client.birthday) }}</span>
+            </p>
+          </div>
+        </div>
+        <a v-if="client.phone"
+           :href="'https://wa.me/55' + cleanPhone(client.phone)"
+           target="_blank"
+           class="w-full py-2 px-4 border border-gray-300 dark:border-slate-600 hover:border-green-500 hover:text-green-500 text-gray-500 dark:text-slate-300 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm no-underline">
+          <i class="fa-brands fa-whatsapp"></i> Enviar Mensagem
+        </a>
+        <div v-else class="text-xs text-gray-400 dark:text-slate-500 italic text-center">Sem telefone cadastrado</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import DashboardCard from './DashboardCard.vue';
 import api from '../../services/api';
 
 const router = useRouter();
@@ -56,84 +57,60 @@ const loading = ref(true);
 const error = ref(false);
 const clients = ref([]);
 
-const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500', 'bg-indigo-500'];
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ').filter(p => p.length > 0);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0][0].toUpperCase();
+};
+
+const getAvatarColor = (name) => {
+  if (!name) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
 
 const extractDay = (dateStr) => {
   if (!dateStr) return '';
-  // Format is typically YYYY-MM-DD
-  const parts = dateStr.split('-');
-  return parts.length === 3 ? parts[2] : '';
+  return dateStr.split('-')[2] || '';
 };
 
-const extractMonth = (dateStr) => {
+const extractMonthNum = (dateStr) => {
   if (!dateStr) return '';
-  const parts = dateStr.split('-');
-  if (parts.length === 3) {
-    const monthIndex = parseInt(parts[1], 10) - 1;
-    return monthNames[monthIndex];
-  }
-  return '';
+  return dateStr.split('-')[1] || '';
 };
 
-const isToday = (dateStr) => {
-  if (!dateStr) return false;
-  const today = new Date();
-  const parts = dateStr.split('-');
-  if (parts.length === 3) {
-    return parseInt(parts[1], 10) === today.getMonth() + 1 && 
-           parseInt(parts[2], 10) === today.getDate();
-  }
-  return false;
+const cleanPhone = (phone) => {
+  return ('' + phone).replace(/\D/g, '');
 };
 
-const formatPhone = (phone) => {
-  if (!phone) return '';
-  const cleaned = ('' + phone).replace(/\D/g, '');
-  const match = cleaned.match(/^(\d{2})(\d{4,5})(\d{4})$/);
-  if (match) {
-    return `(${match[1]}) ${match[2]}-${match[3]}`;
-  }
-  return phone;
+const goToClient = (client) => {
+  if (!client || !client.id) return;
+  router.push({ name: 'client-detail', params: { id: client.id } });
 };
 
 const fetchBirthdays = async () => {
   loading.value = true;
   error.value = false;
-  
   try {
     const currentMonth = new Date().getMonth() + 1;
-    
-    // Atualmente, a busca baseia-se em trazer todos e filtrar no frontend
-    // Ideal: o backend prover um endpoint /api/clients/birthdays?month=X
-    // Como workaround, pegamos os 100 últimos clientes ordenados por data de criação / id
-    // e filtramos. Se a carteira for gigante, isso precisará de refactor backend.
-    
-    const response = await api.get('/clients', {
-      params: { size: 200, sort: 'name,asc' } 
-    });
-    
+    const response = await api.get('/clients', { params: { size: 200, sort: 'name,asc' } });
     const content = response?.data?.content || response?.data || [];
     const allClients = Array.isArray(content) ? content : [];
-    
-    // Frontend Filter
     const birthdaysThisMonth = allClients.filter(client => {
       if (!client.birthday) return false;
       const parts = client.birthday.split('-');
-      if (parts.length === 3) {
-        return parseInt(parts[1], 10) === currentMonth;
-      }
-      return false;
+      return parts.length === 3 && parseInt(parts[1], 10) === currentMonth;
     });
-
-    // Sort by day
     birthdaysThisMonth.sort((a, b) => {
-       const dayA = parseInt(a.birthday.split('-')[2], 10);
-       const dayB = parseInt(b.birthday.split('-')[2], 10);
-       return dayA - dayB;
+      const dayA = parseInt(a.birthday.split('-')[2], 10);
+      const dayB = parseInt(b.birthday.split('-')[2], 10);
+      return dayA - dayB;
     });
-
-    clients.value = birthdaysThisMonth.slice(0, 10); // Take top 10 to avoid huge card
-    
+    clients.value = birthdaysThisMonth.slice(0, 5);
   } catch (err) {
     console.error('Failed to fetch birthdays:', err);
     error.value = true;
@@ -142,153 +119,7 @@ const fetchBirthdays = async () => {
   }
 };
 
-const goToClient = (client) => {
-    if (!client || !client.id) return;
-    router.push({
-      name: 'client-detail',
-      params: { id: client.id }
-    });
-};
-
 onMounted(() => {
   fetchBirthdays();
 });
 </script>
-
-<style scoped>
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.birthdays-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  overflow-y: auto;
-  max-height: 350px;
-  padding-right: var(--spacing-sm);
-}
-
-.birthdays-list::-webkit-scrollbar {
-  width: 4px;
-}
-.birthdays-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-.birthdays-list::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-
-.birthday-item {
-  display: flex;
-  align-items: center;
-  background-color: var(--color-bg-body);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.birthday-item:hover {
-  background-color: var(--color-primary-soft);
-  border-color: var(--color-primary-soft);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.calendar-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  margin-right: var(--spacing-md);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.calendar-icon .month {
-  background-color: #ef4444; /* Red Header */
-  color: white;
-  width: 100%;
-  text-align: center;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 0;
-}
-
-.calendar-icon .day {
-  color: #1e293b; /* Dark text consistently due to #fff background */
-  font-size: 1.2rem;
-  line-height: 1.2;
-}
-
-.client-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex-grow: 1;
-}
-
-.client-name {
-  margin: 0;
-  font-weight: 600;
-  color: var(--color-text-main);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.today-badge {
-  font-size: 0.65rem;
-  background-color: #fef08a;
-  color: #854d0e;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.contact-info {
-  display: flex;
-  align-items: center;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.phone-block {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: #16a34a; /* WhatsApp Green */
-}
-
-.btn-icon {
-  text-decoration: none;
-  color: var(--color-text-muted);
-}
-
-.btn-icon:hover {
-  color: var(--color-primary);
-}
-</style>

@@ -1,91 +1,124 @@
 <template>
-  <div class="app-layout">
+  <div class="font-sans text-gray-800 dark:text-gray-200 h-screen flex overflow-hidden" style="background-color: var(--color-bg-body); font-family: 'Inter', sans-serif;">
     <!-- Mobile Header / Hamburger -->
-    <div class="mobile-header">
-      <button @click="toggleSidebar" class="btn-icon hamburger">
-        ☰
+    <div class="md:hidden flex items-center px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 w-full z-[900] h-[60px]">
+      <button @click="toggleSidebar" class="text-gray-600 dark:text-gray-300 text-2xl p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <i class="fa-solid fa-bars"></i>
       </button>
-      <img src="@/assets/githa-logo-main.png" alt="Githa" class="mobile-logo-img" />
+      <img src="@/assets/githa-logo-main.png" alt="Githa" class="ml-4 h-10 w-auto object-contain dark:invert" />
     </div>
 
     <!-- Backdrop -->
     <div 
       v-if="isSidebarOpen" 
-      class="sidebar-backdrop"
+      class="fixed inset-0 bg-black/50 z-[950] md:hidden"
       @click="closeSidebar"
     ></div>
 
-    <aside class="sidebar" :class="{ 'open': isSidebarOpen }">
-      <div class="sidebar-header">
-        <img src="@/assets/githa-logo-main.png" alt="Githa" class="sidebar-logo-img" />
-        <button class="btn-icon close-sidebar" @click="closeSidebar">×</button>
+    <!-- Sidebar -->
+    <aside 
+      aria-label="Sidebar" 
+      class="w-[260px] bg-white dark:bg-gray-800 flex-shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 z-[1000] shadow-sm overflow-y-auto no-scrollbar fixed md:relative transition-transform duration-300"
+      :class="{ '-translate-x-full md:translate-x-0': !isSidebarOpen, 'translate-x-0': isSidebarOpen }"
+    >
+      <!-- Logo Section -->
+      <div class="p-6 flex justify-center items-center border-b border-gray-100 dark:border-gray-700">
+        <img src="@/assets/githa-logo-main.png" alt="Githa" class="max-w-full h-auto max-h-[80px] object-contain dark:invert" />
+        <button class="md:hidden absolute right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xl" @click="closeSidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      
-      <nav class="sidebar-nav">
-        <router-link to="/appointments" class="nav-item" active-class="active" @click="closeSidebar">
-          Agenda
+
+      <!-- Navigation Menu -->
+      <nav class="flex-1 px-3 space-y-1 py-4">
+        <router-link to="/appointments" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-regular fa-calendar w-6 text-lg"></i>
+          <span class="ml-2">Agenda</span>
         </router-link>
-        <router-link to="/clients" class="nav-item" active-class="active" @click="closeSidebar">
-          Clientes
+        <router-link to="/clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-regular fa-user w-6 text-lg"></i>
+          <span class="ml-2">Clientes</span>
         </router-link>
-        <router-link to="/strategic-clients" class="nav-item" active-class="active" @click="closeSidebar">
-          Clientes Estratégicos
+        <router-link to="/strategic-clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-user-group w-6 text-lg"></i>
+          <span class="ml-2">Clientes Estratégicos</span>
         </router-link>
-        <router-link to="/account-groups" class="nav-item" active-class="active" @click="closeSidebar">
-          Grupos de Contas
+        <router-link to="/account-groups" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-users-line w-6 text-lg"></i>
+          <span class="ml-2">Grupos de Contas</span>
         </router-link>
-        <router-link to="/" class="nav-item" active-class="active" @click="closeSidebar">
-          Dashboard
+        <router-link to="/" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-table-columns w-6 text-lg"></i>
+          <span class="ml-2">Dashboard</span>
         </router-link>
-        <router-link to="/feedbacks" class="nav-item" active-class="active" @click="closeSidebar">
-          Feedbacks e Suporte
+        <router-link to="/feedbacks" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-regular fa-comment-dots w-6 text-lg"></i>
+          <span class="ml-2">Feedbacks e Suporte</span>
         </router-link>
-        <router-link to="/ai-insights" class="nav-item" active-class="active" @click="closeSidebar">
-          <i class="pi pi-sparkles text-sm mr-2" style="color: #8b5cf6"></i> Central Githa AI
+        <router-link to="/ai-insights" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-globe w-6 text-lg"></i>
+          <span class="ml-2">Central Githa AI</span>
         </router-link>
-        <router-link to="/financials" class="nav-item" active-class="active" @click="closeSidebar">
-          Financeiro
+        <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
+          <span class="ml-2">Financeiro</span>
         </router-link>
-        <router-link to="/payment-methods" class="nav-item" active-class="active" @click="closeSidebar">
-          Formas de Pagamento
+        <router-link to="/payment-methods" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-regular fa-credit-card w-6 text-lg"></i>
+          <span class="ml-2">Formas de Pagamento</span>
         </router-link>
-        <router-link to="/admin/parameters" class="nav-item" v-if="isAdmin" @click="closeSidebar">
-          Parametrização
+        <router-link v-if="isAdmin" to="/admin/parameters" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-gear w-6 text-lg"></i>
+          <span class="ml-2">Parametrização</span>
         </router-link>
-        <router-link to="/services" class="nav-item" active-class="active" @click="closeSidebar">
-          Procedimentos
+        <router-link to="/services" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-list-ul w-6 text-lg"></i>
+          <span class="ml-2">Procedimentos</span>
         </router-link>
-        <router-link to="/products" class="nav-item" active-class="active" @click="closeSidebar">
-          Produtos
+        <router-link to="/products" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-bag-shopping w-6 text-lg"></i>
+          <span class="ml-2">Produtos</span>
         </router-link>
-        <router-link to="/professionals" class="nav-item" active-class="active" @click="closeSidebar">
-          Profissionais
+        <router-link to="/professionals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-regular fa-user w-6 text-lg"></i>
+          <span class="ml-2">Profissionais</span>
         </router-link>
-        <router-link to="/users" class="nav-item" active-class="active" @click="closeSidebar">
-          Usuários
+        <router-link to="/users" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-user-gear w-6 text-lg"></i>
+          <span class="ml-2">Usuários</span>
         </router-link>
-        <router-link to="/profile" class="nav-item" active-class="active" @click="closeSidebar">
-          Meu Perfil
+        <router-link to="/profile" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-id-badge w-6 text-lg"></i>
+          <span class="ml-2">Meu Perfil</span>
         </router-link>
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="user-info">
-          <span>{{ userEmail }}</span>
+      <!-- Bottom Sidebar Section -->
+      <div class="p-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+        <div class="flex items-center mb-4">
+          <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full mr-3 text-gray-600 dark:text-gray-400">
+            <i class="fa-regular fa-user"></i>
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate w-32">{{ userEmail }}</p>
+          </div>
         </div>
-        <div class="footer-actions">
-          <button @click="toggleTheme" class="btn-icon" :title="isDark ? 'Tema Claro' : 'Tema Escuro'">
-            {{ isDark ? '🌞' : '🌙' }}
+        <div class="flex items-center justify-between">
+          <!-- Theme Toggle -->
+          <button @click="toggleTheme" class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" :title="isDark ? 'Tema Claro' : 'Tema Escuro'">
+            <i :class="isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-indigo-400'" class="text-lg"></i>
           </button>
-          <button @click="handleLogout" class="btn-icon" title="Sair">
-            🚪
+          <!-- Logout -->
+          <button @click="handleLogout" class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors" title="Sair">
+            <i class="fa-solid fa-arrow-right-from-bracket text-xl"></i>
           </button>
         </div>
       </div>
     </aside>
 
-    <main class="main-content">
-      <div class="content-wrapper">
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto no-scrollbar md:ml-0 mt-[60px] md:mt-0 pb-[70px] md:pb-0" style="background-color: var(--color-bg-body)">
+      <div class="max-w-[1200px] mx-auto">
         <slot></slot>
       </div>
     </main>
@@ -134,190 +167,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.mobile-header {
-  display: none;
-  align-items: center;
-  padding: var(--spacing-md);
-  background-color: var(--color-bg-card);
-  border-bottom: 1px solid var(--color-border);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 900;
-  height: 60px;
-}
-
-.mobile-logo-img {
-  margin-left: 1rem;
-  height: 40px;
-  width: auto;
-  object-fit: contain;
-}
-
-.sidebar {
-  width: 250px;
-  background-color: var(--color-bg-card);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  height: 100vh;
-  z-index: 1000;
-  transition: transform 0.3s ease;
-}
-
-.sidebar-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.close-sidebar {
-  display: none; /* Hidden on desktop */
-  position: absolute;
-  right: 15px;
-}
-
-.sidebar-logo-img {
-  max-width: 100%;
-  height: auto;
-  max-height: 80px;
-  object-fit: contain;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: var(--spacing-md) 0;
-  overflow-y: auto;
-}
-
-.nav-item {
-  display: block;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  color: var(--color-text-main);
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s;
-  border-left: 3px solid transparent;
-}
-
-.nav-item:hover {
-  background-color: var(--color-bg-body);
-  color: var(--color-primary);
-}
-
-.nav-item.active {
-  background-color: var(--color-primary-soft);
-  color: var(--color-primary);
-  border-left-color: var(--color-primary);
-}
-
-.sidebar-footer {
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.user-info {
-  font-weight: 600;
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-.footer-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0.25rem;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.2s;
-  color: var(--color-text-main);
-}
-
-.btn-icon:hover {
-  background-color: var(--color-bg-body);
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 250px;
-  background-color: var(--color-bg-body);
-  width: calc(100% - 250px);
-  transition: margin-left 0.3s ease;
-}
-
-.content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-lg);
-}
-
-.sidebar-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 950;
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
-  .mobile-header {
-    display: flex;
-  }
-
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-    margin-top: 60px; /* Space for mobile header */
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav */
-  }
-
-  .sidebar-backdrop {
-    display: block;
-  }
-
-  .close-sidebar {
-    display: block;
-  }
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
+/* Nav link base styles */
+.nav-link {
+  @apply flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-underline;
+}
+
+.nav-link i {
+  @apply text-gray-500 dark:text-gray-500;
+}
+
+.nav-link:hover i {
+  @apply text-gray-700 dark:text-gray-300;
+}
+
+/* Active nav link */
+.nav-link-active {
+  @apply bg-[#484cb0] text-white shadow-md !important;
+}
+
+.nav-link-active i {
+  @apply text-white !important;
+}
 </style>
 
 <style>
-[data-theme="dark"] .mobile-logo-img,
-[data-theme="dark"] .sidebar-logo-img {
+[data-theme="dark"] .dark\:invert {
   filter: brightness(0) invert(1);
 }
 </style>

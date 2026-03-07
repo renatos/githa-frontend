@@ -1,27 +1,48 @@
 <template>
-  <div class="product-list">
-    <div class="header-actions">
-      <h2>Produtos</h2>
-      <button class="btn btn-primary" @click="openForm()">
-        + Novo Produto
-      </button>
-    </div>
+  <div class="p-4 md:p-6 flex flex-col gap-6">
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Produtos</h2>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie o catálogo de produtos e seu estoque.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          @click="openForm()"
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          <span class="material-symbols-outlined text-[18px] mr-2">add</span>
+          Novo Produto
+        </button>
+      </div>
+    </header>
 
-    <div class="status-legend">
-      <span 
-        class="legend-item active"
-        :class="{ selected: selectedStatuses.includes('true') }"
+    <div class="flex flex-wrap items-center gap-3">
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('true') 
+            ? 'border-emerald-500 bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:border-emerald-500 dark:text-emerald-100'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+        ]"
         @click="toggleFilter('true')"
       >
+        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
         Ativo
-      </span>
-      <span 
-        class="legend-item inactive"
-        :class="{ selected: selectedStatuses.includes('false') }"
+      </button>
+
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('false') 
+            ? 'border-slate-500 bg-slate-100 text-slate-900 dark:bg-slate-700 dark:border-slate-500 dark:text-slate-100'
+            : 'border-slate-300 bg-slate-50 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+        ]"
         @click="toggleFilter('false')"
       >
+        <span class="w-2 h-2 rounded-full bg-slate-500 mr-2"></span>
         Inativo
-      </span>
+      </button>
     </div>
 
     <GenericTable
@@ -35,7 +56,9 @@
       </template>
 
       <template #cell-active="{ value }">
-        <span :class="['status-badge', value ? 'active' : 'inactive']">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+              :class="value ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
+          <span class="w-1.5 h-1.5 rounded-full" :class="value ? 'bg-emerald-500' : 'bg-slate-400'"></span>
           {{ value ? 'Ativo' : 'Inativo' }}
         </span>
       </template>
@@ -61,6 +84,7 @@ import { ref } from 'vue';
 import GenericTable from '@/components/common/GenericTable.vue';
 import ProductForm from '@/components/ProductForm.vue';
 import productService from '@/services/productService';
+import { confirmBridge } from '@/services/confirmBridge';
 
 const tableRef = ref(null);
 const showForm = ref(false);
@@ -142,26 +166,29 @@ const onSave = () => {
 };
 
 const confirmDelete = async (item) => {
-  if (confirm(`Tem certeza que deseja excluir "${item.name}"?`)) {
-    try {
-      await productService.delete(item.id);
-      tableRef.value?.loadData();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Erro ao excluir produto. Verifique se existem vendas vinculadas.');
+  confirmBridge.confirm({
+    title: 'Excluir Produto',
+    message: `Tem certeza que deseja excluir "${item.name}"?`,
+    type: 'danger',
+    confirmLabel: 'Excluir',
+    onConfirm: async () => {
+      try {
+        await productService.delete(item.id);
+        tableRef.value?.loadData();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        confirmBridge.alert({
+          title: 'Erro ao Excluir',
+          message: 'Erro ao excluir produto. Verifique se existem vendas vinculadas.',
+          type: 'danger'
+        });
+      }
     }
-  }
+  });
 };
 </script>
 
 <style scoped>
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
 .actions-group {
   display: flex;
   gap: var(--spacing-xs);
@@ -177,6 +204,9 @@ const confirmDelete = async (item) => {
   transition: all 0.2s;
   color: var(--color-text-muted);
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -196,72 +226,5 @@ const confirmDelete = async (item) => {
   border-color: #ef4444;
   color: #ef4444;
   opacity: 1;
-}
-
-.status-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.active {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.inactive {
-  background-color: #f1f5f9;
-  color: #64748b;
-}
-.status-legend {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.875rem;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
-  border: 1px solid transparent;
-  opacity: 0.7; /* Dimmed by default */
-}
-
-.legend-item:hover {
-  background-color: var(--color-bg-body);
-}
-
-.legend-item.selected {
-  opacity: 1;
-  border-color: var(--color-border);
-  background-color: var(--color-bg-card);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  font-weight: 600;
-}
-
-.legend-item::before {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-}
-
-.legend-item.active::before {
-  background-color: var(--color-status-active-bg, #dcfce7);
-  border-color: var(--color-text-muted);
-}
-
-.legend-item.inactive::before {
-  background-color: var(--color-bg-body, #f1f5f9);
-  border-color: var(--color-text-muted);
 }
 </style>

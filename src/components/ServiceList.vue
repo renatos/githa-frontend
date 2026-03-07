@@ -1,11 +1,21 @@
 <template>
-  <div class="service-list">
-    <div class="header-actions">
-      <h2>Procedimentos</h2>
-      <button class="btn btn-primary" @click="$emit('new')">
-        + Novo Procedimento
-      </button>
-    </div>
+  <div class="p-4 md:p-6 flex flex-col gap-6">
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Procedimentos</h2>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os procedimentos e serviços oferecidos.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          @click="$emit('new')"
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          <span class="material-symbols-outlined text-[18px] mr-2">add</span>
+          Novo Procedimento
+        </button>
+      </div>
+    </header>
 
     <GenericTable
       ref="tableRef"
@@ -22,7 +32,9 @@
       </template>
 
       <template #cell-active="{ value }">
-        <span :class="['status-badge', value ? 'active' : 'inactive']">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+              :class="value ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
+          <span class="w-1.5 h-1.5 rounded-full" :class="value ? 'bg-emerald-500' : 'bg-slate-400'"></span>
           {{ value ? 'Ativo' : 'Inativo' }}
         </span>
       </template>
@@ -76,13 +88,6 @@ defineExpose({ refresh });
 </script>
 
 <style scoped>
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
 .actions-group {
   display: flex;
   gap: var(--spacing-xs);
@@ -98,6 +103,9 @@ defineExpose({ refresh });
   transition: all 0.2s;
   color: var(--color-text-muted);
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -117,22 +125,5 @@ defineExpose({ refresh });
   border-color: #ef4444;
   color: #ef4444;
   opacity: 1;
-}
-
-.status-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.active {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.inactive {
-  background-color: #f1f5f9;
-  color: #64748b;
 }
 </style>

@@ -1,11 +1,11 @@
 <template>
-  <div class="base-lookup lookup-container">
+  <div class="w-full">
     <!-- Combobox Mode (Select) -->
-    <div v-if="isComboboxMode" class="combobox-wrapper">
+    <div v-if="isComboboxMode" class="w-full">
       <select
           :disabled="disabled"
           :value="modelValue"
-          class="form-select"
+          class="form-select flex w-full max-w-full truncate resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm font-normal leading-normal transition-colors disabled:opacity-50"
           @change="onSelectChange"
       >
         <option value="">{{ placeholder }}</option>
@@ -16,13 +16,13 @@
     </div>
 
     <!-- Lookup Mode (Inputs) -->
-    <div v-else class="lookup-inputs-wrapper">
-      <!-- ID Input -->
-      <div class="id-input-wrapper">
+    <div v-else class="flex gap-2 w-full">
+      <!-- ID Input (Optional) -->
+      <div v-if="!hideId" class="w-16 sm:w-20 shrink-0">
         <input
             :disabled="disabled"
             :value="modelValue"
-            class="form-control id-input"
+            class="form-input flex w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-2 py-3 text-center text-xs sm:text-sm font-normal leading-normal transition-colors disabled:opacity-50"
             placeholder="ID"
             type="text"
             @input="onIdInput"
@@ -30,55 +30,63 @@
       </div>
 
       <!-- Description Input -->
-      <div class="desc-input-wrapper">
-        <input
-            v-model="searchQuery"
-            :disabled="disabled"
-            :placeholder="placeholder"
-            class="form-control"
-            type="text"
-            @blur="onBlur"
-            @focus="onFocus"
-            @input="onSearchInput"
-        />
+      <div class="flex-1 relative" ref="inputWrapperRef">
+        <div class="flex gap-2">
+          <input
+              v-model="searchQuery"
+              :disabled="disabled"
+              :placeholder="placeholder"
+              class="form-input flex w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 py-3 text-xs sm:text-sm font-normal leading-normal transition-colors disabled:opacity-50"
+              type="text"
+              @blur="onBlur"
+              @focus="onFocus"
+              @input="onSearchInput"
+          />
+
+          <!-- Edit Button -->
+          <button
+              v-if="modelValue && !disabled && canEdit"
+              class="shrink-0 flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+              title="Editar registro selecionado"
+              type="button"
+              @click="$emit('edit', modelValue)"
+          >
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+          </button>
+        </div>
 
         <!-- Dropdown Results -->
-        <div
-            v-if="showResults && results.length > 0"
-            class="lookup-results"
-        >
+        <Teleport to="body">
+          <div
+              v-if="showResults && results.length > 0"
+              ref="dropdownRef"
+              :style="dropdownStyle"
+              class="fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[99999] max-h-48 overflow-y-auto custom-scrollbar"
+              @mousedown.stop
+          >
           <div
               v-for="item in results"
               :key="item.id"
-              class="lookup-item"
+              class="px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700/50 last:border-0 transition-colors"
               @mousedown.prevent="selectItem(item)"
           >
-            <span class="item-name">{{ item.name }}</span>
-            <span class="item-id">#{{ item.id }}</span>
-            <span v-if="item.price" class="item-extra">
-               {{ formatCurrency(item.price) }}
-            </span>
+            <span class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ item.name }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 dark:text-slate-400">#{{ item.id }}</span>
+              <span v-if="item.price" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                 {{ formatCurrency(item.price) }}
+              </span>
+            </div>
+            </div>
           </div>
-        </div>
+        </Teleport>
       </div>
     </div>
-
-    <!-- Edit Button -->
-    <!-- Edit Button -->
-    <button
-        v-if="modelValue && !disabled && canEdit"
-        class="btn-icon-small edit-btn"
-        title="Editar registro selecionado"
-        type="button"
-        @click="$emit('edit', modelValue)"
-    >
-      ✏️
-    </button>
   </div>
 </template>
 
 <script setup>
-import {ref, watch, defineProps, defineEmits, onMounted, useAttrs, computed} from 'vue';
+import {ref, watch, defineProps, defineEmits, onMounted, onUnmounted, nextTick, useAttrs, computed} from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -102,6 +110,10 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  hideId: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -122,6 +134,36 @@ const results = ref([]);
 const showResults = ref(false);
 let searchTimeout = null;
 let idSearchTimeout = null;
+
+// Teleport & Positioning State
+const inputWrapperRef = ref(null);
+const dropdownRef = ref(null);
+const dropdownStyle = ref({ top: '0px', left: '0px', width: '0px' });
+
+const updateDropdownPosition = () => {
+  if (inputWrapperRef.value) {
+    const rect = inputWrapperRef.value.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    // Prevent rendering below screen
+    if (top + 192 > window.innerHeight && rect.top - 192 - 8 > 0) {
+       top = rect.top - 192 - 8;
+    }
+    dropdownStyle.value = {
+      top: `${top}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`
+    };
+  }
+};
+
+const handleScroll = (event) => {
+  if (showResults.value) {
+    if (dropdownRef.value && dropdownRef.value.contains(event.target)) {
+      return;
+    }
+    showResults.value = false;
+  }
+};
 
 onMounted(async () => {
   if (props.initialDescription) {
@@ -154,6 +196,14 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error initializing Lookup:', error);
   }
+
+  window.addEventListener('scroll', handleScroll, true);
+  window.addEventListener('resize', updateDropdownPosition);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll, true);
+  window.removeEventListener('resize', updateDropdownPosition);
 });
 
 // Watchers
@@ -166,6 +216,14 @@ watch(() => props.initialDescription, (newVal) => {
 watch(() => props.modelValue, (newVal) => {
   if (!newVal && !props.initialDescription) {
     searchQuery.value = '';
+  }
+});
+
+watch(showResults, (val) => {
+  if (val) {
+    nextTick(() => {
+      updateDropdownPosition();
+    });
   }
 });
 
@@ -275,126 +333,18 @@ const formatCurrency = (value) => {
 </script>
 
 <style scoped>
-.base-lookup {
-  width: 100%;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-.form-select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  background-color: var(--color-bg-card);
-  color: var(--color-text-main);
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-.lookup-container {
-  display: flex;
-  gap: var(--spacing-sm);
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
 }
-
-.combobox-wrapper {
-  flex: 1;
-}
-
-.lookup-inputs-wrapper {
-  flex: 1;
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.id-input-wrapper {
-  flex: 0 0 80px;
-}
-
-.desc-input-wrapper {
-  flex: 1;
-  position: relative;
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  box-sizing: border-box;
-  background-color: var(--color-bg-card);
-  color: var(--color-text-main);
-}
-
-.id-input {
-  text-align: center;
-  background-color: var(--color-bg-body);
-}
-
-.lookup-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 4px;
-}
-
-.lookup-item {
-  padding: 0.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  color: var(--color-text-main);
-}
-
-.lookup-item:hover {
-  background-color: var(--color-bg-body);
-}
-
-.item-name {
-  font-weight: 500;
-}
-
-.item-id {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  margin-left: 0.5rem;
-}
-
-.item-extra {
-  font-size: 0.75rem;
-  color: var(--color-success, #16a34a);
-  margin-left: auto;
-  padding-left: 0.5rem;
-}
-
-.btn-icon-small {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-main);
-  transition: all 0.2s;
-  background-color: var(--color-bg-card);
-}
-
-.btn-icon-small:hover {
-  background-color: var(--color-primary-soft);
-  border-color: var(--color-primary);
-}
-
-.edit-btn {
-  flex: 0 0 auto;
+:global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
 }
 </style>

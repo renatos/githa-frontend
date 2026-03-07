@@ -37,6 +37,7 @@
 import {ref, defineProps, defineEmits, onMounted} from 'vue';
 import {useModal} from '../composables/useModal';
 import {useEscapeKey} from '../composables/useEscapeKey';
+import {confirmBridge} from '../services/confirmBridge';
 import {enumService} from '../services/enumService';
 
 const props = defineProps({
@@ -75,7 +76,11 @@ onMounted(async () => {
 
 const save = () => {
   if (!form.value.notes || form.value.notes.trim() === '') {
-    alert("O campo Notas é obrigatório para cancelamentos.");
+    confirmBridge.alert({
+      title: 'Informação Necessária',
+      message: 'O preenchimento do motivo do cancelamento no campo Notas é obrigatório.',
+      type: 'warning'
+    });
     return;
   }
 

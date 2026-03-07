@@ -4,135 +4,61 @@
 
 ## Visão Geral
 
-**Githa Frontend** é a interface do sistema de gestão para clínicas de estética. Construído com:
+**Githa Frontend** é a interface do sistema de gestão para clínicas de estética. O projeto passou por uma modernização recente para utilizar **Tailwind CSS**.
 
-| Tecnologia | Versão |
-|---|---|
-| Vue.js | 3.5+ (Composition API) |
-| Vite | 7.2+ |
-| PrimeVue | 4.5+ (tema Material) |
-| Axios | 1.13+ |
-| Vue Router | 4.6+ |
-| vue-currency-input | 3.2+ |
-| ESLint | 9.39+ (flat config) |
-| Prettier | 3.8+ |
-| Vitest | 4.0+ |
+| Tecnologia   | Versão                   |
+|--------------|--------------------------|
+| Vue.js       | 3.5+ (Composition API)   |
+| Vite         | 7.2+                     |
+| Tailwind CSS | 3.4+                     |
+| Axios        | 1.13+                    |
+| Vue Router   | 4.6+                     |
 
 ## Estrutura do Projeto
 
 ```
 src/
-├── main.js                  # Bootstrap da app (Vue, PrimeVue, Router, ConfigService)
-├── App.vue                  # Componente raiz (layout dinâmico + Toast via toastBridge)
+├── main.js                  # Bootstrap da app (Vue, Router, ConfigService)
+├── App.vue                  # Componente raiz
 │
 ├── views/                   # Páginas/Views (composição de componentes)
-│   ├── ClientView.vue       # Clientes (usa useErrorHandler)
+│   ├── clients/             
+│   │   ├── ClientList.vue   # Lista de clientes (usa GenericTable)
+│   │   ├── ClientForm.vue   # Formulário em modal (Tailwind)
 │   ├── ClientDetailView.vue # Detalhe do cliente
-│   ├── AppointmentView.vue  # Agendamentos (usa useCrudView + lógica de status)
-│   ├── ProfessionalView.vue # Profissionais (usa useCrudView)
-│   ├── ServiceView.vue      # Procedimentos (usa useCrudView)
-│   ├── UserView.vue         # Usuários (usa useCrudView + override de save)
+│   ├── AppointmentView.vue  # Agendamentos (usa calendário customizado)
 │   ├── StrategicClientsView.vue  # Clientes estratégicos
 │   ├── SystemParametersView.vue  # Parâmetros do sistema (ADMIN)
-│   ├── ProfileView.vue      # Perfil do usuário
 │   ├── LoginView.vue        # Login
 │   ├── GoogleCallbackView.vue    # Callback OAuth do Google
-│   ├── HomeView.vue         # Página inicial
-│   └── financial/           # Módulo financeiro
-│       ├── FinancialDashboard.vue
-│       ├── AccountView.vue
-│       └── OperatingExpenseList.vue
+│   └── HomeView.vue         # Dashboard inicial
 │
 ├── components/              # Componentes reutilizáveis
-│   ├── ClientList.vue       # Lista de clientes (usa GenericTable)
-│   ├── ClientForm.vue       # Formulário de cliente (modal)
-│   ├── AppointmentList.vue  # Lista de agendamentos
-│   ├── AppointmentForm.vue  # Formulário de agendamento
-│   ├── AppointmentCancellationModal.vue
-│   ├── ProfessionalList.vue / ProfessionalForm.vue
-│   ├── ServiceList.vue / ServiceForm.vue
-│   ├── UserList.vue / UserForm.vue
-│   ├── common/              # Componentes genéricos
-│   │   ├── GenericTable.vue      # Tabela paginada, filtrável, ordenável
-│   │   ├── BaseModal.vue / BaseLookup.vue
-│   │   ├── CurrencyInput.vue     # Input monetário (R$)
-│   │   ├── ErrorModal.vue        # Modal de erros
-│   │   ├── AlertMessage.vue      # Mensagens de alerta
-│   │   ├── GoogleLoginButton.vue # Botão login Google
+│   ├── common/              # Componentes genéricos da nova arquitetura
+│   │   ├── GenericTable.vue      # Tabela flexível com paginação, filtros e mobile cards
+│   │   ├── BaseModal.vue         # Modal base em Tailwind (Padrão para todos os forms modais)
+│   │   ├── BaseLookup.vue        # Componente de autocomplete/lookup
+│   │   ├── AiContextBadge.vue    # Badge antigo de IA (Legacy)
+│   │   ├── AiInsightsBanner.vue  # Novo banner interativo de insights gerados por IA
 │   │   └── GoogleContactsModal.vue
+│   │
+│   ├── dashboard/           # Componentes do Dashboard inicial (Estilizado com Tailwind)
 │   └── financial/           # Componentes financeiros
-│       └── OperatingExpenseForm.vue
 │
-├── services/                # Camada de comunicação com API
-│   ├── api.js               # Instância Axios (baseURL: /api, JWT interceptor)
-│   ├── toastBridge.js       # Bridge modular para Toast (substitui window.$toast)
-│   ├── authService.js       # Autenticação (login, Google OAuth, extração de roles)
-│   ├── clientService.js     # CRUD de clientes
-│   ├── appointmentService.js # CRUD de agendamentos
-│   ├── professionalService.js
-│   ├── serviceService.js
-│   ├── userService.js
-│   ├── financialService.js  # Dashboard financeiro
-│   ├── systemParameterService.js
-│   ├── configService.js     # Carregamento de config do backend
-│   └── errorHandler.js      # Handler global de erros HTTP
+├── services/                # Camada de comunicação com API (Axios)
+│   ├── api.js               # Instância base com interceptors (JWT)
+│   ├── authService.js       # Autenticação (Google OAuth, JWT parsing)
+│   ├── clientService.js     
+│   ├── appointmentService.js 
+│   ├── aiService.js         # Integração com a central de IA do Githa
+│   ├── financialService.js
+│   └── configService.js     # ConfigURAÇÕES estáticas do backend
 │
 ├── composables/             # Composables Vue (lógica reutilizável)
-│   ├── useCrudView.js       # Lógica CRUD genérica (form, save, delete, alert)
-│   ├── useErrorHandler.js   # Estado de erro (show, title, message, details)
-│   ├── useEscapeKey.js      # Listener de tecla Escape
-│   ├── useModal.js          # Controle de visibilidade de modais
-│   └── useTheme.js          # Tema claro/escuro
+│   ├── useModal.js          # Controle para bloquear scroll quando modals abrem (crucial)
+│   └── useEscapeKey.js      # Listener de tecla Escape para fechar apenas o último modal aberto
 │
 ├── router/
-│   └── index.js             # Vue Router (rotas com meta: requiresAuth, roles)
-│
-├── constants/               # Constantes da aplicação
-├── utils/                   # Funções utilitárias
-├── layouts/                 # Layouts da aplicação
-│   ├── MainLayout.vue       # Layout principal (sidebar, header)
-│   └── AuthLayout.vue       # Layout de autenticação (login)
-│
-└── assets/                  # CSS e recursos estáticos
-    ├── base.css             # Variáveis CSS, reset, estilos globais
-    ├── forms.css            # Estilos de formulários
-    └── modal.css            # Estilos de modais
-
-tests/
-├── composables/
-│   ├── useCrudView.test.js      # Testes do composable CRUD
-│   └── useErrorHandler.test.js  # Testes do error handler
-└── services/
-    └── clientService.test.js    # Testes do service de clientes
-```
-
-## Padrões e Convenções
-
-### Padrão View → List + Form (via `useCrudView`)
-
-Cada entidade CRUD segue o padrão **View + List + Form**, com a lógica comum extraída no composable `useCrudView`:
-
-```
-View (orquestra, usa useCrudView)
-├── List (GenericTable, emite @new, @edit, @delete)
-└── Form (BaseModal, recebe :entity, emite @close, @save)
-```
-
-**View** — Exemplo simplificado (`views/ServiceView.vue`):
-```javascript
-import { useCrudView } from '../composables/useCrudView';
-import { serviceService } from '../services/serviceService';
-
-const {
-  listRef, showForm, editingItem, alert,
-  openForm, closeForm, saveItem, deleteItem,
-} = useCrudView(serviceService, { singular: 'Procedimento', plural: 'Procedimentos' });
-```
-
-O composable `useCrudView(service, labels)` encapsula:
-- Estado reativo: `listRef`, `showForm`, `editingItem`, `alert`
-- Funções: `openForm()`, `closeForm()`, `saveItem()`, `deleteItem()`, `showAlert()`, `refreshList()`
-- Mensagens de sucesso/erro automáticas baseadas nos `labels`
 
 **Para Views com lógica extra** (ex: `AppointmentView`), desestruture e estenda:
 ```javascript
@@ -206,13 +132,11 @@ Substitui o anti-pattern `window.$toast`. O `App.vue` registra o toast via `toas
 - Sem Options API
 - Imports sempre no topo do `<script setup>`
 
-### UI Framework (PrimeVue)
+### Integrações com Bibliotecas Externas
 
-- Tema: **Material** (configurado em `main.js`)
-- Componentes comuns: `Toast`, `DataTable`, `Dialog`, `Button`, `InputText`
-- Toast: `useToast()` no `App.vue`, registrado via `toastBridge`
-
-## Fluxo de Autenticação
+- **Gráficos**: Chart.js configurado no `FinancialDashboard`
+- **Ícones**: Material Symbols Outlined (Google Fonts)
+- **Toast**: Sistema customizado via `App.vue` e `toastBridge.js`
 
 ```
 LoginView → authService.loginWithGoogle() → Google OAuth
@@ -312,7 +236,6 @@ npm run test:watch
 |---|---|---|
 | CORS blocked | Backend não configurou CORS | Verificar config CORS no backend |
 | 401 após login | Token expirado ou inválido | Verificar `localStorage.token` |
-| Componente PrimeVue não renderiza | Falta registro | PrimeVue 4 usa auto-import |
 | Toast não aparece | `toastBridge` não inicializado | Garantir `App.vue` montou e registrou via `toastBridge.setToast()` |
 | Proxy não funciona | Vite dev server não rodando | Verificar `npm run dev` |
 | Testes falham com `confirm` | `happy-dom` não define `confirm` | Usar `globalThis.confirm = vi.fn()` |

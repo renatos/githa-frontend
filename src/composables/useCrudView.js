@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { confirmBridge } from '../services/confirmBridge';
 
 /**
  * Composable that encapsulates common CRUD View logic.
@@ -54,16 +55,22 @@ export function useCrudView(service, labels) {
     };
 
     const deleteItem = async (id) => {
-        if (confirm(`Tem certeza que deseja excluir este(a) ${labels.singular.toLowerCase()}?`)) {
-            try {
-                await service.delete(id);
-                showAlert('success', `${labels.singular} excluído(a) com sucesso!`);
-                refreshList();
-            } catch (error) {
-                console.error(`Error deleting ${labels.singular.toLowerCase()}:`, error);
-                showAlert('error', `Erro ao excluir ${labels.singular.toLowerCase()}.`);
+        confirmBridge.confirm({
+            title: `Excluir ${labels.singular}`,
+            message: `Tem certeza que deseja excluir este(a) ${labels.singular.toLowerCase()}?`,
+            type: 'danger',
+            confirmLabel: 'Excluir',
+            onConfirm: async () => {
+                try {
+                    await service.delete(id);
+                    showAlert('success', `${labels.singular} excluído(a) com sucesso!`);
+                    refreshList();
+                } catch (error) {
+                    console.error(`Error deleting ${labels.singular.toLowerCase()}:`, error);
+                    showAlert('error', `Erro ao excluir ${labels.singular.toLowerCase()}.`);
+                }
             }
-        }
+        });
     };
 
     return {

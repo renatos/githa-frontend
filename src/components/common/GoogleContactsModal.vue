@@ -1,57 +1,92 @@
 <template>
-  <div v-if="visible" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Importar Contatos do Google</h3>
-        <button class="btn-close" @click="$emit('close')">×</button>
-      </div>
-
-      <div class="modal-body">
-        <div v-if="loading" class="loading">Carregando contatos...</div>
-        <div v-else-if="error" class="error-container">
-          <div class="error-message">{{ error }}</div>
-          <button v-if="showConnectButton" class="btn btn-google mt-2" @click="connectGoogle">
-            Conectar com Google
-          </button>
-        </div>
-        <div v-else class="contacts-list">
-          <div class="search-container">
-            <input
-                v-model="searchQuery"
-                class="search-input"
-                placeholder="Buscar contato..."
-                type="text"
-            >
-          </div>
-          <div v-if="filteredContacts.length > 0" class="select-all-container">
-            <label>
-              <input v-model="selectAll" type="checkbox">
-              <span class="select-all-text">Selecionar Todos ({{ filteredContacts.length }})</span>
-            </label>
-          </div>
-          <div v-for="contact in filteredContacts" :key="contact.resourceName" class="contact-item">
-            <label>
-              <input v-model="selectedContacts" :value="contact" type="checkbox">
-              <span class="contact-name">{{ getDisplayName(contact) }}</span>
-              <span v-if="getEmail(contact)" class="contact-email">{{ getEmail(contact) }}</span>
-            </label>
-          </div>
-          <div v-if="filteredContacts.length === 0">Nenhum contato encontrado.</div>
+  <BaseModal
+    :show="visible"
+    title="Importar Contatos do Google"
+    icon="fa-brands fa-google"
+    @close="$emit('close')"
+    maxWidth="max-w-2xl"
+    :bodyPadding="false"
+  >
+    <template #sub-header>
+      <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input
+            v-model="searchQuery"
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder="Buscar contato por nome ou email..."
+            type="text"
+          >
         </div>
       </div>
+      <div v-if="filteredContacts.length > 0 && !loading && !error" class="px-6 py-2 bg-slate-100/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700">
+        <label class="flex items-center gap-3 cursor-pointer group">
+          <input v-model="selectAll" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+          <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">
+            Selecionar Todos ({{ filteredContacts.length }})
+          </span>
+        </label>
+      </div>
+    </template>
 
-      <div class="modal-footer">
-        <button class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
-        <button :disabled="selectedContacts.length === 0" class="btn btn-primary" @click="importSelected">
-          Importar ({{ selectedContacts.length }})
+    <div class="min-h-[300px] flex flex-col">
+      <div v-if="loading" class="flex-1 flex flex-col items-center justify-center p-12 text-slate-400">
+        <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4 text-indigo-500"></i>
+        <p class="font-medium">Carregando contatos...</p>
+      </div>
+
+      <div v-else-if="error" class="flex-1 flex flex-col items-center justify-center p-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-4">
+          <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+        </div>
+        <p class="text-slate-900 dark:text-slate-100 font-medium mb-2">{{ error }}</p>
+        <button v-if="showConnectButton" 
+                class="mt-4 px-6 py-2.5 bg-[#4285F4] hover:bg-[#3367d6] text-white rounded-lg font-medium shadow-sm transition-all flex items-center gap-2" 
+                @click="connectGoogle">
+          <i class="fa-brands fa-google text-lg"></i>
+          Conectar com Google
         </button>
       </div>
+
+      <div v-else class="divide-y divide-slate-100 dark:divide-slate-800">
+        <div v-for="contact in filteredContacts" :key="contact.resourceName" 
+             class="px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <label class="flex items-center gap-4 cursor-pointer">
+            <input v-model="selectedContacts" :value="contact" type="checkbox" 
+                   class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <div class="min-w-0">
+              <p class="font-bold text-slate-900 dark:text-slate-100 truncate">{{ getDisplayName(contact) }}</p>
+              <p v-if="getEmail(contact)" class="text-sm text-slate-500 dark:text-slate-400 truncate">{{ getEmail(contact) }}</p>
+            </div>
+          </label>
+        </div>
+        
+        <div v-if="filteredContacts.length === 0" class="p-12 text-center text-slate-400">
+          <i class="fa-solid fa-user-slash text-4xl mb-4 opacity-20"></i>
+          <p>Nenhum contato encontrado.</p>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <template #footer>
+      <button class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors" 
+              @click="$emit('close')">
+        Cancelar
+      </button>
+      <button :disabled="selectedContacts.length === 0" 
+              class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-all shadow-sm shadow-indigo-200 dark:shadow-none" 
+              @click="importSelected">
+        Importar {{ selectedContacts.length }} contato(s)
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
-import {ref, watch, computed} from 'vue';
+import { ref, watch, computed } from 'vue';
+import BaseModal from './BaseModal.vue';
 import api from '../../services/api';
 import {useModal} from '../../composables/useModal';
 
@@ -167,160 +202,5 @@ const importSelected = () => {
 </script>
 
 <style scoped>
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
 
-.modal {
-  background: var(--color-bg-card);
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: var(--color-text-main);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.5rem;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-}
-
-.contacts-list {
-  width: 100%;
-}
-
-.contact-item {
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.contact-item:last-child {
-  border-bottom: none;
-}
-
-.contact-item label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  color: var(--color-text-main);
-}
-
-.contact-email {
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  margin-left: 0.5rem;
-}
-
-.modal-footer {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-.loading, .error-container {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-}
-
-.error-message {
-  color: var(--color-error, #ef4444);
-  margin-bottom: 1rem;
-}
-
-.btn-google {
-  background-color: #4285F4;
-  color: white;
-  border: 1px solid #4285F4;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.btn-google:hover {
-  background-color: #3367d6;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.search-container {
-  margin-bottom: 1rem;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-bg-body);
-  color: var(--color-text-main);
-  font-size: 0.9rem;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-soft);
-}
-
-.select-all-container {
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-bg-body);
-}
-
-.select-all-text {
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
 </style>

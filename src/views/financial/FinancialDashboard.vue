@@ -1,87 +1,144 @@
 <template>
-  <div class="financial-dashboard">
-    <div class="header-row">
-      <h2>Dashboard Financeiro</h2>
-      <div class="selectors-container">
-        <div class="view-mode-toggle">
-            <button 
-                class="btn-toggle" 
-                :class="{ active: viewMode === 'MONTH' }"
-                @click="viewMode = 'MONTH'"
-            >
-                Mensal
-            </button>
-            <button 
-                class="btn-toggle" 
-                :class="{ active: viewMode === 'DAY' }"
-                @click="viewMode = 'DAY'"
-            >
-                Diário
-            </button>
+  <div class="p-4 md:p-6 flex flex-col gap-6">
+    <!-- Header Row -->
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col gap-1">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Financeiro</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gestão de fluxo de caixa e transações em tempo real.</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <!-- View Mode Toggle -->
+        <div class="flex bg-slate-900/50 p-1 rounded-xl border border-slate-800 backdrop-blur-sm">
+          <button 
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="viewMode === 'MONTH' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-slate-200'"
+            @click="viewMode = 'MONTH'"
+          >
+            Mensal
+          </button>
+          <button 
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="viewMode === 'DAY' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-slate-200'"
+            @click="viewMode = 'DAY'"
+          >
+            Diário
+          </button>
         </div>
-        <div class="month-selector">
-          <button @click="previousMonth" class="btn-icon">❮</button>
-          <span class="current-month">{{ currentMonthLabel }}</span>
-          <button @click="nextMonth" class="btn-icon">❯</button>
-        </div>
-        <div class="day-selector">
-          <button @click="previousDay" class="btn-icon">❮</button>
-          <span class="current-day">{{ currentDayLabel }}</span>
-          <button @click="nextDay" class="btn-icon">❯</button>
+
+        <!-- Month/Day Selectors -->
+        <div class="flex items-center gap-3">
+          <div v-show="viewMode === 'MONTH'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
+            <button @click="previousMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <span class="px-4 font-semibold text-sm min-w-[140px] text-center">{{ currentMonthLabel }}</span>
+            <button @click="nextMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+
+          <div v-show="viewMode === 'DAY'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
+            <button @click="previousDay" class="p-2 text-slate-400 hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <span class="px-4 font-semibold text-sm min-w-[80px] text-center">{{ currentDayLabel }}</span>
+            <button @click="nextDay" class="p-2 text-slate-400 hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
     
-    <div class="summary-cards">
-      <div class="card income">
-        <h3>Receitas</h3>
-        <div class="amount">{{ formatCurrency(summary.totalIncome) }}</div>
-        <div class="pending">Pendente: {{ formatCurrency(summary.pendingIncome || 0) }}</div>
+    <!-- Summary Cards (Monthly Context) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Income Card -->
+      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fa-solid fa-arrow-trend-up text-5xl text-emerald-500"></i>
+        </div>
+        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Receitas ({{ currentMonthLabel }})</h3>
+        <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">{{ formatCurrency(summary.totalIncome) }}</div>
+        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+          <span class="mr-2">Pendente:</span>
+          <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingIncome || 0) }}</span>
+        </div>
       </div>
       
-      <div class="card expense">
-        <h3>Despesas</h3>
-        <div class="amount">{{ formatCurrency(summary.totalExpense) }}</div>
-        <div class="pending">Pendente: {{ formatCurrency(summary.pendingExpense || 0) }}</div>
+      <!-- Expense Card -->
+      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/5">
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fa-solid fa-arrow-trend-down text-5xl text-rose-500"></i>
+        </div>
+        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Despesas ({{ currentMonthLabel }})</h3>
+        <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
+        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+          <span class="mr-2">Pendente:</span>
+          <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingExpense || 0) }}</span>
+        </div>
       </div>
       
-      <div class="card balance" :class="{ negative: summary.balance < 0 }">
-        <h3>Saldo (Acumulado)</h3>
-        <div class="amount">{{ formatCurrency(summary.balance) }}</div>
-        <div class="pending" :class="{ negative: (summary.pendingBalance || 0) < 0 }">
-          Pendente: {{ formatCurrency(summary.pendingBalance || 0) }}
+      <!-- Balance Card -->
+      <div 
+        class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/5"
+        :class="summary.balance < 0 ? 'hover:border-rose-500/30' : 'hover:border-indigo-500/30'"
+      >
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <i class="fa-solid fa-scale-balanced text-5xl" :class="summary.balance < 0 ? 'text-rose-500' : 'text-indigo-500'"></i>
+        </div>
+        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Saldo Acumulado</h3>
+        <div class="text-3xl font-bold mb-2 transition-colors" :class="summary.balance < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'">
+          {{ formatCurrency(summary.balance) }}
+        </div>
+        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+          <span class="mr-2">Soma Pendentes:</span>
+          <span class="font-medium" :class="summary.pendingBalance < 0 ? 'text-rose-600 dark:text-rose-500' : 'text-slate-700 dark:text-slate-300'">
+            {{ formatCurrency(summary.pendingBalance || 0) }}
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Daily summary cards -->
-    <div class="summary-cards daily-cards">
-      <div class="card daily income">
-        <h3>Receitas (dia)</h3>
-        <div class="amount">{{ formatCurrency(dailySummary.totalIncome) }}</div>
+    <!-- Daily summary cards (visible only in Day mode) -->
+    <div v-show="viewMode === 'DAY'" class="animate-in fade-in slide-in-from-top-4 duration-500">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="h-px flex-1 bg-slate-800"></div>
+        <span class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Visão do Dia: {{ currentDayLabel }}</span>
+        <div class="h-px flex-1 bg-slate-800"></div>
       </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-between transition-colors hover:border-emerald-500/20">
+          <span class="text-slate-500 text-xs font-medium">Receitas Dia</span>
+          <span class="text-lg font-bold text-emerald-400/90">{{ formatCurrency(dailySummary.totalIncome) }}</span>
+        </div>
 
-      <div class="card daily expense">
-        <h3>Despesas (dia)</h3>
-        <div class="amount">{{ formatCurrency(dailySummary.totalExpense) }}</div>
-      </div>
+        <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-between transition-colors hover:border-rose-500/20">
+          <span class="text-slate-500 text-xs font-medium">Despesas Dia</span>
+          <span class="text-lg font-bold text-rose-400/90">{{ formatCurrency(dailySummary.totalExpense) }}</span>
+        </div>
 
-      <div class="card daily balance" :class="{ negative: dailySummary.balance < 0 }">
-        <h3>Saldo (dia)</h3>
-        <div class="amount">{{ formatCurrency(dailySummary.balance) }}</div>
+        <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-between transition-colors hover:border-indigo-500/20">
+          <span class="text-slate-500 text-xs font-medium">Saldo Dia</span>
+          <span class="text-lg font-bold" :class="dailySummary.balance < 0 ? 'text-rose-400/90' : 'text-indigo-400/90'">
+            {{ formatCurrency(dailySummary.balance) }}
+          </span>
+        </div>
       </div>
     </div>
 
-    <!-- Here we embed the transaction list -->
-    <div class="recent-transactions">
-        <TransactionList 
-            ref="transactionListRef" 
-            :month="selectedMonth" 
-            :year="selectedYear" 
-            :day="viewMode === 'DAY' ? selectedDay : null"
-            @change="loadAllData" 
-            @view-appointment="openAppointment" 
-        />
+    <!-- Transaction List Section -->
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">
+      <div class="p-4 md:p-6 min-h-[400px]">
+          <TransactionList 
+              ref="transactionListRef" 
+              :month="selectedMonth" 
+              :year="selectedYear" 
+              :day="viewMode === 'DAY' ? selectedDay : null"
+              @change="loadAllData" 
+              @view-appointment="openAppointment" 
+          />
+      </div>
     </div>
 
     <!-- Embedded Appointment Form -->
@@ -100,6 +157,8 @@ import financialService from '../../services/financialService';
 import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
 import AppointmentForm from '../../components/AppointmentForm.vue';
+import { confirmBridge } from '../../services/confirmBridge';
+import { toastBridge } from '../../services/toastBridge';
 
 const viewMode = ref('MONTH'); // 'MONTH' or 'DAY'
 
@@ -249,7 +308,11 @@ const openAppointment = async (id) => {
         showAppointmentForm.value = true;
     } catch (error) {
         console.error('Error loading appointment:', error);
-        alert('Erro ao carregar agendamento');
+        confirmBridge.alert({
+          title: 'Erro de Carregamento',
+          message: 'Não foi possível carregar os dados do agendamento.',
+          type: 'danger'
+        });
     }
 };
 
@@ -262,202 +325,21 @@ const saveAppointment = async (data) => {
   try {
     if (data.id) {
       await appointmentService.update(data.id, data);
-      alert('Agendamento atualizado com sucesso!');
+      toastBridge.getToast().add({ severity: 'success', summary: 'Sucesso', detail: 'Agendamento atualizado com sucesso!', life: 3000 });
     } else {
       await appointmentService.create(data);
-      alert('Agendamento criado com sucesso!');
+      toastBridge.getToast().add({ severity: 'success', summary: 'Sucesso', detail: 'Agendamento criado com sucesso!', life: 3000 });
     }
     closeAppointmentForm();
     loadAllData();
     transactionListRef.value?.loadData();
   } catch (error) {
     console.error('Error saving appointment:', error);
-    alert('Erro ao salvar agendamento.');
+    confirmBridge.alert({
+      title: 'Erro ao Salvar',
+      message: 'Ocorreu um erro ao tentar salvar o agendamento.',
+      type: 'danger'
+    });
   }
 };
 </script>
-
-<style scoped>
-.financial-dashboard {
-  padding: 1rem;
-}
-
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.selectors-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-end;
-}
-
-.view-mode-toggle {
-    display: flex;
-    background: var(--color-bg-card, #fff);
-    border-radius: var(--radius-md);
-    padding: 0.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-bottom: 0.25rem;
-}
-
-.btn-toggle {
-    background: transparent;
-    border: none;
-    padding: 0.25rem 0.75rem;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.btn-toggle.active {
-    background: var(--color-primary);
-    color: white;
-}
-
-.month-selector,
-.day-selector {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: var(--color-bg-card, #fff);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.day-selector {
-  padding: 0.35rem 0.8rem;
-}
-
-.current-month {
-  font-weight: 600;
-  color: var(--color-text-main);
-  min-width: 150px;
-  text-align: center;
-}
-
-.current-day {
-  font-weight: 600;
-  color: var(--color-text-main);
-  min-width: 60px;
-  text-align: center;
-  font-size: 0.95rem;
-}
-
-.btn-icon {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 0.25rem 0.6rem;
-  transition: all 0.2s;
-  color: var(--color-text-muted);
-}
-
-.btn-icon:hover:not(:disabled) {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.btn-icon:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.summary-cards.daily-cards {
-  margin-bottom: 2rem;
-}
-
-.card {
-  background: var(--color-bg-card, #fff);
-  padding: 1.5rem;
-  border-radius: var(--radius-md);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border-left: 5px solid transparent;
-}
-
-.card.daily {
-  padding: 1rem 1.25rem;
-}
-
-.card.income {
-  border-left-color: var(--color-success, #16a34a);
-}
-
-.card.expense {
-  border-left-color: var(--color-error, #dc2626);
-}
-
-.card.balance {
-  border-left-color: var(--color-primary, #2563eb);
-}
-.card.balance.negative {
-    border-left-color: var(--color-error, #dc2626);
-}
-
-.card h3 {
-  margin: 0 0 0.5rem 0;
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-}
-
-.card.daily h3 {
-  font-size: 0.8rem;
-  margin-bottom: 0.35rem;
-}
-
-.card .amount {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.card.daily .amount {
-  font-size: 1.3rem;
-}
-
-.card .pending {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-top: 0.25rem;
-}
-
-.card .pending.negative {
-  color: var(--color-error, #dc2626);
-}
-
-.card.income .amount {
-    color: var(--color-success, #16a34a);
-}
-
-.card.expense .amount {
-    color: var(--color-error, #dc2626);
-}
-
-.card.balance.negative .amount {
-    color: var(--color-error, #dc2626);
-}
-
-.recent-transactions {
-    background: var(--color-bg-card, #fff);
-    border-radius: var(--radius-md);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    padding: 1rem;
-}
-</style>

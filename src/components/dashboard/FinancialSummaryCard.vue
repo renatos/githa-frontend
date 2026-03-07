@@ -1,55 +1,65 @@
 <template>
-  <DashboardCard
-    title="Resumo Financeiro (Mês Atual)"
-    icon="💰"
-    :loading="loading"
-    :error="error"
-    @retry="fetchFinancialSummary"
-  >
-    <div v-if="!summary && !loading && !error" class="empty-state">
-      <p>Nenhum dado financeiro disponível para este mês.</p>
-    </div>
-
-    <div v-else-if="summary" class="finance-grid">
-      <!-- Receitas -->
-      <div class="finance-metric income">
-        <span class="metric-label">Receitas (Pagas)</span>
-        <span class="metric-value">{{ formatCurrency(summary.totalIncome || 0) }}</span>
-        <div class="metric-footer">
-          <span class="pendings">Pendentes: {{ formatCurrency(summary.totalPendingIncome || 0) }}</span>
-        </div>
-      </div>
-
-      <!-- Despesas -->
-      <div class="finance-metric expense">
-        <span class="metric-label">Despesas (Pagas)</span>
-        <span class="metric-value">{{ formatCurrency(summary.totalExpenses || 0) }}</span>
-        <div class="metric-footer">
-          <span class="pendings">Pendentes: {{ formatCurrency(summary.totalPendingExpenses || 0) }}</span>
-        </div>
-      </div>
-
-      <!-- Saldo -->
-      <div class="finance-metric balance" :class="balanceClass">
-        <span class="metric-label">Saldo (Recebido - Pago)</span>
-        <span class="metric-value">{{ formatCurrency(summary.balance || 0) }}</span>
-        <div class="metric-footer">
-          <span class="pendings">Margem: {{ calculateMargin(summary.totalIncome, summary.totalExpenses) }}%</span>
-        </div>
-      </div>
-    </div>
-
-    <template #actions>
-      <router-link to="/financials" class="btn-icon" title="Abrir Módulo Financeiro">
-        <i class="pi pi-arrow-right"></i>
+  <div class="bg-white dark:bg-[#1E222B] rounded-xl p-5 lg:p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4 lg:mb-6">
+      <h2 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+        <span>💰</span> Resumo Financeiro (Mês Atual)
+      </h2>
+      <router-link to="/financials" class="text-gray-400 hover:text-indigo-500 transition-colors" title="Abrir Módulo Financeiro">
+        <i class="fa-solid fa-arrow-right"></i>
       </router-link>
-    </template>
-  </DashboardCard>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" class="flex-1 flex items-center justify-center py-8">
+      <div class="text-center text-gray-400 dark:text-slate-500 text-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i>
+        Carregando...
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
+      <button @click="fetchFinancialSummary" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+        <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
+      </button>
+    </div>
+
+    <!-- Empty -->
+    <div v-else-if="!summary" class="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
+      Nenhum dado financeiro disponível para este mês.
+    </div>
+
+    <!-- Content: 3-col on mobile, vertical on desktop -->
+    <div v-else class="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-0 lg:space-y-5 flex-1">
+      <!-- Receitas -->
+      <div class="text-center lg:text-left">
+        <p class="text-[10px] lg:text-xs uppercase tracking-wider text-gray-500 dark:text-slate-500 mb-1 font-semibold">RECEITAS (PAGAS)</p>
+        <div class="text-base lg:text-2xl font-bold text-green-600 dark:text-[#10B981]">{{ formatCurrency(summary.totalIncome || 0) }}</div>
+        <div class="text-[10px] lg:text-sm text-gray-400 dark:text-slate-500">Pendentes: {{ formatCurrency(summary.totalPendingIncome || 0) }}</div>
+      </div>
+      <!-- Divider (desktop only) -->
+      <div class="hidden lg:block h-px bg-gray-100 dark:bg-slate-700/50"></div>
+      <!-- Despesas -->
+      <div class="text-center lg:text-left">
+        <p class="text-[10px] lg:text-xs uppercase tracking-wider text-gray-500 dark:text-slate-500 mb-1 font-semibold">DESPESAS (PAGAS)</p>
+        <div class="text-base lg:text-2xl font-bold text-red-600 dark:text-[#EF4444]">{{ formatCurrency(summary.totalExpenses || 0) }}</div>
+        <div class="text-[10px] lg:text-sm text-gray-400 dark:text-slate-500">Pendentes: {{ formatCurrency(summary.totalPendingExpenses || 0) }}</div>
+      </div>
+      <!-- Divider (desktop only) -->
+      <div class="hidden lg:block h-px bg-gray-100 dark:bg-slate-700/50"></div>
+      <!-- Saldo -->
+      <div class="text-center lg:text-left">
+        <p class="text-[10px] lg:text-xs uppercase tracking-wider text-gray-500 dark:text-slate-500 mb-1 font-semibold">SALDO (RECEBIDO - PAGO)</p>
+        <div class="text-base lg:text-2xl font-bold" :class="balanceColor">{{ formatCurrency(summary.balance || 0) }}</div>
+        <div class="text-[10px] lg:text-sm text-gray-400 dark:text-slate-500">Margem: {{ calculateMargin(summary.totalIncome, summary.totalExpenses) }}%</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import DashboardCard from './DashboardCard.vue';
 import financialService from '../../services/financialService';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -57,11 +67,11 @@ const loading = ref(true);
 const error = ref(false);
 const summary = ref(null);
 
-const balanceClass = computed(() => {
-  if (!summary.value) return '';
-  if (summary.value.balance > 0) return 'positive';
-  if (summary.value.balance < 0) return 'negative';
-  return 'neutral';
+const balanceColor = computed(() => {
+  if (!summary.value) return 'text-gray-900 dark:text-white';
+  if (summary.value.balance > 0) return 'text-purple-600 dark:text-[#8B5CF6]';
+  if (summary.value.balance < 0) return 'text-red-600 dark:text-[#EF4444]';
+  return 'text-gray-900 dark:text-white';
 });
 
 const calculateMargin = (income, expense) => {
@@ -73,16 +83,12 @@ const calculateMargin = (income, expense) => {
 const fetchFinancialSummary = async () => {
   loading.value = true;
   error.value = false;
-  
   try {
     const today = new Date();
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
-
     const response = await financialService.getSummary(month, year);
-    
     if (response && response.data) {
-      // Map properties to match the backend DTO names
       summary.value = {
         totalIncome: response.data.totalIncome || 0,
         totalExpenses: response.data.totalExpense || 0,
@@ -91,7 +97,7 @@ const fetchFinancialSummary = async () => {
         totalPendingExpenses: response.data.pendingExpense || 0
       };
     } else {
-      error.value = true; 
+      error.value = true;
     }
   } catch (err) {
     console.error('Failed to fetch financial summary:', err);
@@ -105,112 +111,3 @@ onMounted(() => {
   fetchFinancialSummary();
 });
 </script>
-
-<style scoped>
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.finance-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  height: 100%;
-  justify-content: space-around;
-}
-
-.finance-metric {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg-body);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  border-left: 4px solid var(--color-border);
-  transition: transform 0.2s;
-}
-
-.finance-metric:hover {
-  transform: translateX(4px);
-}
-
-.metric-label {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-}
-
-.metric-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin-bottom: var(--spacing-sm);
-}
-
-.metric-footer {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  display: flex;
-  justify-content: flex-end;
-  border-top: 1px dashed var(--color-border);
-  padding-top: var(--spacing-xs);
-  margin-top: auto;
-}
-
-.pendings {
-  font-style: italic;
-}
-
-/* Specific Styles for Income, Expenses, Balance */
-.finance-metric.income {
-  border-left-color: var(--color-status-active-bg);
-}
-.finance-metric.income .metric-value {
-  color: #16a34a; /* Green 600 */
-}
-.finance-metric.income .metric-footer {
-  border-top-color: #dcfce7;
-}
-
-.finance-metric.expense {
-  border-left-color: var(--color-status-risk-bg);
-}
-.finance-metric.expense .metric-value {
-  color: #dc2626; /* Red 600 */
-}
-.finance-metric.expense .metric-footer {
-  border-top-color: #fee2e2;
-}
-
-.finance-metric.balance {
-  border-left-color: var(--color-primary);
-  background-color: var(--color-primary-soft);
-}
-.finance-metric.balance.positive .metric-value {
-  color: #16a34a;
-}
-.finance-metric.balance.negative .metric-value {
-  color: #dc2626;
-}
-.finance-metric.balance.neutral .metric-value {
-  color: var(--color-text-main);
-}
-.finance-metric.balance .metric-footer {
-  border-top-color: rgba(0,0,0,0.05);
-}
-
-.btn-icon {
-  text-decoration: none;
-  color: var(--color-text-muted);
-}
-
-.btn-icon:hover {
-  color: var(--color-primary);
-}
-</style>

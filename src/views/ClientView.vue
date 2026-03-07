@@ -31,6 +31,9 @@ import ClientList from '../components/ClientList.vue';
 import ClientForm from '../components/ClientForm.vue';
 import ErrorModal from '../components/common/ErrorModal.vue';
 import { clientService } from '../services/clientService';
+import { enumService } from '../services/enumService';
+import { toastBridge } from '../services/toastBridge';
+import { confirmBridge } from '../services/confirmBridge';
 import { useErrorHandler } from '../composables/useErrorHandler';
 
 const route = useRoute();
@@ -93,15 +96,37 @@ const saveClient = async (clientData) => {
   }
 };
 
-const deleteClient = async (id) => {
-  if (confirm('Tem certeza que deseja excluir este cliente?')) {
-    try {
-      await clientService.delete(id);
-      clientList.value?.refresh();
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      showError(error, 'Erro ao Excluir Cliente');
+const deleteClient = (id) => {
+  confirmBridge.confirm({
+    title: 'Excluir Cliente',
+    message: 'Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.',
+    type: 'danger',
+    confirmLabel: 'Excluir',
+    onConfirm: async () => {
+      try {
+        await clientService.delete(id);
+        toastBridge.getToast().add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Cliente excluído com sucesso!',
+          life: 3000
+        });
+        clientList.value?.refresh(); // Refresh the list after deletion
+        // If the deleted client was the one being edited, close the form
+        if (editingClient.value.id === id) {
+          closeForm();
+        }
+      } catch (err) {
+        console.error('Error deleting client:', err);
+        toastBridge.getToast().add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Não foi possível excluir o cliente.',
+          life: 3000
+        });
+        showError(err, 'Erro ao Excluir Cliente'); // Also show error in modal
+      }
     }
-  }
+  });
 };
 </script>

@@ -1,46 +1,75 @@
 <template>
-  <div class="feedback-list">
-    <div class="header-actions">
-      <div class="flex align-items-center gap-3">
-        <h2 class="m-0">Feedbacks e Suporte</h2>
-        <AiContextBadge context="FEEDBACKS" contextName="Feedbacks" />
+  <div class="p-4 md:p-6 flex flex-col gap-6">
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-3">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Feedbacks e Suporte</h2>
+          <AiContextBadge context="FEEDBACKS" contextName="Feedbacks" />
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os feedbacks e sugestões do sistema.</p>
       </div>
-      <div class="header-buttons">
-        <button class="btn btn-primary" @click="$emit('new')">
-          + Novo Feedback
+      <div class="flex items-center gap-3">
+        <button 
+          @click="$emit('new')"
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          <span class="material-symbols-outlined text-[18px] mr-2">add</span>
+          Novo Feedback
         </button>
       </div>
-    </div>
+    </header>
 
-    <div class="status-legend">
-      <span
-          :class="{ selected: selectedStatuses.includes('NEW') }"
-          class="legend-item new"
-          @click="toggleFilter('NEW')"
+    <div class="flex flex-wrap items-center gap-3">
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('NEW') 
+            ? 'border-blue-500 bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:border-blue-500 dark:text-blue-100'
+            : 'border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50'
+        ]"
+        @click="toggleFilter('NEW')"
       >
+        <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
         Novo
-      </span>
-      <span
-          :class="{ selected: selectedStatuses.includes('ACCEPTED') }"
-          class="legend-item accepted"
-          @click="toggleFilter('ACCEPTED')"
+      </button>
+
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('ACCEPTED') 
+            ? 'border-amber-500 bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:border-amber-500 dark:text-amber-100'
+            : 'border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+        ]"
+        @click="toggleFilter('ACCEPTED')"
       >
+        <span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
         Em Análise
-      </span>
-      <span
-          :class="{ selected: selectedStatuses.includes('IMPLEMENTED') }"
-          class="legend-item implemented"
-          @click="toggleFilter('IMPLEMENTED')"
+      </button>
+
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('IMPLEMENTED') 
+            ? 'border-emerald-500 bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:border-emerald-500 dark:text-emerald-100'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+        ]"
+        @click="toggleFilter('IMPLEMENTED')"
       >
+        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
         Concluído
-      </span>
-      <span
-          :class="{ selected: selectedStatuses.includes('REJECTED') }"
-          class="legend-item rejected"
-          @click="toggleFilter('REJECTED')"
+      </button>
+
+      <button 
+        class="inline-flex items-center px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+        :class="[
+          selectedStatuses.includes('REJECTED') 
+            ? 'border-red-500 bg-red-100 text-red-900 dark:bg-red-900/50 dark:border-red-500 dark:text-red-100'
+            : 'border-red-200 bg-red-50 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50'
+        ]"
+        @click="toggleFilter('REJECTED')"
       >
+        <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
         Rejeitado
-      </span>
+      </button>
     </div>
 
     <GenericTable
@@ -51,12 +80,18 @@
         @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-feedbackType="{ item }">
-        <span
-            :class="'badge type-' + item.feedbackType.toLowerCase()">{{ formatType(item.feedbackType) }}</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold"
+              :class="getTypeBadgeClass(item.feedbackType)">
+          {{ formatType(item.feedbackType) }}
+        </span>
       </template>
 
       <template #cell-feedbackStatus="{ item }">
-        <span :class="'badge status-' + item.feedbackStatus.toLowerCase()">{{ formatStatus(item.feedbackStatus) }}</span>
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+              :class="getStatusBadgeClass(item.feedbackStatus)">
+          <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.feedbackStatus)"></span>
+          {{ formatStatus(item.feedbackStatus) }}
+        </span>
       </template>
 
       <template #cell-user="{ item }">
@@ -154,114 +189,41 @@ const formatStatus = (status) => {
   return map[status] || status;
 };
 
+const getTypeBadgeClass = (type) => {
+  const map = {
+    'BUG': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    'FEATURE': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    'IMPROVEMENT': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    'SUGGESTION': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  };
+  return map[type] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+};
+
+const getStatusBadgeClass = (status) => {
+  const map = {
+    'NEW': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    'ACCEPTED': 'bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300',
+    'IN_PROGRESS': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+    'REJECTED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'IMPLEMENTED': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  };
+  return map[status] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+};
+
+const getStatusDotClass = (status) => {
+  const map = {
+    'NEW': 'bg-blue-500',
+    'ACCEPTED': 'bg-amber-500',
+    'IN_PROGRESS': 'bg-indigo-500',
+    'REJECTED': 'bg-red-500',
+    'IMPLEMENTED': 'bg-emerald-500',
+  };
+  return map[status] || 'bg-slate-400';
+};
+
 defineExpose({refresh});
 </script>
 
 <style scoped>
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.status-legend {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.875rem;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
-  border: 1px solid transparent;
-  opacity: 0.7;
-}
-
-.legend-item:hover {
-  background-color: var(--color-bg-body);
-}
-
-.legend-item.selected {
-  opacity: 1;
-  border-color: var(--color-border);
-  background-color: var(--color-bg-card);
-  font-weight: 600;
-}
-
-.legend-item::before {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-}
-
-/* Status colors - adapt based on status */
-.legend-item.new::before, .badge.status-new {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
-  color: white
-}
-
-.legend-item.accepted::before, .badge.status-accepted {
-  background-color: #f59e0b;
-  border-color: #f59e0b;
-  color: white
-}
-
-.legend-item.implemented::before, .badge.status-implemented {
-  background-color: #10b981;
-  border-color: #10b981;
-  color: white
-}
-
-.legend-item.rejected::before, .badge.status-rejected {
-  background-color: #ef4444;
-  border-color: #ef4444;
-  color: white
-}
-
-.badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge.type-bug {
-  background-color: #fee2e2;
-  color: #ef4444;
-}
-
-.badge.type-feature {
-  background-color: #dbeafe;
-  color: #3b82f6;
-}
-
-.badge.type-improvement {
-  background-color: #f3e8ff;
-  color: #a855f7;
-}
-
-.badge.type-suggestion {
-  background-color: #ecfdf5;
-  color: #059669;
-}
-
-.btn-icon {
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 4px 8px;
-}
+/* Scoped styles replaced by Tailwind utils in template */
 </style>

@@ -14,7 +14,7 @@
         @confirm="confirmItem"
         @delete="deleteItem"
         @edit="openForm"
-        @new="openForm()"
+        @new="(payload) => openForm(payload)"
         @add-procedure="openAddProcedureForm"
     />
 

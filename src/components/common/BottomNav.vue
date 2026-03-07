@@ -1,19 +1,19 @@
 <template>
   <nav class="bottom-nav">
     <router-link to="/" class="nav-item" active-class="active" exact>
-      <i class="pi pi-home"></i>
+      <Home :size="20" />
       <span>Home</span>
     </router-link>
     <router-link to="/appointments" class="nav-item" active-class="active">
-      <i class="pi pi-calendar"></i>
+      <Calendar :size="20" />
       <span>Agenda</span>
     </router-link>
     <router-link to="/clients" class="nav-item" active-class="active">
-      <i class="pi pi-users"></i>
+      <User :size="20" />
       <span>Clientes</span>
     </router-link>
     <router-link to="/financials" class="nav-item" active-class="active" :class="{ 'active': $route.path.startsWith('/financials') || $route.path.startsWith('/accounts') || $route.path.startsWith('/payment-methods') || $route.path.startsWith('/account-groups') }">
-      <i class="pi pi-wallet"></i>
+      <Wallet :size="20" />
       <span>Financeiro</span>
     </router-link>
   </nav>
@@ -21,6 +21,7 @@
 
 <script setup>
 import { useRoute } from 'vue-router';
+import { Home, Calendar, User, Wallet } from 'lucide-vue-next';
 
 const $route = useRoute();
 </script>

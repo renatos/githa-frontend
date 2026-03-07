@@ -1,51 +1,81 @@
 <template>
-  <div class="ai-central-container p-4">
-    <div class="header-section mb-4 flex justify-content-between align-items-center">
-      <div>
-        <h2 class="text-2xl font-bold mb-2">Central de Inteligência Githa AI</h2>
-        <p class="text-color-secondary">Acompanhe todos os insights, alertas e descobertas geradas automaticamente pela inteligência artificial da sua clínica.</p>
+  <div class="ai-central-container p-4 md:p-6 max-w-7xl mx-auto">
+    <!-- Standard Page Header -->
+    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 mb-6" style="border-top: 3px solid #6366f1">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Central de Inteligência Githa AI</h2>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">AI Powered</span>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Acompanhe todos os insights, alertas e descobertas geradas automaticamente.</p>
       </div>
-      <div>
-        <Button icon="pi pi-refresh" outlined rounded class="mr-2" @click="fetchInsights" :loading="loading" />
+      <div class="flex items-center gap-3">
+        <button
+          @click="fetchInsights"
+          :disabled="loading"
+          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span
+            class="material-symbols-outlined text-[18px] mr-2"
+            :class="{ 'animate-spin': loading }"
+          >
+            refresh
+          </span>
+          Atualizar Insights
+        </button>
       </div>
+    </header>
+
+    <!-- Loading State -->
+    <div v-if="loading && insights.length === 0" class="flex justify-center items-center h-48">
+      <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
     </div>
 
-    <div v-if="loading && insights.length === 0" class="flex justify-content-center align-items-center h-20rem">
-      <ProgressSpinner />
-    </div>
-
-    <div v-else-if="error" class="bg-red-50 p-4 border-round text-red-700">
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-900/20 border border-red-500/30 p-4 rounded-xl text-red-400 text-center">
       Erro ao carregar os insights. Tente novamente mais tarde.
     </div>
 
-    <div v-else-if="insights.length === 0" class="surface-100 p-5 text-center border-round">
-      <i class="pi pi-sparkles text-4xl mb-3 text-500"></i>
-      <h3 class="text-500">Nenhum insight disponível no momento</h3>
-      <p class="text-500 text-sm">A inteligência artificial ainda está analisando os dados da sua clínica. Volte mais tarde.</p>
+    <!-- Empty State -->
+    <div v-else-if="insights.length === 0" class="bg-slate-800/30 border border-slate-700/50 p-10 text-center rounded-2xl flex flex-col items-center justify-center">
+      <i class="material-symbols-outlined text-4xl mb-3 text-slate-500">auto_awesome</i>
+      <h3 class="text-slate-300 font-semibold mb-2">Nenhum insight disponível no momento</h3>
+      <p class="text-slate-500 text-sm max-w-md">
+        A inteligência artificial ainda está analisando os dados da sua clínica. Volte mais tarde.
+      </p>
     </div>
 
-    <div v-else class="grid">
-      <!-- In a real implementation we could have filters by type here -->
-      <div v-for="insight in insights" :key="insight.id" class="col-12 md:col-6 lg:col-4">
-        <Card class="insight-card h-full" :class="insight.type.toLowerCase()">
-          <template #title>
-            <div class="flex align-items-center gap-2">
-              <span class="insight-icon">{{ getInsightIcon(insight.type) }}</span>
-              <span class="text-lg">{{ insight.title || 'Insight' }}</span>
+    <!-- Insights Grid (List mode) -->
+    <div v-else class="flex flex-col gap-4">
+      <div
+        v-for="insight in insights"
+        :key="insight.id"
+        class="bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 md:p-6 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5"
+      >
+        <!-- Card Header -->
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-700/50 text-xl shadow-sm">
+              {{ getInsightIcon(insight.type) }}
             </div>
-          </template>
-          <template #subtitle>
-            <span class="text-xs text-color-secondary">{{ formatDate(insight.createdAt) }}</span>
-          </template>
-          <template #content>
-            <p class="m-0 text-color">{{ insight.description }}</p>
-          </template>
-          <template #footer>
-            <div class="flex justify-content-end w-full">
-               <span class="ai-badge">Githa AI</span>
-            </div>
-          </template>
-        </Card>
+            <span class="text-lg font-semibold text-slate-100">{{ insight.title || 'Insight' }}</span>
+          </div>
+          <span class="text-xs text-slate-400 whitespace-nowrap">{{ formatDate(insight.createdAt) }}</span>
+        </div>
+
+        <!-- Card Body -->
+        <div class="mb-5">
+          <p class="m-0 text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+            {{ insight.description }}
+          </p>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="flex justify-start w-full">
+          <span class="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 select-none">
+            Githa AI
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -54,9 +84,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { aiService } from '@/services/aiService';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import ProgressSpinner from 'primevue/progressspinner';
 
 const loading = ref(true);
 const error = ref(false);
@@ -91,7 +118,7 @@ const fetchInsights = async () => {
   
   try {
     const response = await aiService.getDashboardInsights({ page: 0, size: 50, sort: 'createdAt,desc' });
-    insights.value = response.data.content || [];
+    insights.value = response?.data?.content || [];
   } catch (err) {
     console.error('Failed to fetch AI insights:', err);
     error.value = true;
@@ -104,47 +131,3 @@ onMounted(() => {
   fetchInsights();
 });
 </script>
-
-<style scoped>
-.insight-card {
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
-  border: 1px solid var(--color-border, var(--surface-border));
-  background-color: var(--color-bg-card, var(--surface-card)) !important;
-  color: var(--color-text-main, var(--text-color)) !important;
-  border-radius: var(--radius-lg, 8px);
-}
-.insight-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-  border-color: var(--color-primary-soft, var(--primary-color));
-}
-:deep(.p-card-body) {
-  padding: 1.5rem;
-}
-:deep(.p-card-content p) {
-  color: var(--color-text-muted, var(--text-color-secondary));
-  line-height: 1.5;
-}
-.insight-icon {
-  font-size: 1.5rem;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: var(--color-bg-body, var(--surface-hover));
-}
-.ai-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  display: inline-block;
-}
-</style>

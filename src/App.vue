@@ -1,22 +1,16 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast';
+import BaseToast from './components/common/BaseToast.vue';
+import ConfirmModal from './components/common/ConfirmModal.vue';
 import MainLayout from './layouts/MainLayout.vue';
 import AuthLayout from './layouts/AuthLayout.vue';
 
 import { useTheme } from './composables/useTheme';
-import { toastBridge } from './services/toastBridge';
 import LoadingOverlay from './components/LoadingOverlay.vue';
 
 const route = useRoute();
-const toast = useToast();
 const { isDark } = useTheme(); // Initialize theme globally
-
-onMounted(() => {
-    toastBridge.setToast(toast);
-});
 
 const layout = computed(() => {
   return route.meta.layout === 'auth' ? AuthLayout : MainLayout;
@@ -28,7 +22,8 @@ const layout = computed(() => {
     <RouterView />
   </component>
   <LoadingOverlay />
-  <Toast />
+  <BaseToast />
+  <ConfirmModal />
 </template>
 
 <style scoped>

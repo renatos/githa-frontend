@@ -48,6 +48,7 @@ api.interceptors.request.use(config => {
 
 import { errorHandler } from './errorHandler';
 import { toastBridge } from './toastBridge';
+import { confirmBridge } from './confirmBridge';
 
 const getToast = () => toastBridge.getToast();
 
@@ -64,9 +65,15 @@ api.interceptors.response.use(
         if (error.response && (error.response.status === 403 || error.response.status === 401)) {
             // Give user a chance to read the error toast or see the modal before redirecting
             setTimeout(() => {
-                alert('Sessão expirada ou sem permissão. Você será redirecionado para o login.');
-                localStorage.removeItem('token');
-                window.location.href = '/login';
+                confirmBridge.alert({
+                    title: 'Sessão Expirada',
+                    message: 'Sessão expirada ou sem permissão. Você será redirecionado para o login.',
+                    type: 'warning',
+                    onConfirm: () => {
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    }
+                });
             }, 1000);
         }
         return Promise.reject(error);

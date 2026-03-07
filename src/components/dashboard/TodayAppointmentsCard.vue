@@ -1,50 +1,47 @@
 <template>
-  <DashboardCard
-    title="Agenda do Dia"
-    icon="📅"
-    :loading="loading"
-    :error="error"
-    @retry="fetchAppointments"
-  >
-    <div v-if="appointments.length === 0 && !loading && !error" class="empty-state">
-      <p>Nenhum agendamento para hoje.</p>
-    </div>
+  <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
+    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+      <span>📅</span> Agendamentos Hoje
+    </h2>
 
-    <div v-else class="appointments-list">
-      <div 
-        v-for="appointment in appointments" 
-        :key="appointment.id" 
-        class="appointment-item clickable"
-        @click="goToAppointment(appointment)"
-      >
-        <div class="time-block">
-          <span class="time">{{ formatTime(appointment.startTime) }}</span>
-        </div>
-        <div class="appointment-details">
-          <p class="client-name">{{ appointment.clientName?.split(' ')[0] }}</p>
-          <p class="service-name">{{ appointment.serviceName }}</p>
-          <span 
-            class="status-badge" 
-            :class="appointment.status ? appointment.status.toLowerCase() : ''"
-          >
-            {{ statusMap[appointment.status] || appointment.status }}
-          </span>
-        </div>
+    <div v-if="loading" class="flex-1 flex items-center justify-center py-8">
+      <div class="text-center text-gray-400 dark:text-slate-500 text-sm">
+        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i>
+        Carregando...
       </div>
     </div>
 
-    <template #actions>
-      <router-link to="/appointments" class="btn-icon" title="Ver Agenda Completa">
-        <i class="pi pi-arrow-right"></i>
-      </router-link>
-    </template>
-  </DashboardCard>
+    <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
+      <button @click="fetchAppointments" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+        <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
+      </button>
+    </div>
+
+    <div v-else-if="appointments.length === 0" class="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
+      Nenhum agendamento para hoje.
+    </div>
+
+    <div v-else class="space-y-4 flex-1">
+      <div
+        v-for="(appointment, index) in appointments"
+        :key="appointment.id"
+        class="flex items-center justify-between text-sm cursor-pointer hover:opacity-80 transition-opacity"
+        :class="{ 'pb-3 border-b border-gray-100 dark:border-slate-700/50': index < appointments.length - 1 }"
+        @click="goToAppointment(appointment)"
+      >
+        <div class="text-gray-400 dark:text-slate-400 w-16 font-medium">{{ formatTime(appointment.startTime) }}</div>
+        <div class="font-medium text-gray-800 dark:text-white flex-1">{{ appointment.clientName }}</div>
+        <span class="px-2 py-1 rounded text-xs font-medium" :class="getStatusStyle(appointment.status)">
+          {{ statusMap[appointment.status] || appointment.status }}
+        </span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import DashboardCard from './DashboardCard.vue';
 import { appointmentService } from '../../services/appointmentService';
 import { enumService } from '../../services/enumService';
 
@@ -52,13 +49,11 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref(false);
 const appointments = ref([]);
+const statusMap = ref({});
 
 const goToAppointment = (appointment) => {
   if (appointment && appointment.id) {
-    router.push({
-      path: '/appointments',
-      query: { highlight: appointment.id }
-    });
+    router.push({ path: '/appointments', query: { highlight: appointment.id } });
   }
 };
 
@@ -68,42 +63,37 @@ const formatTime = (dateTimeStr) => {
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
 
-const statusMap = ref({});
-
 const loadStatuses = async () => {
   const options = await enumService.getOptions('AppointmentStatus');
-  options.forEach(opt => {
-    statusMap.value[opt.name] = opt.description;
-  });
+  options.forEach(opt => { statusMap.value[opt.name] = opt.description; });
+};
+
+const getStatusStyle = (status) => {
+  if (!status) return 'bg-gray-100 text-gray-600 dark:bg-slate-600/30 dark:text-slate-400';
+  const s = status.toLowerCase();
+  if (['scheduled', 'confirmed'].includes(s)) return 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30';
+  if (['in_progress'].includes(s)) return 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30';
+  if (['completed'].includes(s)) return 'bg-gray-100 text-gray-600 dark:bg-slate-600/30 dark:text-slate-400 border border-gray-200 dark:border-slate-600/30';
+  if (['canceled', 'no_show'].includes(s)) return 'bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30';
+  return 'bg-gray-100 text-gray-600 dark:bg-slate-600/30 dark:text-slate-400';
 };
 
 const fetchAppointments = async () => {
   loading.value = true;
   error.value = false;
-  
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
-    
-    // Convert to UTC ISO string as expected by the backend DynamicFilter (no Z postfix)
     const startTimeIso = today.toISOString().replace('Z', '');
     const endTimeIso = endOfDay.toISOString().replace('Z', '');
-    
     const response = await appointmentService.getAll({
-      page: 0,
-      size: 50, // Get a reasonable number of today's appointments
-      sort: 'startTime,asc',
-      'startTime_gte': startTimeIso,
-      'startTime_lte': endTimeIso
+      page: 0, size: 50, sort: 'startTime,asc',
+      'startTime_gte': startTimeIso, 'startTime_lte': endTimeIso
     });
-    
-    // Ensure we handle pagination format properly
     const content = response?.data?.content || response?.data || [];
     appointments.value = Array.isArray(content) ? content : [];
-    
   } catch (err) {
     console.error('Failed to fetch today appointments:', err);
     error.value = true;
@@ -117,111 +107,3 @@ onMounted(() => {
   loadStatuses();
 });
 </script>
-
-<style scoped>
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.appointments-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  overflow-y: auto;
-  max-height: 350px;
-  padding-right: var(--spacing-sm);
-}
-
-/* Custom scrollbar for inner list */
-.appointments-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.appointments-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.appointments-list::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-
-.appointment-item {
-  display: flex;
-  background-color: var(--color-bg-body);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  border-left: 3px solid var(--color-primary);
-  transition: transform 0.2s, background-color 0.2s;
-}
-
-.appointment-item.clickable {
-  cursor: pointer;
-}
-
-.appointment-item:hover {
-  transform: translateX(4px);
-  background-color: var(--color-primary-soft);
-}
-
-.time-block {
-  min-width: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: var(--color-primary);
-  font-size: 1.1rem;
-  border-right: 1px dashed var(--color-border);
-  margin-right: var(--spacing-sm);
-  padding-right: var(--spacing-sm);
-}
-
-.appointment-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex-grow: 1;
-}
-
-.client-name {
-  margin: 0;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-
-.service-name {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
-
-.status-badge {
-  align-self: flex-start;
-  padding: 0.15rem 0.4rem;
-  font-size: 0.7rem;
-  border-radius: 4px;
-  font-weight: 600;
-}
-
-/* Reuse existing status badge colors if possible, else define basic ones */
-.status-badge.scheduled { background-color: #e0f2fe; color: #0369a1; }
-.status-badge.confirmed { background-color: #dcfce7; color: #166534; }
-.status-badge.in_progress { background-color: #fef9c3; color: #854d0e; }
-.status-badge.completed { background-color: #f3f4f6; color: #374151; }
-.status-badge.canceled, .status-badge.no_show { background-color: #fee2e2; color: #991b1b; }
-
-.btn-icon {
-  text-decoration: none;
-  color: var(--color-text-muted);
-}
-
-.btn-icon:hover {
-  color: var(--color-primary);
-}
-</style>

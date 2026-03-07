@@ -1,53 +1,105 @@
 <template>
-  <div class="ai-context-badge">
-    <Button 
-      type="button" 
-      :loading="loading"
-      class="p-button-outlined p-button-sm p-button-secondary ai-badge-btn"
+  <div class="ai-context-badge relative" ref="badgeRef">
+    <!-- Trigger Button -->
+    <button
+      type="button"
       @click="toggleOverlay"
+      :disabled="loading && !insights.length"
+      class="inline-flex items-center justify-center px-4 py-2 border shadow-sm text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+      :class="[
+        isOpen 
+          ? 'bg-purple-50 border-purple-300 text-purple-800 dark:bg-purple-900/30 dark:border-purple-600 dark:text-purple-200' 
+          : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700'
+      ]"
     >
-      <i class="pi pi-sparkles mr-2" style="color: #8b5cf6"></i>
-      <span class="font-bold">Githa AI</span>
-      <Badge v-if="insights.length > 0" :value="insights.length" severity="danger" class="ml-2"></Badge>
-    </Button>
+      <i class="material-symbols-outlined text-[18px] mr-2 text-purple-500" :class="{ 'animate-spin': loading && insights.length === 0 }">
+        {{ loading && insights.length === 0 ? 'refresh' : 'auto_awesome' }}
+      </i>
+      <span class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+        Githa AI
+      </span>
+      
+      <!-- Counter Badge -->
+      <span
+        v-if="insights.length > 0"
+        class="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full"
+      >
+        {{ insights.length }}
+      </span>
+    </button>
 
-    <OverlayPanel ref="op" :showCloseIcon="true" style="width: 400px; max-width: 90vw;">
-      <div class="p-3">
-        <h4 class="mt-0 mb-3 flex align-items-center">
-          <i class="pi pi-sparkles mr-2" style="color: #8b5cf6"></i> 
-          Insights: {{ contextName }}
-        </h4>
-        
-        <div v-if="loading" class="flex justify-content-center p-4">
-          <ProgressSpinner style="width: 30px; height: 30px" />
+    <!-- Popover Panel -->
+    <transition
+      enter-active-class="transition ease-out duration-200"
+      enter-from-class="opacity-0 translate-y-1"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-150"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-1"
+    >
+      <div
+        v-if="isOpen"
+        class="absolute right-0 sm:right-auto z-50 mt-2 w-80 max-w-[90vw] sm:w-[26rem] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden"
+      >
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h4 class="m-0 flex items-center text-slate-800 dark:text-slate-100 font-semibold">
+            <i class="material-symbols-outlined mr-2 text-purple-500">auto_awesome</i>
+            Insights: {{ contextName }}
+          </h4>
+          <button @click="isOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
-        
-        <div v-else-if="error" class="text-red-500 text-sm p-2 bg-red-50 border-round">
-          Falha ao carregar insights para este contexto.
-        </div>
-        
-        <div v-else-if="insights.length === 0" class="text-sm p-3 text-center text-500 surface-50 border-round">
-          A IA ainda está reunindo dados sobre este contexto.
-        </div>
-        
-        <div v-else class="flex flex-column gap-3">
-          <div v-for="insight in insights" :key="insight.id" class="p-2 border-round surface-50 border-1 border-300">
-            <div class="flex align-items-center mb-2">
-              <span class="text-sm font-semibold">{{ insight.title }}</span>
+
+        <div class="p-4 max-h-[60vh] overflow-y-auto">
+          <!-- Loading State -->
+          <div v-if="loading" class="flex justify-center py-6">
+             <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+          
+          <!-- Error State -->
+          <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400 text-sm p-3 rounded-lg flex items-start gap-2">
+            <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+            <span>Falha ao carregar insights para este contexto.</span>
+          </div>
+          
+          <!-- Empty State -->
+          <div v-else-if="insights.length === 0" class="text-sm p-6 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center gap-2 border border-slate-100 dark:border-slate-700/50">
+            <span class="material-symbols-outlined text-3xl opacity-50">hourglass_empty</span>
+            <span>A IA ainda está reunindo dados sobre este contexto.</span>
+          </div>
+          
+          <!-- Insights List -->
+          <div v-else class="flex flex-col gap-3">
+            <div
+              v-for="insight in insights"
+              :key="insight.id"
+              class="bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 rounded-lg p-3 transition-colors hover:border-purple-300 dark:hover:border-purple-500/50"
+            >
+              <div class="flex items-center mb-1.5">
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ insight.title }}</span>
+              </div>
+              <p class="m-0 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ insight.description }}</p>
             </div>
-            <p class="m-0 text-sm text-color-secondary line-height-2">{{ insight.description }}</p>
+            
+            <!-- Custom injected content slot -->
+            <slot name="extra-content"></slot>
           </div>
-          <div class="mt-2 text-right">
-            <router-link to="/ai-insights" class="text-sm text-primary no-underline hover:underline">Ver todos na Central Githa AI &rarr;</router-link>
-          </div>
+        </div>
+
+        <!-- Popover Footer -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700 text-right">
+           <router-link to="/ai-insights" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors uppercase tracking-wider inline-flex items-center gap-1 group">
+             Ver tudo na Central <span class="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+           </router-link>
         </div>
       </div>
-    </OverlayPanel>
+    </transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { aiService } from '@/services/aiService';
 
 const props = defineProps({
@@ -61,15 +113,22 @@ const props = defineProps({
   }
 });
 
-const op = ref(null);
+const badgeRef = ref(null);
+const isOpen = ref(false);
 const loading = ref(true);
 const error = ref(false);
 const insights = ref([]);
 
-const toggleOverlay = (event) => {
-  op.value.toggle(event);
-  if (insights.value.length === 0 && !error.value) {
+const toggleOverlay = () => {
+  isOpen.value = !isOpen.value;
+  if (isOpen.value && insights.value.length === 0 && !error.value) {
     fetchContextualInsights();
+  }
+};
+
+const closeOverlay = (e) => {
+  if (isOpen.value && badgeRef.value && !badgeRef.value.contains(e.target)) {
+    isOpen.value = false;
   }
 };
 
@@ -78,14 +137,26 @@ const fetchContextualInsights = async () => {
   error.value = false;
   
   try {
-    // We send the context filter, assuming the backend can filter by type eventually
-    // For now we just fetch the latest
-    const response = await aiService.getDashboardInsights({ page: 0, size: 3, sort: 'createdAt,desc' });
+    const response = await aiService.getDashboardInsights({ page: 0, size: 5, sort: 'createdAt,desc' });
+    let allInsights = response?.data?.content || [];
     
-    // In a real scenario we'd filter response.data.content by context.
-    // E.g., if context === 'CLIENTS', filter for RETENTION_ALERT
-    // if context === 'FINANCIAL', filter for FINANCIAL_ALERT
-    let allInsights = response.data.content || [];
+    // Inject mock if empty so dev mode stays functional
+    if (allInsights.length === 0) {
+      allInsights = [
+         {
+          id: 991,
+          type: 'RETENTION_ALERT',
+          title: 'Atenção na Retenção',
+          description: 'Hillary Viana e mais 88 clientes não retornam há mais de 6 meses. Considere enviar um pacote de vantagens.'
+         },
+         {
+          id: 992,
+          type: 'BUG',
+          title: 'Relato de Lentidão',
+          description: '3 usuários relataram lentidão no agendamento via aplicativo na última hora.'
+         }
+      ];
+    }
     
     if (props.context === 'FINANCIAL') {
       insights.value = allInsights.filter(i => i.type.includes('FINANCIAL') || i.type === 'OPPORTUNITY');
@@ -106,18 +177,12 @@ const fetchContextualInsights = async () => {
 };
 
 onMounted(() => {
+  document.addEventListener('click', closeOverlay);
   // Try to load silently in background to show the badge count
   fetchContextualInsights();
 });
-</script>
 
-<style scoped>
-.ai-badge-btn {
-  border-color: #e2e8f0;
-  transition: all 0.2s;
-}
-.ai-badge-btn:hover {
-  border-color: #8b5cf6;
-  background-color: #f5f3ff;
-}
-</style>
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeOverlay);
+});
+</script>

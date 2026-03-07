@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Design System - HSL Variables */
 :root {
     /* Colors - Modern Blue/Violet Palette */
@@ -23,9 +27,9 @@
     --color-text-muted: #64748b;
     --color-text-inverse: #ffffff;
 
-    --color-bg-body: #f8fafc;
+    --color-bg-body: #d4d7ed;
     --color-bg-card: #ffffff;
-    --color-border: #e2e8f0;
+    --color-border: #b8bdd8;
 
     --color-highlight-row: #fef9c3;
 
@@ -74,6 +78,7 @@ body {
     background-color: var(--color-bg-body);
     line-height: 1.6;
 }
+
 
 /* Utilities */
 .container {
@@ -205,4 +210,41 @@ body {
         min-height: 44px;
         min-width: 44px;
     }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700 */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* slate-600 */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #6366f1; /* indigo-500 */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
 }
