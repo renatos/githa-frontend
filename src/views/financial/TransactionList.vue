@@ -82,7 +82,7 @@
               :class="isActionDisabled(item) 
                 ? 'opacity-30 cursor-not-allowed grayscale' 
                 : 'text-slate-400 hover:text-rose-400 hover:border-rose-500/30'"
-              @click="!isActionDisabled(item) && deleteItem(item.id)" 
+              @click="!isActionDisabled(item) && deleteItem(item)" 
               :title="getDeleteTitle(item)">
               <i class="fa-solid fa-trash-can text-[14px]"></i>
             </button>
@@ -119,6 +119,7 @@ import financialService from '../../services/financialService';
 import { authService } from '../../services/authService';
 import { enumService } from '../../services/enumService';
 import { confirmBridge } from '../../services/confirmBridge';
+import { toastBridge } from '../../services/toastBridge';
 
 const props = defineProps({
   month: {

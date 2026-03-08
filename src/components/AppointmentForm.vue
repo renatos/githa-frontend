@@ -108,7 +108,7 @@
             <input v-model="form.start" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                    required type="text" placeholder="HH:MM" maxlength="5"
-                   @input="e => form.start = maskTime(e)"/>
+                   @input="e => { form.start = maskTime(e); calculateEndTime(); }"/>
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Fim</p>
@@ -349,7 +349,8 @@ const loadStatuses = async () => {
 const selectedServiceDuration = ref(0);
 
 const calculateEndTime = () => {
-  if (!form.value.start || !selectedServiceDuration.value) return;
+  if (!form.value.start || !form.value.service || form.value.start.length !== 5) return;
+
   const [hours, minutes] = form.value.start.split(':').map(Number);
   const date = new Date();
   date.setHours(hours, minutes, 0, 0);
@@ -375,9 +376,8 @@ const maskTime = (e) => {
   return v;
 };
 
-watch(() => form.value.start, () => {
-  calculateEndTime();
-});
+// O cálculo via watcher foi removido para evitar sobrescrever a data-fim carregada do banco
+// O calculateEndTime agora roda diretamente no @input do campo Início.
 
 const save = () => {
   const toISOString = (date, time) => {
