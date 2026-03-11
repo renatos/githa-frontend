@@ -36,64 +36,35 @@
             </button>
           </div>
 
-          <!-- Description Section -->
-          <div v-if="launchMode === 'MANUAL'" class="space-y-2">
-            <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1 pb-1">Descrição</label>
-            <div class="relative group mt-1">
-              <i class="fa-solid fa-signature absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 group-focus-within:text-indigo-600 transition-colors"></i>
-              <input 
-                v-model="form.description" 
-                :disabled="!canSave"
-                placeholder="Ex: Aluguel mensal, Compra de suprimentos..."
-                class="form-input flex w-full h-12 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 placeholder:text-slate-400 pl-11 pr-4 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors disabled:opacity-50 text-base font-normal"
-              />
-            </div>
-          </div>
+          <!-- Manual Mode Section -->
+          <ManualTransactionSection
+            v-if="launchMode === 'MANUAL'"
+            :form="form"
+            :can-save="canSave"
+            :is-appointment-transaction="isAppointmentTransaction"
+            :account-group-service-adapter="accountGroupServiceAdapter"
+            @account-group-select="onAccountGroupSelect"
+          />
 
-          <!-- SALE MODE: Client Selection -->
-          <div v-if="launchMode === 'SALE'" class="space-y-6">
-            <div class="space-y-2">
-              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1 pb-1">Cliente</label>
-              <div class="h-12 w-full mt-1">
-                <BaseLookup
-                  v-model="form.clientId"
-                  :disabled="!canSave"
-                  :initial-description="form.clientName"
-                  :search-service="clientService"
-                  placeholder="Pesquisar cliente..."
-                  @select="onClientSelect"
-                />
-              </div>
-            </div>
+          <!-- Sale Mode Section -->
+          <SaleTransactionSection
+            v-if="launchMode === 'SALE'"
+            ref="saleTransactionRef"
+            :form="form"
+            :can-save="canSave"
+            :sale-items="saleItems"
+            :sale-item-types="saleItemTypes"
+            :auto-filled-message="autoFilledMessage"
+            :client-service="clientService"
+            :product-service-adapter="productServiceAdapter"
+            :service-service="serviceService"
+            :professional-service="professionalService"
+            @client-select="onClientSelect"
+            @add-item="addSaleItem"
+            @remove-item="removeSaleItem"
+          />
 
-            <!-- SALE MODE: Items Table -->
-            <SaleItemsTable 
-              ref="saleItemsTableRef"
-              :items="saleItems"
-              :can-save="canSave"
-              :sale-item-types="saleItemTypes"
-              :product-service-adapter="productServiceAdapter"
-              :service-service="serviceService"
-              :professional-service="professionalService"
-              :auto-filled-message="autoFilledMessage"
-              @add-item="addSaleItem"
-              @remove-item="removeSaleItem"
-            />
-          </div>
 
-          <div v-if="!isAppointmentTransaction && launchMode === 'MANUAL'" class="space-y-2">
-            <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Grupo de Contas</label>
-            <div class="h-12 w-full mt-1">
-              <BaseLookup
-                v-model="form.accountGroupId"
-                :disabled="!canSave"
-                :initial-description="form.accountGroupName"
-                :search-service="accountGroupServiceAdapter"
-                placeholder="Ex: Custos de Operação, Investimentos..."
-                @select="onAccountGroupSelect"
-              />
-            </div>
-          </div>
 
           <div v-if="form.nature === 'INCOME'" class="space-y-2">
             <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Forma de Pagamento</label>
@@ -254,7 +225,8 @@ import {professionalService} from '../../services/professionalService';
 import {saleService} from '../../services/saleService';
 
 // Sub-components
-import SaleItemsTable from './SaleItemsTable.vue';
+import ManualTransactionSection from './ManualTransactionSection.vue';
+import SaleTransactionSection from './SaleTransactionSection.vue';
 import TransactionDiscountBadge from './TransactionDiscountBadge.vue';
 
 const props = defineProps({
@@ -268,7 +240,7 @@ const originalStatus = ref('');
 const transactionStatuses = ref([]);
 const saleItemTypes = ref([]);
 const accountNatures = ref([]);
-const saleItemsTableRef = ref(null);
+const saleTransactionRef = ref(null);
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
@@ -436,7 +408,7 @@ const checkForUnbilledAppointments = async () => {
 
             if (unbilled.length > 0) {
                 const apt = unbilled[0];
-                saleItemsTableRef.value?.setItemData({
+                saleTransactionRef.value?.saleItemsTableRef?.setItemData({
                   type: 'SERVICE',
                   serviceId: apt.serviceId,
                   serviceName: apt.serviceName,
