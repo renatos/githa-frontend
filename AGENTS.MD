@@ -246,3 +246,11 @@ A interface é em **português brasileiro (pt-BR)**. Todos os labels, mensagens 
 - "Tem certeza que deseja excluir?"
 - "Erro ao salvar cliente"
 - "Novo Agendamento"
+
+## Uso Obrigatório do MCP th0th (Obrigatório)
+
+O uso do servidor MCP `th0th-brain` é **obrigatório** para todas as interações de longo prazo e pesquisas no código:
+- **Indexação Semântica**: Utilize `th0th_search` ou `th0th_optimized_context` para entender o contexto do código antes de propor mudanças complexas.
+- **Reindexação Periódica**: Execute `th0th_index` (com `forceReindex: true` se necessário) de tempos em tempos para garantir que a base de conhecimento reflita as mudanças mais recentes do código.
+- **Memória Hierárquica**: Utilize `th0th_remember` para registrar decisões arquiteturais importantes tomadas durante a conversa e `th0th_recall` para recuperar contexto de conversas passadas.
+- **Eficiência de Tokens**: Prefira ferramentas do `th0th` para busca em vez de ler arquivos inteiros repetidamente.
