@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import pluginVue from 'eslint-plugin-vue';
 import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
 
 export default [
     js.configs.recommended,
@@ -8,6 +9,12 @@ export default [
     prettierConfig,
     {
         files: ['src/**/*.{js,vue}'],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
+        },
         rules: {
             'no-console': ['warn', { allow: ['warn', 'error'] }],
             'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

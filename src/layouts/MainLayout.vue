@@ -35,6 +35,10 @@
           <i class="fa-regular fa-calendar w-6 text-lg"></i>
           <span class="ml-2">Agenda</span>
         </router-link>
+        <router-link to="/ai-insights" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-globe w-6 text-lg"></i>
+          <span class="ml-2">Central Githa AI</span>
+        </router-link>
         <router-link to="/clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Clientes</span>
@@ -43,9 +47,9 @@
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>
         </router-link>
-        <router-link to="/account-groups" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-users-line w-6 text-lg"></i>
-          <span class="ml-2">Grupos de Contas</span>
+        <router-link to="/professionals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-hand-holding-dollar w-6 text-lg"></i>
+          <span class="ml-2">Comissões</span>
         </router-link>
         <router-link to="/" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-table-columns w-6 text-lg"></i>
@@ -55,10 +59,6 @@
           <i class="fa-regular fa-comment-dots w-6 text-lg"></i>
           <span class="ml-2">Feedbacks e Suporte</span>
         </router-link>
-        <router-link to="/ai-insights" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-globe w-6 text-lg"></i>
-          <span class="ml-2">Central Githa AI</span>
-        </router-link>
         <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>
@@ -66,6 +66,14 @@
         <router-link to="/payment-methods" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-credit-card w-6 text-lg"></i>
           <span class="ml-2">Formas de Pagamento</span>
+        </router-link>
+        <router-link to="/account-groups" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-users-line w-6 text-lg"></i>
+          <span class="ml-2">Grupos de Contas</span>
+        </router-link>
+        <router-link to="/profile" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-id-badge w-6 text-lg"></i>
+          <span class="ml-2">Meu Perfil</span>
         </router-link>
         <router-link v-if="isAdmin" to="/admin/parameters" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-gear w-6 text-lg"></i>
@@ -86,10 +94,6 @@
         <router-link to="/users" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-user-gear w-6 text-lg"></i>
           <span class="ml-2">Usuários</span>
-        </router-link>
-        <router-link to="/profile" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-id-badge w-6 text-lg"></i>
-          <span class="ml-2">Meu Perfil</span>
         </router-link>
       </nav>
 

@@ -116,6 +116,12 @@ const router = createRouter({
             component: () => import('../views/AiCentralView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/professionals/:id/commissions',
+            name: 'professional-commissions',
+            component: () => import('../views/professional/ProfessionalCommissionView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })

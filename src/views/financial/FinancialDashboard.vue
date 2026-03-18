@@ -28,15 +28,11 @@
 
         <!-- Month/Day Selectors -->
         <div class="flex items-center gap-3">
-          <div v-show="viewMode === 'MONTH'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
-            <button @click="previousMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            <span class="px-4 font-semibold text-sm min-w-[140px] text-center">{{ currentMonthLabel }}</span>
-            <button @click="nextMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-          </div>
+          <MonthYearSelector 
+            v-show="viewMode === 'MONTH'"
+            v-model:month="selectedMonth"
+            v-model:year="selectedYear"
+          />
 
           <div v-show="viewMode === 'DAY'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
             <button @click="previousDay" class="p-2 text-slate-400 hover:text-white transition-colors">
@@ -157,6 +153,7 @@ import financialService from '../../services/financialService';
 import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
 import AppointmentForm from '../../components/AppointmentForm.vue';
+import MonthYearSelector from '../../components/common/MonthYearSelector.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
 
@@ -233,35 +230,6 @@ const loadDailySummary = async () => {
     dailySummary.value = response.data;
   } catch (error) {
     console.error('Error loading daily summary:', error);
-  }
-};
-
-const previousMonth = () => {
-  if (selectedMonth.value === 1) {
-    selectedMonth.value = 12;
-    selectedYear.value--;
-  } else {
-    selectedMonth.value--;
-  }
-  resetDayToDefault();
-};
-
-const nextMonth = () => {
-  if (selectedMonth.value === 12) {
-    selectedMonth.value = 1;
-    selectedYear.value++;
-  } else {
-    selectedMonth.value++;
-  }
-  resetDayToDefault();
-};
-
-const resetDayToDefault = () => {
-  const today = new Date();
-  if (selectedMonth.value === today.getMonth() + 1 && selectedYear.value === today.getFullYear()) {
-    selectedDay.value = today.getDate();
-  } else {
-    selectedDay.value = 1;
   }
 };
 

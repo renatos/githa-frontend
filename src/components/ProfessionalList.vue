@@ -41,6 +41,13 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
+          <router-link 
+            :to="'/professionals/' + item.id + '/commissions'" 
+            class="btn-icon" 
+            title="Ver Extrato de Comissões"
+          >
+            <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+          </router-link>
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>
