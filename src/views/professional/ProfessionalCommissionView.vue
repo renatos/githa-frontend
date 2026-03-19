@@ -40,6 +40,18 @@
           </div>
           <div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{{ card.label }}</p>
+            
+            <!-- Calculation Detail for Net Sales Card -->
+            <p v-if="card.label === 'Vendas Líquidas'" class="text-[11px] text-slate-400 dark:text-slate-500 mb-1 font-medium leading-tight italic">
+              Bruto: {{ formatCurrency(balanceData.totalSalesAmount) }}
+            </p>
+
+            <!-- Calculation Detail for Net Balance Card -->
+            <p v-if="card.label === 'Saldo Líquido'" class="text-[11px] text-slate-400 dark:text-slate-500 mb-1 font-medium leading-tight">
+              ({{ formatCurrency(balanceData.commissionAmount) }} - {{ formatCurrency(balanceData.totalWithdrawalsAmount) }})
+              {{ balanceData.previousMonthBalance >= 0 ? '+' : '-' }} {{ formatCurrency(Math.abs(balanceData.previousMonthBalance)) }} =
+            </p>
+
             <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(card.value) }}</p>
           </div>
         </div>
@@ -65,8 +77,8 @@
             <template #cell-paymentDate="{ value }">
               <span class="text-slate-500">{{ formatDate(value) }}</span>
             </template>
-            <template #cell-itemGrossAmount="{ value }">
-              <span class="text-xs text-slate-400">{{ formatCurrency(value) }} (Bruto)</span>
+            <template #cell-itemNetAmount="{ value }">
+              <span class="text-slate-600 dark:text-slate-300">{{ formatCurrency(value) }}</span>
             </template>
             <template #empty>
               <div class="py-12 flex flex-col items-center text-slate-400">
@@ -89,8 +101,26 @@
             :columns="withdrawalColumns" 
             :items="balanceData.withdrawalItems"
           >
-            <template #cell-withdrawalAmount="{ value }">
-              <span class="font-bold text-rose-600 dark:text-rose-400">- {{ formatCurrency(value) }}</span>
+            <template #cell-withdrawalAmount="{ item, value }">
+              <div class="relative group cursor-help inline-flex items-center justify-end w-full">
+                <span class="font-bold text-rose-600 dark:text-rose-400">
+                  - {{ formatCurrency(value) }}
+                </span>
+                <!-- Custom Tooltip for Desktop Notes -->
+                <div v-if="item.notes" class="absolute bottom-full right-0 mb-1.5 hidden group-hover:block z-50 pointer-events-none">
+                  <div class="bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 text-[11px] px-2.5 py-1.5 rounded-lg shadow-2xl border border-slate-700 dark:border-slate-600 whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                    <div class="flex items-center gap-1.5 font-medium">
+                      <span class="material-symbols-outlined text-xs text-rose-400">info</span>
+                      {{ item.notes }}
+                    </div>
+                  </div>
+                  <!-- Tooltip Arrow -->
+                  <div class="w-2 h-2 border-l border-t border-slate-700 dark:border-slate-600 bg-slate-900 dark:bg-slate-700 absolute -bottom-1 right-4 rotate-[225deg]"></div>
+                </div>
+              </div>
+            </template>
+            <template #cell-notes="{ value }">
+              <span class="text-xs italic text-slate-500">{{ value }}</span>
             </template>
             <template #cell-paymentDate="{ value }">
               <span class="text-slate-500">{{ formatDate(value) }}</span>
@@ -127,7 +157,9 @@ const balanceData = ref({
   professionalName: '',
   commissionAmount: 0,
   totalSalesAmount: 0,
+  totalNetSalesAmount: 0,
   totalWithdrawalsAmount: 0,
+  previousMonthBalance: 0,
   netAmountToReceive: 0,
   commissionItems: [],
   withdrawalItems: []
@@ -136,8 +168,8 @@ const balanceData = ref({
 // Summary Data for Cards
 const summaryCards = computed(() => [
   { 
-    label: 'Bruto em Vendas', 
-    value: balanceData.value.totalSalesAmount, 
+    label: 'Vendas Líquidas', 
+    value: balanceData.value.totalNetSalesAmount, 
     icon: 'moving', 
     iconBg: 'bg-emerald-500' 
   },
@@ -166,13 +198,14 @@ const commissionColumns = [
   { key: 'paymentDate', label: 'Data', width: '120px' },
   { key: 'clientName', label: 'Cliente' },
   { key: 'itemDescription', label: 'Serviço' },
-  { key: 'itemGrossAmount', label: 'Valor', align: 'right', width: '140px' },
+  { key: 'itemNetAmount', label: 'Valor', align: 'right', width: '140px' },
   { key: 'calculatedCommissionAmount', label: 'Comissão', align: 'right', width: '120px' },
 ];
 
 const withdrawalColumns = [
   { key: 'paymentDate', label: 'Data', width: '120px' },
   { key: 'withdrawalAmount', label: 'Valor', align: 'right' },
+  { key: 'notes', label: 'Obs.', class: 'md:hidden' }
 ];
 
 const fetchBalance = async () => {
