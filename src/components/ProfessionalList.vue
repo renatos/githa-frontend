@@ -3,9 +3,9 @@
     <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Profissionais</h2>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">{{ title }}</h2>
         </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os profissionais e suas comissões.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">{{ subtitle }}</p>
       </div>
       <div class="flex items-center gap-3">
         <button 
@@ -41,6 +41,13 @@
 
       <template #actions="{ item }">
         <div class="actions-group">
+          <router-link 
+            :to="'/professionals/' + item.id + '/commissions'" 
+            class="btn-icon" 
+            title="Ver Extrato de Comissões"
+          >
+            <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+          </router-link>
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>
@@ -49,9 +56,18 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, defineExpose } from 'vue';
+import { ref, defineEmits, defineExpose, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import GenericTable from './common/GenericTable.vue';
 import { professionalService } from '../services/professionalService';
+
+const route = useRoute();
+const isCommissionsView = computed(() => route.query.view === 'commissions');
+
+const title = computed(() => isCommissionsView.value ? 'Comissões' : 'Profissionais');
+const subtitle = computed(() => isCommissionsView.value 
+  ? 'Selecione um profissional para gerenciar suas comissões.' 
+  : 'Gerencie os profissionais e suas comissões.');
 
 defineEmits(['new', 'edit', 'delete']);
 

@@ -6,4 +6,5 @@ export const professionalService = {
     create: (professional) => api.post('/professionals', professional),
     update: (id, professional) => api.put(`/professionals/${id}`, professional),
     delete: (id) => api.delete(`/professionals/${id}`),
+    getCommissionBalance: (id, month, year) => api.get(`/professionals/${id}/commission-balance`, { params: { month, year } }),
 };

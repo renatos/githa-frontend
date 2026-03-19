@@ -35,6 +35,10 @@
           <i class="fa-regular fa-calendar w-6 text-lg"></i>
           <span class="ml-2">Agenda</span>
         </router-link>
+        <router-link to="/ai-insights" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-globe w-6 text-lg"></i>
+          <span class="ml-2">Central Githa AI</span>
+        </router-link>
         <router-link to="/clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Clientes</span>
@@ -43,9 +47,9 @@
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>
         </router-link>
-        <router-link to="/account-groups" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-users-line w-6 text-lg"></i>
-          <span class="ml-2">Grupos de Contas</span>
+        <router-link to="/professionals?view=commissions" class="nav-link" :class="{ 'nav-link-active': isCommissionsActive }" active-class="" @click="closeSidebar">
+          <i class="fa-solid fa-hand-holding-dollar w-6 text-lg"></i>
+          <span class="ml-2">Comissões</span>
         </router-link>
         <router-link to="/" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-table-columns w-6 text-lg"></i>
@@ -55,10 +59,6 @@
           <i class="fa-regular fa-comment-dots w-6 text-lg"></i>
           <span class="ml-2">Feedbacks e Suporte</span>
         </router-link>
-        <router-link to="/ai-insights" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-globe w-6 text-lg"></i>
-          <span class="ml-2">Central Githa AI</span>
-        </router-link>
         <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>
@@ -66,6 +66,14 @@
         <router-link to="/payment-methods" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-credit-card w-6 text-lg"></i>
           <span class="ml-2">Formas de Pagamento</span>
+        </router-link>
+        <router-link to="/account-groups" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-users-line w-6 text-lg"></i>
+          <span class="ml-2">Grupos de Contas</span>
+        </router-link>
+        <router-link to="/profile" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-id-badge w-6 text-lg"></i>
+          <span class="ml-2">Meu Perfil</span>
         </router-link>
         <router-link v-if="isAdmin" to="/admin/parameters" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-gear w-6 text-lg"></i>
@@ -79,17 +87,13 @@
           <i class="fa-solid fa-bag-shopping w-6 text-lg"></i>
           <span class="ml-2">Produtos</span>
         </router-link>
-        <router-link to="/professionals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+        <router-link to="/professionals" class="nav-link" :class="{ 'nav-link-active': isProfessionalsActive }" active-class="" @click="closeSidebar">
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Profissionais</span>
         </router-link>
         <router-link to="/users" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-user-gear w-6 text-lg"></i>
           <span class="ml-2">Usuários</span>
-        </router-link>
-        <router-link to="/profile" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-id-badge w-6 text-lg"></i>
-          <span class="ml-2">Meu Perfil</span>
         </router-link>
       </nav>
 
@@ -117,7 +121,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 h-full overflow-y-auto no-scrollbar md:ml-0 mt-[60px] md:mt-0 pb-[70px] md:pb-0" style="background-color: var(--color-bg-body)">
+    <main class="flex-1 h-full overflow-y-auto no-scrollbar md:ml-0 mt-[60px] md:mt-0 pb-[120px] md:pb-0" style="background-color: var(--color-bg-body)">
       <div class="max-w-[1200px] mx-auto">
         <slot></slot>
       </div>
@@ -132,18 +136,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { isDark, toggleTheme } = useTheme();
 const userEmail = ref('');
 const isAdmin = ref(false);
 const isSidebarOpen = ref(false);
+
+const isProfessionalsActive = computed(() => {
+  return route.path === '/professionals' && !route.query.view;
+});
+
+const isCommissionsActive = computed(() => {
+  return (route.path === '/professionals' && route.query.view === 'commissions') || 
+         route.path.match(/^\/professionals\/.*\/commissions/);
+});
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;

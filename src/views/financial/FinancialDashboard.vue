@@ -8,46 +8,14 @@
       </div>
 
       <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <!-- View Mode Toggle -->
-        <div class="flex bg-slate-900/50 p-1 rounded-xl border border-slate-800 backdrop-blur-sm">
-          <button 
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            :class="viewMode === 'MONTH' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-slate-200'"
-            @click="viewMode = 'MONTH'"
-          >
-            Mensal
-          </button>
-          <button 
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            :class="viewMode === 'DAY' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-slate-200'"
-            @click="viewMode = 'DAY'"
-          >
-            Diário
-          </button>
-        </div>
-
-        <!-- Month/Day Selectors -->
-        <div class="flex items-center gap-3">
-          <div v-show="viewMode === 'MONTH'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
-            <button @click="previousMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            <span class="px-4 font-semibold text-sm min-w-[140px] text-center">{{ currentMonthLabel }}</span>
-            <button @click="nextMonth" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-          </div>
-
-          <div v-show="viewMode === 'DAY'" class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm">
-            <button @click="previousDay" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            <span class="px-4 font-semibold text-sm min-w-[80px] text-center">{{ currentDayLabel }}</span>
-            <button @click="nextDay" class="p-2 text-slate-400 hover:text-white transition-colors">
-              <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-          </div>
-        </div>
+        <!-- Period Navigator (Unified) -->
+        <PeriodSelector 
+          v-model:view-mode="viewMode"
+          v-model:month="selectedMonth"
+          v-model:year="selectedYear"
+          v-model:day="selectedDay"
+          @change="loadAllData"
+        />
       </div>
     </header>
     
@@ -157,6 +125,7 @@ import financialService from '../../services/financialService';
 import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
 import AppointmentForm from '../../components/AppointmentForm.vue';
+import PeriodSelector from '../../components/common/PeriodSelector.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
 
@@ -184,20 +153,10 @@ const transactionListRef = ref(null);
 const showAppointmentForm = ref(false);
 const editingAppointment = ref({});
 
-const daysInMonth = computed(() => {
-  return new Date(selectedYear.value, selectedMonth.value, 0).getDate();
-});
-
 const currentMonthLabel = computed(() => {
   const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
   return `${months[selectedMonth.value - 1]} ${selectedYear.value}`;
-});
-
-const currentDayLabel = computed(() => {
-  const dayStr = String(selectedDay.value).padStart(2, '0');
-  const monthStr = String(selectedMonth.value).padStart(2, '0');
-  return `${dayStr}/${monthStr}`;
 });
 
 onMounted(async () => {
@@ -233,66 +192,6 @@ const loadDailySummary = async () => {
     dailySummary.value = response.data;
   } catch (error) {
     console.error('Error loading daily summary:', error);
-  }
-};
-
-const previousMonth = () => {
-  if (selectedMonth.value === 1) {
-    selectedMonth.value = 12;
-    selectedYear.value--;
-  } else {
-    selectedMonth.value--;
-  }
-  resetDayToDefault();
-};
-
-const nextMonth = () => {
-  if (selectedMonth.value === 12) {
-    selectedMonth.value = 1;
-    selectedYear.value++;
-  } else {
-    selectedMonth.value++;
-  }
-  resetDayToDefault();
-};
-
-const resetDayToDefault = () => {
-  const today = new Date();
-  if (selectedMonth.value === today.getMonth() + 1 && selectedYear.value === today.getFullYear()) {
-    selectedDay.value = today.getDate();
-  } else {
-    selectedDay.value = 1;
-  }
-};
-
-const previousDay = () => {
-  if (selectedDay.value > 1) {
-    selectedDay.value--;
-  } else {
-    // Go to previous month
-    if (selectedMonth.value === 1) {
-      selectedMonth.value = 12;
-      selectedYear.value--;
-    } else {
-      selectedMonth.value--;
-    }
-    // Set to last day of new month
-    selectedDay.value = new Date(selectedYear.value, selectedMonth.value, 0).getDate();
-  }
-};
-
-const nextDay = () => {
-  if (selectedDay.value < daysInMonth.value) {
-    selectedDay.value++;
-  } else {
-    // Go to next month
-    if (selectedMonth.value === 12) {
-        selectedMonth.value = 1;
-        selectedYear.value++;
-    } else {
-        selectedMonth.value++;
-    }
-    selectedDay.value = 1;
   }
 };
 
