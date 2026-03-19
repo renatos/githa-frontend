@@ -13,6 +13,7 @@
           :disabled="!canSave"
           :initial-description="form.clientName"
           :search-service="clientService"
+          mode="lookup"
           placeholder="Pesquisar cliente..."
           @select="$emit('client-select', $event)"
         />

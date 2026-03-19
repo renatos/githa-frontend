@@ -114,6 +114,11 @@ const props = defineProps({
   hideId: {
     type: Boolean,
     default: false
+  },
+  mode: {
+    type: String,
+    default: 'auto',
+    validator: (val) => ['auto', 'lookup', 'combobox'].includes(val)
   }
 });
 
@@ -170,31 +175,39 @@ onMounted(async () => {
     searchQuery.value = props.initialDescription;
   }
 
-  try {
-    // Initial check to decide mode
-    const response = await props.searchService.getAll({page: 0, size: 10});
-    
-    let totalElements = 0;
-    let content = [];
-    
-    if (Array.isArray(response.data)) {
-        // Handle simple list response
-        totalElements = response.data.length;
-        content = response.data;
-    } else if (response.data && response.data.content) {
-        // Handle Page response
-        totalElements = response.data.totalElements;
-        content = response.data.content;
-    }
+  if (props.mode === 'lookup') {
+    isComboboxMode.value = false;
+  } else if (props.mode === 'combobox') {
+    isComboboxMode.value = true;
+    try {
+      const response = await props.searchService.getAll({page: 0, size: 10});
+      allItems.value = Array.isArray(response.data) ? response.data : (response.data?.content || []);
+    } catch (e) { console.error(e); }
+  } else {
+    // Original auto-detection logic
+    try {
+      const response = await props.searchService.getAll({page: 0, size: 10});
+      
+      let totalElements = 0;
+      let content = [];
+      
+      if (Array.isArray(response.data)) {
+          totalElements = response.data.length;
+          content = response.data;
+      } else if (response.data && response.data.content) {
+          totalElements = response.data.totalElements;
+          content = response.data.content;
+      }
 
-    if (totalElements <= 10) {
-      isComboboxMode.value = true;
-      allItems.value = content;
-    } else {
-      isComboboxMode.value = false;
+      if (totalElements <= 10) {
+        isComboboxMode.value = true;
+        allItems.value = content;
+      } else {
+        isComboboxMode.value = false;
+      }
+    } catch (error) {
+      console.error('Error initializing Lookup:', error);
     }
-  } catch (error) {
-    console.error('Error initializing Lookup:', error);
   }
 
   window.addEventListener('scroll', handleScroll, true);

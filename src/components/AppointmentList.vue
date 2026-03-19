@@ -89,39 +89,39 @@
         </div>
 
         <div v-for="item in group.items" :key="item.id"
-             class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
+             class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 md:p-4 flex items-center gap-2 md:gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
              @click="$emit('edit', item)">
           
           <!-- Status indicator bar (discrete) -->
           <div class="absolute left-0 top-0 bottom-0 w-1" :class="statusAccentColor(item.status)"></div>
 
           <!-- Time Block -->
-          <div class="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-lg w-20 py-2 px-1 border border-slate-100 dark:border-slate-600">
-            <p class="text-base font-bold text-slate-900 dark:text-white">{{ formatTime(item.startTime) }}</p>
-            <p class="text-[10px] text-slate-400 uppercase font-medium tracking-tighter">{{ formatTime(item.endTime) }}</p>
+          <div class="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-lg w-14 md:w-20 py-1.5 md:py-2 px-1 border border-slate-100 dark:border-slate-600">
+            <p class="text-sm md:text-base font-bold text-slate-900 dark:text-white">{{ formatTime(item.startTime) }}</p>
+            <p class="text-[9px] md:text-[10px] text-slate-400 uppercase font-medium tracking-tighter">{{ formatTime(item.endTime) }}</p>
           </div>
 
           <!-- Info -->
-          <div class="flex-1 min-w-0 px-1">
-            <p class="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
-            <div class="flex items-center gap-2 mt-0.5 min-w-0">
-               <span class="text-[11px] text-indigo-500/80 dark:text-indigo-400/80 font-bold uppercase tracking-tight truncate">{{ item.serviceName }}</span>
-               <span class="text-[10px] text-slate-400">•</span>
-               <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ item.professionalName }}</span>
+          <div class="flex-1 min-w-0 pr-12 md:pr-1 flex flex-col gap-0.5">
+            <p class="font-bold text-slate-900 dark:text-white text-sm md:text-base leading-tight md:truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
+            <div class="flex flex-col md:flex-row md:items-center gap-x-2 min-w-0">
+               <span class="text-[11px] text-indigo-500/80 dark:text-indigo-400/80 font-bold uppercase tracking-tight md:truncate">{{ item.serviceName }}</span>
+               <span class="hidden md:inline text-[10px] text-slate-400">•</span>
+               <span class="text-[11px] text-slate-500 dark:text-slate-400 md:truncate">{{ item.professionalName }}</span>
             </div>
           </div>
 
           <!-- Status Badge -->
-          <div class="flex-shrink-0">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border"
+          <div class="absolute md:relative top-2 right-2 md:top-0 md:right-0 md:flex-shrink-0">
+            <span class="inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider shadow-sm border"
                   :class="statusBadgeClass(item.status)">
-              <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
+              <span class="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
               {{ statusMap[item.status] || item.status }}
             </span>
           </div>
 
           <!-- Actions -->
-          <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+          <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute md:relative bottom-2 md:bottom-0 right-2 md:right-0" @click.stop>
             <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                     title="Confirmar" @click="$emit('confirm', item)">

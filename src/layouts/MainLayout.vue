@@ -47,7 +47,7 @@
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>
         </router-link>
-        <router-link to="/professionals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+        <router-link to="/professionals?view=commissions" class="nav-link" :class="{ 'nav-link-active': isCommissionsActive }" active-class="" @click="closeSidebar">
           <i class="fa-solid fa-hand-holding-dollar w-6 text-lg"></i>
           <span class="ml-2">Comissões</span>
         </router-link>
@@ -87,7 +87,7 @@
           <i class="fa-solid fa-bag-shopping w-6 text-lg"></i>
           <span class="ml-2">Produtos</span>
         </router-link>
-        <router-link to="/professionals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+        <router-link to="/professionals" class="nav-link" :class="{ 'nav-link-active': isProfessionalsActive }" active-class="" @click="closeSidebar">
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Profissionais</span>
         </router-link>
@@ -136,18 +136,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { isDark, toggleTheme } = useTheme();
 const userEmail = ref('');
 const isAdmin = ref(false);
 const isSidebarOpen = ref(false);
+
+const isProfessionalsActive = computed(() => {
+  return route.path === '/professionals' && !route.query.view;
+});
+
+const isCommissionsActive = computed(() => {
+  return (route.path === '/professionals' && route.query.view === 'commissions') || 
+         route.path.match(/^\/professionals\/.*\/commissions/);
+});
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
