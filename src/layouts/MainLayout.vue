@@ -121,7 +121,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 h-full overflow-y-auto no-scrollbar md:ml-0 mt-[60px] md:mt-0 pb-[70px] md:pb-0" style="background-color: var(--color-bg-body)">
+    <main class="flex-1 h-full overflow-y-auto no-scrollbar md:ml-0 mt-[60px] md:mt-0 pb-[120px] md:pb-0" style="background-color: var(--color-bg-body)">
       <div class="max-w-[1200px] mx-auto">
         <slot></slot>
       </div>
