@@ -46,8 +46,8 @@
 
       <div class="flex flex-col gap-2">
         <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Descrição</p>
-        <div v-if="isMarkdown && feedback.id" class="markdown-content bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto text-sm" v-html="renderedDescription"></div>
-        <textarea v-else v-model="form.description" :disabled="!!feedback.id" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors disabled:opacity-60 disabled:bg-slate-100 dark:disabled:bg-slate-800" required rows="4"></textarea>
+        <div v-if="isMarkdown && feedback.id" class="markdown-content bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-4 max-h-[600px] overflow-y-auto text-sm" v-html="renderedDescription"></div>
+        <textarea v-else v-model="form.description" :disabled="!!feedback.id" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors disabled:opacity-60 disabled:bg-slate-100 dark:disabled:bg-slate-800" required rows="12"></textarea>
       </div>
 
       <!-- Chat Section -->

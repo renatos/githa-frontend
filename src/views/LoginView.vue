@@ -8,7 +8,16 @@
         @dismiss="error = ''"
     />
 
-    <GoogleLoginButton/>
+    <div v-if="isMockLoginEnabled" class="mock-login-container">
+      <button 
+        class="w-100 mb-4" 
+        @click="handleMockLogin" 
+        :disabled="loading"
+        style="padding: 1rem; background-color: var(--color-primary); color: white; border-radius: var(--radius-sm); border: none; font-weight: bold; cursor: pointer; text-align: center;">
+        {{ loading ? 'Entrando...' : 'Entrar Offline' }}
+      </button>
+    </div>
+    <GoogleLoginButton v-else />
 
     <!-- Email/Password login removed as per requirements -->
   </div>
@@ -28,6 +37,27 @@ const email = ref('');
 const password = ref('');
 const error = ref('');
 const loading = ref(false);
+
+const isMockLoginEnabled = import.meta.env.VITE_MOCK_LOGIN_ENABLED === 'true';
+
+const handleMockLogin = async () => {
+  loading.value = true;
+  error.value = '';
+
+  try {
+    await authService.mockLogin();
+    router.push('/');
+  } catch (err) {
+    if (err.response && err.response.status === 403) {
+      error.value = 'Mock login está desativado no servidor.';
+    } else {
+      error.value = 'Erro ao realizar login offline. Tente novamente mais tarde.';
+      console.error(err);
+    }
+  } finally {
+    loading.value = false;
+  }
+};
 
 const handleLogin = async () => {
   loading.value = true;

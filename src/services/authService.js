@@ -17,6 +17,14 @@ export const authService = {
         return response.data;
     },
 
+    mockLogin: async () => {
+        const response = await api.post('/auth/mock-login');
+        if (response.data.token) {
+            authService.setSession(response.data.token, response.data.email);
+        }
+        return response.data;
+    },
+
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
