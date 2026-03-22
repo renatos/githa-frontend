@@ -13,9 +13,10 @@
         <AiInsightsCard />
       </div>
 
-      <!-- COLUMN 2: Appointments + Top Clients -->
+      <!-- COLUMN 2: Appointments + Rebooking + Top Clients -->
       <div class="space-y-6">
         <TodayAppointmentsCard />
+        <RebookingCard />
         <TopStrategicClientsCard />
       </div>
 
@@ -31,6 +32,7 @@
 <script setup>
 import FinancialSummaryCard from '../components/dashboard/FinancialSummaryCard.vue';
 import TodayAppointmentsCard from '../components/dashboard/TodayAppointmentsCard.vue';
+import RebookingCard from '../components/dashboard/RebookingCard.vue';
 import TopStrategicClientsCard from '../components/dashboard/TopStrategicClientsCard.vue';
 import AiInsightsCard from '../components/dashboard/AiInsightsCard.vue';
 import TodayBirthdaysCard from '../components/dashboard/TodayBirthdaysCard.vue';

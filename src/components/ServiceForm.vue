@@ -31,12 +31,17 @@
           <input v-model="form.durationMinutes" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="1" required type="number"/>
         </label>
         <label class="flex flex-col">
-          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Preço</p>
-          <div class="h-11 flex w-full">
-            <CurrencyInput v-model="form.price" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 text-base transition-colors" required/>
-          </div>
+          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Retorno Ideal (dias)</p>
+          <input v-model="form.idealReturnDays" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="0" placeholder="Ex: 30" type="number"/>
         </label>
       </div>
+
+      <label class="flex flex-col">
+        <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Preço</p>
+        <div class="h-11 flex w-full">
+          <CurrencyInput v-model="form.price" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 text-base transition-colors" required/>
+        </div>
+      </label>
 
       <div class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors border"
            :class="form.active ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-100/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
@@ -80,6 +85,7 @@ const form = ref({
   name: '',
   description: '',
   durationMinutes: 30,
+  idealReturnDays: null,
   price: 0,
   active: true,
   group: 'Serviços básicos', // Default
@@ -87,7 +93,10 @@ const form = ref({
 
 onMounted(() => {
   if (props.service.id) {
-    form.value = {...props.service};
+    form.value = {
+        ...props.service,
+        idealReturnDays: props.service.idealReturnDays ?? null
+    };
   }
 });
 
