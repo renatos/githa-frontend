@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col h-full">
+  <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
         <span>🔄</span> Smart Rebooking
@@ -13,24 +13,24 @@
       </select>
     </div>
 
-    <div v-if="loading" class="flex-1 flex items-center justify-center py-8">
+    <div v-if="loading" class="flex items-center justify-center py-8">
       <div class="text-center text-gray-400 dark:text-slate-500 text-sm">
         <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i>
         Carregando...
       </div>
     </div>
 
-    <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
+    <div v-else-if="error" class="flex items-center justify-center py-8">
       <button @click="fetchReminders" class="text-sm text-red-500 hover:text-red-400 transition-colors">
         <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
       </button>
     </div>
 
-    <div v-else-if="reminders.length === 0" class="flex-1 flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
+    <div v-else-if="reminders.length === 0" class="flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
       Nenhum lembrete pendente.
     </div>
 
-    <div v-else class="space-y-4 flex-1 overflow-y-auto pr-2" style="max-height: 20rem;">
+    <div v-else class="space-y-4 overflow-y-auto pr-2" style="max-height: 20rem;">
       <div
         v-for="(reminder, index) in reminders"
         :key="reminder.id"
@@ -47,6 +47,13 @@
     </div>
 
     <RebookingForm v-if="selectedReminder" :reminder="selectedReminder" @close="selectedReminder = null" @save="onSaved" />
+
+    <AppointmentForm 
+      v-if="showAppointmentForm" 
+      :appointment="preFilledAppointment" 
+      @close="showAppointmentForm = false" 
+      @save="onAppointmentSaved"
+    />
   </div>
 </template>
 
@@ -55,12 +62,16 @@ import { ref, onMounted } from 'vue';
 import { listRebookingReminders } from '../../services/rebookingService';
 import RebookingForm from './RebookingForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
+import AppointmentForm from '../AppointmentForm.vue';
+import { confirmBridge } from '../../services/confirmBridge';
 
 const loading = ref(true);
 const error = ref(false);
 const reminders = ref([]);
 const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
+const showAppointmentForm = ref(false);
+const preFilledAppointment = ref({});
 
 const rebookingStatusMap = {
     NEW: { label: 'Novo', badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
@@ -86,9 +97,44 @@ const openForm = (reminder) => {
     selectedReminder.value = reminder;
 };
 
-const onSaved = () => {
+const onSaved = (updatedData) => {
     selectedReminder.value = null;
     fetchReminders();
+
+    if (updatedData.status === 'SCHEDULED') {
+        confirmBridge.confirm({
+            title: 'Gerar Agendamento?',
+            message: `O status foi definido como Agendado para ${updatedData.client?.name}. Deseja abrir o formulário de agendamento agora?`,
+            type: 'info',
+            confirmLabel: 'Sim, agendar',
+            cancelLabel: 'Agora não',
+            onConfirm: () => {
+                preFilledAppointment.value = {
+                    client: {
+                        id: updatedData.client?.id,
+                        name: updatedData.client?.name
+                    },
+                    professional: {
+                        id: updatedData.contactResponsibleId,
+                        name: updatedData.contactResponsibleName
+                    },
+                    service: {
+                        id: updatedData.service?.id,
+                        name: updatedData.service?.name
+                    },
+                    notes: updatedData.notes ? `Rebooking - ${updatedData.notes}` : 'Rebooking',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'SCHEDULED'
+                };
+                showAppointmentForm.value = true;
+            }
+        });
+    }
+};
+
+const onAppointmentSaved = () => {
+    showAppointmentForm.value = false;
+    // Potentially refresh dashboard if needed
 };
 
 onMounted(() => {

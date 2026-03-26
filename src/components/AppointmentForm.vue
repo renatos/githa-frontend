@@ -272,7 +272,7 @@ const subtitleTimestamp = computed(() => {
 });
 
 onMounted(() => {
-  if (props.appointment.id || props.appointment.startTime) {
+  if (props.appointment && Object.keys(props.appointment).length > 0) {
     const apt = {...props.appointment};
     originalStatus.value = apt.status;
 
@@ -318,22 +318,27 @@ onMounted(() => {
 });
 
 onMounted(async () => {
-  if (props.appointment.id) {
-    try {
-      const response = await appointmentService.getById(props.appointment.id);
-      const fullApt = response.data;
-      if (fullApt) {
-        form.value.transactionId = fullApt.transactionId;
+  if (props.appointment.id || form.value.service?.id) {
+    if (props.appointment.id) {
+      try {
+        const response = await appointmentService.getById(props.appointment.id);
+        const fullApt = response.data;
+        if (fullApt) {
+          form.value.transactionId = fullApt.transactionId;
+        }
+      } catch (e) {
+        console.error("Failed to fetch appointment details", e);
       }
-    } catch (e) {
-      console.error("Failed to fetch appointment details", e);
     }
 
     if (form.value.service.id) {
       try {
         const response = await serviceService.getById(form.value.service.id);
-        if (response) {
-          selectedServiceDuration.value = response.durationMinutes || 0;
+        const s = response.data || response;
+        if (s) {
+          selectedServiceDuration.value = s.durationMinutes || 0;
+          if (!form.value.price) form.value.price = s.price || 0;
+          calculateEndTime();
         }
       } catch (e) {
         console.error("Failed to fetch service details", e);

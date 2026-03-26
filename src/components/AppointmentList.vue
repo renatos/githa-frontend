@@ -78,9 +78,9 @@
         <!-- Date Header -->
         <div class="flex items-center gap-3 px-1 py-1">
           <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
-          <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-            <span class="material-symbols-outlined text-[18px]">calendar_today</span>
-            <span class="text-xs font-bold uppercase tracking-widest">
+          <div class="flex items-center gap-2 whitespace-nowrap" :class="isToday(group.date) ? 'text-indigo-600 dark:text-indigo-400 scale-105 transition-transform' : 'text-slate-500 dark:text-slate-400'">
+            <span class="material-symbols-outlined" :class="isToday(group.date) ? 'text-[20px]' : 'text-[18px]'">calendar_today</span>
+            <span :class="isToday(group.date) ? 'text-sm font-black' : 'text-xs font-bold'" class="uppercase tracking-widest">
               Dia {{ formatDate(group.date) }} — {{ group.items.length }} 
               {{ group.items.length === 1 ? 'Agendamento' : 'Agendamentos' }}
             </span>
@@ -89,8 +89,10 @@
         </div>
 
         <div v-for="item in group.items" :key="item.id"
-             class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 md:p-4 flex items-center gap-2 md:gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
+             class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 md:p-4 flex flex-col md:flex-row md:items-center gap-2 md:gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
              @click="$emit('edit', item)">
+          
+          <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
           
           <!-- Status indicator bar (discrete) -->
           <div class="absolute left-0 top-0 bottom-0 w-1" :class="statusAccentColor(item.status)"></div>
@@ -119,9 +121,10 @@
               {{ statusMap[item.status] || item.status }}
             </span>
           </div>
+          </div>
 
           <!-- Actions -->
-          <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute md:relative bottom-2 md:bottom-0 right-2 md:right-0" @click.stop>
+          <div class="flex-shrink-0 flex items-center justify-end gap-1.5 md:gap-1 mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-700/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity md:relative" @click.stop>
             <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                     title="Confirmar" @click="$emit('confirm', item)">
@@ -227,7 +230,7 @@ const props = defineProps({
 const emit = defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);
 
 // --- State ---
-const viewMode = ref('calendar');
+const viewMode = ref(window.innerWidth < 1024 ? 'list' : 'calendar');
 const loading = ref(false);
 const appointments = ref([]);
 const appointmentLayout = ref({});
@@ -404,6 +407,11 @@ const formatDate = (isoDate) => {
   if (!isoDate) return '';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
+};
+
+const isToday = (dateStr) => {
+  const today = new Date().toISOString().split('T')[0];
+  return dateStr === today;
 };
 
 const isActionDisabled = (item) => item.status === 'COMPLETED' && !isAdmin.value;
