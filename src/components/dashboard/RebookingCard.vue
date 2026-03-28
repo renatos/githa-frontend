@@ -41,6 +41,9 @@
         <div class="flex flex-col">
             <span class="font-medium text-gray-800 dark:text-white">{{ reminder.client?.name }}</span>
             <span class="text-xs text-gray-500 dark:text-slate-400">{{ reminder.service?.name }}</span>
+            <span v-if="reminder.lastAppointmentDate" class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+                Último atendimento: {{ new Date(reminder.lastAppointmentDate).toLocaleDateString('pt-BR') }}
+            </span>
         </div>
         <StatusBadge :status="reminder.status" :status-map="rebookingStatusMap" />
       </div>

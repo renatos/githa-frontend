@@ -20,7 +20,12 @@
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Serviço</label>
               <div class="text-sm text-gray-900 dark:text-white font-medium">{{ reminder.service?.name }}</div>
-              <div class="text-xs text-gray-500 dark:text-slate-400 mt-1">Ciclo: {{ reminder.service?.idealReturnDays }} dias</div>
+              <div class="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                  Ciclo: {{ reminder.service?.idealReturnDays }} dias 
+                  <span v-if="reminder.lastAppointmentDate" class="ml-2" title="Data do último atendimento">
+                    | Último: {{ new Date(reminder.lastAppointmentDate).toLocaleDateString('pt-BR') }}
+                  </span>
+              </div>
           </div>
       </div>
 
