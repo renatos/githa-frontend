@@ -49,8 +49,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
+
+const emit = defineEmits(['select-client']);
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -61,7 +63,7 @@ const clients = ref([]);
 
 const goToClient = (client) => {
   if (!client || !client.id) return;
-  router.push({ name: 'client-detail', params: { id: client.id }, query: { from: 'dashboard' } });
+  emit('select-client', client);
 };
 
 const fetchTopClients = async () => {

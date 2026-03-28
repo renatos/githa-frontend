@@ -49,7 +49,13 @@
       </div>
     </div>
 
-    <RebookingForm v-if="selectedReminder" :reminder="selectedReminder" @close="selectedReminder = null" @save="onSaved" />
+    <RebookingForm 
+      v-if="selectedReminder" 
+      :reminder="selectedReminder" 
+      @close="selectedReminder = null" 
+      @save="onSaved" 
+      @open-client="(client) => $emit('select-client', client)"
+    />
 
     <AppointmentForm 
       v-if="showAppointmentForm" 
@@ -61,7 +67,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, defineEmits } from 'vue';
+
+const emit = defineEmits(['select-client']);
 import { listRebookingReminders } from '../../services/rebookingService';
 import RebookingForm from './RebookingForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';

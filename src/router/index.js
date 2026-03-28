@@ -50,7 +50,7 @@ const router = createRouter({
         {
             path: '/clients/:id',
             name: 'client-detail',
-            component: () => import('../views/ClientDetailView.vue'),
+            component: () => import('../views/ClientView.vue'),
             meta: { requiresAuth: true }
         },
         {

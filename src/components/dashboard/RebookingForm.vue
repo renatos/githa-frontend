@@ -10,7 +10,13 @@
       <div class="grid grid-cols-2 gap-4">
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Cliente</label>
-              <div class="text-sm text-gray-900 dark:text-white font-medium">{{ reminder.client?.name }}</div>
+              <div 
+                class="text-sm text-gray-900 dark:text-white font-semibold cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-block"
+                @click="$emit('open-client', reminder.client)"
+                title="Ver detalhes do cliente"
+              >
+                {{ reminder.client?.name }}
+              </div>
               <div class="text-xs text-gray-500 dark:text-slate-400 mt-1 flex items-center gap-1">
                   <a :href="whatsappUrl" target="_blank" class="hover:text-emerald-500 transition-colors flex items-center gap-1" title="Enviar WhatsApp">
                     <i class="fa-brands fa-whatsapp text-emerald-500"></i> {{ reminder.client?.phone || 'Sem telefone' }}
@@ -95,7 +101,7 @@ const props = defineProps({
     reminder: { type: Object, required: true }
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'save', 'open-client']);
 
 const saving = ref(false);
 const professionals = ref([]);
