@@ -59,6 +59,10 @@
           <i class="fa-regular fa-comment-dots w-6 text-lg"></i>
           <span class="ml-2">Feedbacks e Suporte</span>
         </router-link>
+        <router-link to="/goals" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-bullseye w-6 text-lg"></i>
+          <span class="ml-2">Metas</span>
+        </router-link>
         <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>

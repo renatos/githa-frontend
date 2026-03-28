@@ -16,12 +16,16 @@
       <Wallet :size="20" />
       <span>Financeiro</span>
     </router-link>
+    <router-link to="/goals" class="nav-item" active-class="active">
+      <TrendingUp :size="20" />
+      <span>Metas</span>
+    </router-link>
   </nav>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router';
-import { Home, Calendar, User, Wallet } from 'lucide-vue-next';
+import { Home, Calendar, User, Wallet, TrendingUp } from 'lucide-vue-next';
 
 const $route = useRoute();
 </script>

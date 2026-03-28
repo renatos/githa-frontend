@@ -122,6 +122,12 @@ const router = createRouter({
             component: () => import('../views/professional/ProfessionalCommissionView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/goals',
+            name: 'goals',
+            component: () => import('../views/GoalsView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })
