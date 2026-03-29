@@ -1,7 +1,9 @@
 import api from './api';
 
-export const listRebookingReminders = async (status = null) => {
-    const params = status ? { status } : {};
+export const listRebookingReminders = async (status = null, serviceId = null) => {
+    const params = {};
+    if (status) params.status = status;
+    if (serviceId) params.serviceId = serviceId;
     const response = await api.get('/rebooking', { params });
     return response.data;
 };

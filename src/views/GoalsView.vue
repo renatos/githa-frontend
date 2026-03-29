@@ -27,7 +27,7 @@
       <span class="text-sm font-medium text-gray-400">Filtrar por Profissional:</span>
       <BaseLookup 
         v-model="filterProfessionalId" 
-        endpoint="/professionals" 
+        :search-service="professionalService" 
         placeholder="Todos os Profissionais"
         class="max-w-xs"
         @update:model-value="fetchData"
@@ -81,16 +81,26 @@
             </div>
           </div>
 
-          <div class="mt-8 text-center space-y-1">
+          <div class="mt-8 text-center space-y-1 group/goal relative">
             <p class="text-gray-400 text-sm">Meta mensal</p>
-            <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
+            <div class="flex items-center justify-center gap-2">
+              <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
+              <button 
+                v-if="isAdmin" 
+                class="p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                title="Editar Meta"
+                @click="handleEditGoal"
+              >
+                <Pencil :size="16" />
+              </button>
+            </div>
           </div>
           
-          <div v-if="progressData.onTrack" class="mt-6 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
-            <CheckCircle :size="14" /> DENTRO DA META
+          <div v-if="progressData.onTrack" class="mt-6 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 cursor-help" title="O ritmo de faturamento está adequado para atingir o objetivo mensal.">
+            <CheckCircle :size="14" /> DENTRO DA META <Info :size="12" class="opacity-50" />
           </div>
-          <div v-else class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
-            <AlertCircle :size="14" /> ABAIXO DO PRO-RATA
+          <div v-else class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 cursor-help" title="Faturamento abaixo do esperado para o estágio atual do mês (baseado em dias úteis).">
+            <AlertCircle :size="14" /> ABAIXO DO PRO-RATA <Info :size="12" class="opacity-50" />
           </div>
         </div>
 
@@ -103,7 +113,12 @@
                 <DollarSign :size="24" />
               </div>
               <div>
-                <p class="text-gray-400 text-sm">Receita Realizada (Paga)</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="text-gray-400 text-sm">Receita Realizada (Paga)</p>
+                  <span class="cursor-help" title="Total de vendas efetivamente pagas no período.">
+                    <Info :size="12" class="text-gray-600" />
+                  </span>
+                </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.realizedRevenue) }}</h4>
               </div>
             </div>
@@ -119,7 +134,12 @@
                 <Clock :size="24" />
               </div>
               <div>
-                <p class="text-gray-400 text-sm">Pendente (Vencida/Aberta)</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="text-gray-400 text-sm">Pendente (Vencida/Aberta)</p>
+                  <span class="cursor-help" title="Vendas confirmadas que aguardam pagamento ou estão em aberto.">
+                    <Info :size="12" class="text-gray-600" />
+                  </span>
+                </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.pendingRevenue) }}</h4>
               </div>
             </div>
@@ -132,7 +152,12 @@
                 <Calendar :size="24" />
               </div>
               <div>
-                <p class="text-gray-400 text-sm">Agendado (Estimado)</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="text-gray-400 text-sm">Agendado (Estimado)</p>
+                  <span class="cursor-help" title="Projeção baseada em agendamentos futuros não faturados para este mês.">
+                    <Info :size="12" class="text-gray-600" />
+                  </span>
+                </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.scheduledRevenue) }}</h4>
               </div>
             </div>
@@ -145,7 +170,12 @@
                 <RefreshCw :size="24" />
               </div>
               <div>
-                <p class="text-gray-400 text-sm">Pipeline Rebooking</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="text-gray-400 text-sm">Pipeline Rebooking</p>
+                  <span class="cursor-help" title="Oportunidades de retorno baseadas nos 10 atendimentos mais recentes de clientes que ainda não retornaram.">
+                    <Info :size="12" class="text-gray-600" />
+                  </span>
+                </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.rebookingPipelineValue) }}</h4>
               </div>
             </div>
@@ -154,7 +184,12 @@
           <!-- Total Projection -->
           <div class="md:col-span-2 bg-gradient-to-br from-primary/20 to-indigo-900/10 border border-primary/30 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <p class="text-primary-light font-semibold uppercase tracking-widest text-xs mb-1">Total Projetado (Safe Forecast)</p>
+              <div class="flex items-center gap-2 mb-1">
+                <p class="text-primary-light font-semibold uppercase tracking-widest text-xs">Total Projetado (Safe Forecast)</p>
+                <span class="cursor-help" title="Projeção conservadora do faturamento total (Pago + Pendente + Agendado + Rebooking).">
+                  <Info :size="12" class="text-primary-light/60" />
+                </span>
+              </div>
               <h3 class="text-4xl font-black text-white">{{ formatCurrency(progressData.totalProjectedRevenue) }}</h3>
               <p class="text-gray-400 text-sm mt-2">Soma de Realizado + Pendente + Agendado + Rebooking</p>
             </div>
@@ -177,15 +212,30 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
-v-for="need in progressData.servicesNeeded" :key="need.serviceName" 
-               class="bg-gray-800/40 p-6 rounded-3xl border border-gray-700/50 flex items-center justify-between">
-            <div>
-              <p class="text-white font-semibold truncate max-w-[180px]">{{ need.serviceName }}</p>
-              <p class="text-gray-400 text-xs">{{ formatCurrency(need.servicePrice) }} / un</p>
+            v-for="need in progressData.servicesNeeded" :key="need.serviceName" 
+            class="bg-gray-800/40 p-6 rounded-3xl border border-gray-700/50 flex flex-col justify-between group hover:border-primary/30 transition-all"
+          >
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div class="min-w-0">
+                <p class="text-white font-semibold truncate" :title="need.serviceName">{{ need.serviceName }}</p>
+                <p class="text-gray-400 text-xs">{{ formatCurrency(need.servicePrice) }} / un</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="block text-primary text-2xl font-black leading-none">{{ need.unitsNeeded }}</span>
+                <span class="text-[9px] text-gray-500 uppercase font-bold tracking-tight block mt-1">Vendas</span>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="block text-primary text-2xl font-black">{{ need.unitsNeeded }}</span>
-              <span class="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Vendas necessárias</span>
+            
+            <button 
+              v-if="need.rebookingCount > 0" 
+              class="flex items-center gap-1.5 bg-purple-500/10 text-purple-400 px-3 py-1.5 rounded-2xl text-[10px] font-bold self-start mt-auto hover:bg-purple-500/20 transition-colors cursor-pointer"
+              @click="openRebookingModal(need)"
+            >
+              <RefreshCw :size="12" class="animate-spin-slow" /> 
+              {{ need.rebookingCount }} {{ need.rebookingCount === 1 ? 'Retorno pendente' : 'Retornos pendentes' }}
+            </button>
+            <div v-else class="text-[10px] text-gray-600 font-medium self-start mt-auto">
+              Sem retornos agendáveis
             </div>
           </div>
         </div>
@@ -218,12 +268,16 @@ v-for="need in progressData.servicesNeeded" :key="need.serviceName"
       </section>
     </template>
 
-    <!-- Admin: Add Goal Modal -->
-    <BaseModal v-if="showGoalModal" title="Configurar Meta de Receita" @close="showGoalModal = false">
+    <!-- Admin: Add/Edit Goal Modal -->
+    <BaseModal v-if="showGoalModal" :show="showGoalModal" :title="newGoal.id ? 'Editar Meta de Receita' : 'Configurar Meta de Receita'" @close="showGoalModal = false">
       <form class="space-y-6 p-4" @submit.prevent="handleSaveGoal">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-gray-400">Profissional (Deixe vazio para Clinic Meta)</label>
-          <BaseLookup v-model="newGoal.professionalId" endpoint="/professionals" placeholder="Selecione o profissional ou Meta Geral" />
+          <label class="text-sm font-medium text-gray-400">Profissional (Deixe vazio para meta geral)</label>
+          <BaseLookup
+            v-model="newGoal.professionalId"
+            :search-service="professionalService"
+            placeholder="Pesquisar Profissional..."
+          />
         </div>
         
         <div class="grid grid-cols-2 gap-4">
@@ -251,10 +305,26 @@ v-for="need in progressData.servicesNeeded" :key="need.serviceName"
             :disabled="saving"
             class="bg-primary hover:bg-primary-hover text-white px-8 py-2 rounded-xl transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
           >
-            {{ saving ? 'Salvando...' : 'Salvar Meta' }}
+            {{ saving ? 'Salvando...' : (newGoal.id ? 'Atualizar Meta' : 'Salvar Meta') }}
           </button>
         </div>
       </form>
+    </BaseModal>
+    
+    <!-- Filtered Rebooking Modal -->
+    <BaseModal 
+      v-if="showRebookingModal" 
+      :show="showRebookingModal" 
+      :title="`Retornos Pendentes: ${selectedRebookingService?.name}`" 
+      size="lg"
+      @close="showRebookingModal = false"
+    >
+      <div class="p-2">
+        <RebookingCard 
+          :service-id="selectedRebookingService?.id" 
+          @select-client="(client) => { showRebookingModal = false; /* Implement navigation if needed */ }"
+        />
+      </div>
     </BaseModal>
   </div>
 </template>
@@ -263,15 +333,19 @@ v-for="need in progressData.servicesNeeded" :key="need.serviceName"
 import { ref, onMounted, computed, watch } from 'vue';
 import { 
   Plus, Target, DollarSign, Clock, Calendar, 
-  RefreshCw, CheckCircle, AlertCircle 
+  RefreshCw, CheckCircle, AlertCircle, Pencil, Info
 } from 'lucide-vue-next';
 import MonthYearSelector from '../components/common/MonthYearSelector.vue';
 import BaseLookup from '../components/common/BaseLookup.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import CurrencyInput from '../components/common/CurrencyInput.vue';
 import PageHeader from '../components/common/PageHeader.vue';
+import RebookingCard from '../components/dashboard/RebookingCard.vue';
 import { goalService } from '../services/goalService';
 import { authService } from '../services/authService';
+import { professionalService } from '../services/professionalService';
+
+
 
 // State
 const selectedMonth = ref(new Date().getMonth() + 1);
@@ -281,9 +355,12 @@ const loading = ref(false);
 const saving = ref(false);
 const progressData = ref(null);
 const showGoalModal = ref(false);
+const showRebookingModal = ref(false);
+const selectedRebookingService = ref(null);
 const isAdmin = ref(false);
 
 const newGoal = ref({
+  id: null,
   professionalId: null,
   month: new Date().getMonth() + 1,
   year: new Date().getFullYear(),
@@ -335,9 +412,14 @@ const fetchData = async () => {
 const handleSaveGoal = async () => {
   saving.value = true;
   try {
-    await goalService.createGoal(newGoal.value);
+    if (newGoal.value.id) {
+      await goalService.updateGoal(newGoal.value.id, newGoal.value);
+    } else {
+      await goalService.createGoal(newGoal.value);
+    }
     showGoalModal.value = false;
     await fetchData();
+    resetNewGoal();
   } catch (err) {
     alert(err.response?.data?.message || 'Erro ao salvar meta.');
   } finally {
@@ -348,6 +430,44 @@ const handleSaveGoal = async () => {
 const formatCurrency = (val) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 };
+
+const handleEditGoal = () => {
+  if (!progressData.value?.goal) return;
+  const goal = progressData.value.goal;
+  newGoal.value = {
+    id: goal.id,
+    professionalId: goal.professionalId,
+    month: goal.month,
+    year: goal.year,
+    targetAmount: goal.targetAmount
+  };
+  showGoalModal.value = true;
+};
+
+const openRebookingModal = (need) => {
+  selectedRebookingService.value = {
+    id: need.serviceId,
+    name: need.serviceName
+  };
+  showRebookingModal.value = true;
+};
+
+const resetNewGoal = () => {
+  newGoal.value = {
+    id: null,
+    professionalId: null,
+    month: selectedMonth.value,
+    year: selectedYear.value,
+    targetAmount: 0
+  };
+};
+
+watch(showGoalModal, (val) => {
+  if (!val) {
+    // Small delay to avoid visual flickering while modal closes
+    setTimeout(resetNewGoal, 300);
+  }
+});
 
 onMounted(() => {
   const user = authService.getCurrentUser();

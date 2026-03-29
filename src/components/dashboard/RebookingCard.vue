@@ -76,6 +76,13 @@ import StatusBadge from '../common/StatusBadge.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 
+const props = defineProps({
+    serviceId: {
+        type: Number,
+        default: null
+    }
+});
+
 const loading = ref(true);
 const error = ref(false);
 const reminders = ref([]);
@@ -95,7 +102,7 @@ const fetchReminders = async () => {
     loading.value = true;
     error.value = false;
     try {
-        reminders.value = await listRebookingReminders(statusFilter.value);
+        reminders.value = await listRebookingReminders(statusFilter.value, props.serviceId);
     } catch(e) {
         error.value = true;
         console.error(e);

@@ -1,25 +1,27 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import api from './api';
 
 export const goalService = {
   createGoal(goal) {
-    return axios.post(`${API_URL}/goals`, goal);
+    return api.post('/goals', goal);
+  },
+  
+  updateGoal(id, goal) {
+    return api.put(`/goals/${id}`, goal);
   },
   
   deleteGoal(id) {
-    return axios.delete(`${API_URL}/goals/${id}`);
+    return api.delete(`/goals/${id}`);
   },
   
   listGoals(professionalId, year) {
     const params = { year };
     if (professionalId) params.professionalId = professionalId;
-    return axios.get(`${API_URL}/goals`, { params });
+    return api.get('/goals', { params });
   },
   
   getGoalProgress(professionalId, month, year) {
     const params = { month, year };
     if (professionalId) params.professionalId = professionalId;
-    return axios.get(`${API_URL}/goals/progress`, { params });
+    return api.get('/goals/progress', { params });
   }
 };
