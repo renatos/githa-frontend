@@ -9,7 +9,8 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="show" 
+      <div
+v-if="show" 
            class="fixed inset-0 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
            :style="{ zIndex: zIndex }">
         
@@ -49,9 +50,9 @@
                 </slot>
               </div>
               <button 
-                @click="$emit('close')" 
-                type="button"
+                type="button" 
                 class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg w-8 h-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors shrink-0"
+                @click="$emit('close')"
               >
                 <i class="fa-solid fa-xmark text-lg"></i>
               </button>

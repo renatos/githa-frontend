@@ -82,8 +82,8 @@
               :class="isActionDisabled(item) 
                 ? 'opacity-30 cursor-not-allowed grayscale' 
                 : 'text-slate-400 hover:text-rose-400 hover:border-rose-500/30'"
-              @click="!isActionDisabled(item) && deleteItem(item)" 
-              :title="getDeleteTitle(item)">
+              :title="getDeleteTitle(item)" 
+              @click="!isActionDisabled(item) && deleteItem(item)">
               <i class="fa-solid fa-trash-can text-[14px]"></i>
             </button>
           </div>

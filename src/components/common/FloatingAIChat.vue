@@ -155,8 +155,8 @@ const sendMessage = async () => {
     <!-- Chat Button -->
     <button
       class="chat-trigger-button flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg overflow-hidden"
-      @click="toggleChat"
       title="Assistente de Inteligência Artificial"
+      @click="toggleChat"
     >
       <Sparkles :size="24" />
     </button>
@@ -165,9 +165,9 @@ const sendMessage = async () => {
     <BaseModal
       :show="isChatVisible"
       title="Githa AI Assistant"
+      max-width="max-w-md"
+      :body-padding="false"
       @close="toggleChat"
-      maxWidth="max-w-md"
-      :bodyPadding="false"
     >
       <template #header-content>
         <div class="flex items-center gap-3">
@@ -178,7 +178,7 @@ const sendMessage = async () => {
 
       <template #sub-header>
         <!-- Professional Selector -->
-        <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50" v-if="professionals.length > 0">
+        <div v-if="professionals.length > 0" class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
             <label class="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2 block">Atuando como (Profissional):</label>
             <div class="relative">
               <select 
@@ -197,7 +197,7 @@ const sendMessage = async () => {
         </div>
       </template>
 
-      <div class="chat-messages p-4 flex flex-col gap-4 overflow-y-auto max-h-[50vh]" ref="chatContainer">
+      <div ref="chatContainer" class="chat-messages p-4 flex flex-col gap-4 overflow-y-auto max-h-[50vh]">
         <div 
           v-for="(msg, index) in messages" 
           :key="index"
@@ -218,8 +218,8 @@ const sendMessage = async () => {
                     </div>
                     <button 
                       class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
-                      @click="confirmAction(msg)" 
-                      :disabled="isLoading"
+                      :disabled="isLoading" 
+                      @click="confirmAction(msg)"
                     >
                       <Check :size="14" />
                       {{ isLoading ? 'Confirmando...' : 'Confirmar' }}
@@ -231,8 +231,8 @@ const sendMessage = async () => {
                     <p class="text-xs mb-3 text-slate-600 dark:text-slate-400"><strong>ID do Agendamento:</strong> {{ msg.action.params.appointmentId }}</p>
                     <button 
                       class="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
-                      @click="confirmAction(msg)" 
-                      :disabled="isLoading"
+                      :disabled="isLoading" 
+                      @click="confirmAction(msg)"
                     >
                       <Trash2 :size="14" />
                       {{ isLoading ? 'Cancelando...' : 'Confirmar Cancelamento' }}
@@ -247,8 +247,8 @@ const sendMessage = async () => {
                     </div>
                     <button 
                       class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-lg transition-colors disabled:opacity-50"
-                      @click="confirmAction(msg)" 
-                      :disabled="isLoading"
+                      :disabled="isLoading" 
+                      @click="confirmAction(msg)"
                     >
                       <Percent :size="14" />
                       {{ isLoading ? 'Aplicando...' : 'Confirmar Desconto' }}
@@ -273,14 +273,14 @@ const sendMessage = async () => {
           <input 
             v-model="messageInput" 
             placeholder="Digite sua mensagem..." 
-            @keyup.enter="sendMessage"
             class="flex-1 rounded-full px-4 py-2 text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors outline-none"
             :disabled="isLoading"
+            @keyup.enter="sendMessage"
           />
           <button 
-            @click="sendMessage" 
-            class="p-2 rounded-full text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50"
+            class="p-2 rounded-full text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50" 
             :disabled="isLoading"
+            @click="sendMessage"
           >
             <Send :size="20" />
           </button>

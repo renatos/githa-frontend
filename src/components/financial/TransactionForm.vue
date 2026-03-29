@@ -17,7 +17,7 @@
         </p>
       </div>
     </template>
-    <form @submit.prevent="save" class="space-y-8 flex flex-col h-full">
+    <form class="space-y-8 flex flex-col h-full" @submit.prevent="save">
           
           <!-- Lançamento Mode Selector -->
           <div v-if="!transaction.id" class="flex p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg">
@@ -25,11 +25,11 @@
               v-for="mode in [{id:'MANUAL', label:'Lançamento Manual', icon:'fa-keyboard'}, {id:'SALE', label:'Venda de Produtos/Serviços', icon:'fa-cart-shopping'}]"
               :key="mode.id"
               type="button"
-              @click="launchMode = mode.id"
               class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-bold transition-all duration-300"
               :class="launchMode === mode.id 
                 ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm border border-slate-200/50 dark:border-transparent' 
                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+              @click="launchMode = mode.id"
             >
               <i class="fa-solid" :class="mode.icon"></i>
               {{ mode.label }}
@@ -128,8 +128,8 @@
             </div>
             <button 
               type="button" 
-              @click="viewAppointment"
               class="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-4"
+              @click="viewAppointment"
             >
               Ver Detalhes
             </button>
@@ -189,15 +189,15 @@
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <button 
           type="button" 
-          @click="$emit('close')"
           class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-500"
+          @click="$emit('close')"
         >
           Cancelar
         </button>
         <button 
-          @click="save"
           :disabled="!canSave"
           class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:grayscale"
+          @click="save"
         >
           Salvar Transação
         </button>

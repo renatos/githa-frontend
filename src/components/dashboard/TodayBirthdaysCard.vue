@@ -12,7 +12,7 @@
     </div>
 
     <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
-      <button @click="fetchBirthdays" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+      <button class="text-sm text-red-500 hover:text-red-400 transition-colors" @click="fetchBirthdays">
         <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
       </button>
     </div>
@@ -24,7 +24,8 @@
     <div v-else class="space-y-5 flex-1">
       <div v-for="client in clients" :key="client.id">
         <div class="flex items-center gap-3 mb-3 cursor-pointer" @click="goToClient(client)">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+          <div
+class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
                :class="getAvatarColor(client.name)">
             {{ getInitials(client.name) }}
           </div>
@@ -35,7 +36,8 @@
             </p>
           </div>
         </div>
-        <a v-if="client.phone"
+        <a
+v-if="client.phone"
            :href="'https://wa.me/55' + cleanPhone(client.phone)"
            target="_blank"
            class="w-full py-2 px-4 border border-gray-300 dark:border-slate-600 hover:border-green-500 hover:text-green-500 text-gray-500 dark:text-slate-300 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm no-underline">

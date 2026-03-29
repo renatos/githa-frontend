@@ -30,7 +30,7 @@
       </div>
 
       <!-- Description Input -->
-      <div class="flex-1 relative" ref="inputWrapperRef">
+      <div ref="inputWrapperRef" class="flex-1 relative">
         <div class="flex gap-2">
           <input
               v-model="searchQuery"

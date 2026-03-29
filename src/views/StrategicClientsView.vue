@@ -1,22 +1,19 @@
 <template>
   <div class="p-4 md:p-6 flex flex-col gap-6">
-    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Clientes Estratégicos</h2>
-        </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gestão de carteira baseada em performance e risco.</p>
-      </div>
-      <div class="flex items-center gap-3">
+    <PageHeader
+      title="Clientes Estratégicos"
+      subtitle="Gestão de carteira baseada em performance e risco."
+    >
+      <template #actions>
         <button 
           :disabled="recalculating"
-          @click="recalculate"
-          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="recalculate">
           <span class="material-symbols-outlined text-[18px] mr-2" :class="{'animate-spin': recalculating}">sync</span>
           {{ recalculating ? 'Calculando...' : 'Recalcular Todos' }}
         </button>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
 
     <div class="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-slate-200 dark:border-slate-700 p-4">
       <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Filtros de Status</h3>
@@ -44,7 +41,8 @@
       </template>
 
       <template #cell-client.status="{ item }">
-        <span v-if="item.client.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+        <span
+v-if="item.client.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
               :class="getStatusBadgeClass(item.client.status)">
           <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.client.status)"></span>
           {{ getStatusLabel(item.client.status) }}
@@ -61,7 +59,8 @@
 
       <template #actions="{ item }">
         <div class="flex justify-center gap-1">
-          <a v-if="item.client.phone" :href="getWhatsappLink(item.client)" class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-green-50 hover:border-green-500 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:border-green-500 transition-colors text-slate-500 dark:text-slate-400 grayscale hover:grayscale-0" target="_blank"
+          <a
+v-if="item.client.phone" :href="getWhatsappLink(item.client)" class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-green-50 hover:border-green-500 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:border-green-500 transition-colors text-slate-500 dark:text-slate-400 grayscale hover:grayscale-0" target="_blank"
              title="WhatsApp" @click.stop>
             💬
           </a>
@@ -82,6 +81,7 @@
 <script setup>
 import {ref} from 'vue';
 import GenericTable from '../components/common/GenericTable.vue';
+import PageHeader from '../components/common/PageHeader.vue';
 import ClientForm from '../components/ClientForm.vue';
 import api from '../services/api';
 import { clientService } from '../services/clientService';

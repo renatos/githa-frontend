@@ -3,7 +3,7 @@
     :show="true"
     title="Sacar Comissão"
     :subtitle="professionalName"
-    maxWidth="max-w-md"
+    max-width="max-w-md"
     @close="$emit('close')"
   >
     <template #header-content>
@@ -70,8 +70,8 @@
       <div class="flex flex-col gap-4">
         <button
           type="button"
-          @click="useTotal"
           class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium flex items-center gap-1 w-fit"
+          @click="useTotal"
         >
           <span class="material-symbols-outlined text-xs">auto_fix_high</span>
           Usar saldo total ({{ formatCurrency(netAmount) }})
@@ -92,16 +92,16 @@
     <template #footer>
       <button
         type="button"
-        @click="$emit('close')"
         class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-500"
+        @click="$emit('close')"
       >
         Cancelar
       </button>
       <button
         type="button"
-        @click="confirm"
         :disabled="saving || !!amountError || !amount"
         class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+        @click="confirm"
       >
         <i v-if="saving" class="fa-solid fa-circle-notch fa-spin"></i>
         <i v-else class="fa-solid fa-check"></i>

@@ -4,7 +4,6 @@
       <a
         v-for="(tab, index) in tabs"
         :key="index"
-        @click.prevent="!tab.disabled && $emit('update:modelValue', index)"
         :title="tab.disabled ? disabledTitle : ''"
         :class="[
           tab.disabled
@@ -15,6 +14,7 @@
           'flex items-center justify-center border-b-[3px] px-3 md:px-1 pb-3 pt-4 transition-colors whitespace-nowrap',
           tab.disabled ? '' : 'cursor-pointer',
         ]"
+        @click.prevent="!tab.disabled && $emit('update:modelValue', index)"
       >
         <p class="text-xs md:text-sm font-bold leading-normal tracking-[0.015em] flex items-center gap-1">
           <span v-if="tab.icon" class="material-symbols-outlined text-[16px]">{{ tab.icon }}</span>

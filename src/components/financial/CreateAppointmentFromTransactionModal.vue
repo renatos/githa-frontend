@@ -17,7 +17,7 @@
         </p>
       </div>
     </template>
-    <form @submit.prevent="submit" class="space-y-6">
+    <form class="space-y-6" @submit.prevent="submit">
       
       <!-- Procedimento -->
       <div class="space-y-2">
@@ -107,15 +107,15 @@
     <template #footer>
       <button 
         type="button" 
-        @click="$emit('close')"
         class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-500"
+        @click="$emit('close')"
       >
         Cancelar
       </button>
       <button 
-        @click="submit"
         :disabled="loading"
         class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
+        @click="submit"
       >
         <i v-if="loading" class="fa-solid fa-circle-notch animate-spin"></i>
         {{ loading ? 'Salvando...' : 'Gerar Atendimento' }}

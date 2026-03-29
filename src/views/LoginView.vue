@@ -11,9 +11,9 @@
     <div v-if="isMockLoginEnabled" class="mock-login-container">
       <button 
         class="w-100 mb-4" 
-        @click="handleMockLogin" 
-        :disabled="loading"
-        style="padding: 1rem; background-color: var(--color-primary); color: white; border-radius: var(--radius-sm); border: none; font-weight: bold; cursor: pointer; text-align: center;">
+        :disabled="loading" 
+        style="padding: 1rem; background-color: var(--color-primary); color: white; border-radius: var(--radius-sm); border: none; font-weight: bold; cursor: pointer; text-align: center;"
+        @click="handleMockLogin">
         {{ loading ? 'Entrando...' : 'Entrar Offline' }}
       </button>
     </div>

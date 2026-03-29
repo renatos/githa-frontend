@@ -12,7 +12,7 @@
     </div>
 
     <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
-      <button @click="fetchTopClients" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+      <button class="text-sm text-red-500 hover:text-red-400 transition-colors" @click="fetchTopClients">
         <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
       </button>
     </div>
@@ -35,8 +35,8 @@
           <tr
             v-for="(stat, index) in clients"
             :key="stat.client?.id"
-            @click="goToClient(stat.client)"
             class="cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
+            @click="goToClient(stat.client)"
           >
             <td class="px-3 py-3 text-gray-400 dark:text-slate-400">#{{ index + 1 }}</td>
             <td class="px-3 py-3 font-medium text-gray-800 dark:text-white uppercase">{{ stat.client?.name }}</td>

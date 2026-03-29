@@ -4,7 +4,7 @@
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-3">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Clientes</h2>
-          <AiContextBadge context="CLIENTS" contextName="Clientes">
+          <AiContextBadge context="CLIENTS" context-name="Clientes">
             <template #extra-content>
               <div v-if="atRiskCount > 0" class="mt-2 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg flex flex-col gap-2">
                 <div class="flex items-center gap-2">
@@ -28,14 +28,14 @@
       </div>
       <div class="flex items-center gap-3">
         <button 
-          @click="showImportModal = true"
-          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          @click="showImportModal = true">
           <span class="material-symbols-outlined text-[18px] mr-2">download</span>
           Importar do Google
         </button>
         <button 
-          @click="$emit('new')"
-          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          @click="$emit('new')">
           <span class="material-symbols-outlined text-[18px] mr-2">add</span>
           Novo Cliente
         </button>
@@ -116,7 +116,8 @@
       @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-status="{ item }">
-        <span v-if="item.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+        <span
+v-if="item.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
               :class="getStatusBadgeClass(item.status)">
           <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.status)"></span>
           {{ getStatusLabel(item.status) }}

@@ -1,13 +1,11 @@
 <template>
   <div class="p-4 md:p-6 flex flex-col gap-6">
     <!-- Header Row -->
-    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
-      <div class="flex flex-col gap-1">
-        <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Financeiro</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gestão de fluxo de caixa e transações em tempo real.</p>
-      </div>
-
-      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <PageHeader
+      title="Financeiro"
+      subtitle="Gestão de fluxo de caixa e transações em tempo real."
+    >
+      <template #actions>
         <!-- Period Navigator (Unified) -->
         <PeriodSelector 
           v-model:view-mode="viewMode"
@@ -16,8 +14,8 @@
           v-model:day="selectedDay"
           @change="loadAllData"
         />
-      </div>
-    </header>
+      </template>
+    </PageHeader>
     
     <!-- Summary Cards (Monthly Context) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -126,6 +124,7 @@ import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
 import AppointmentForm from '../../components/AppointmentForm.vue';
 import PeriodSelector from '../../components/common/PeriodSelector.vue';
+import PageHeader from '../../components/common/PageHeader.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
 

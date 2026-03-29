@@ -1,9 +1,8 @@
 <template>
-  <div class="ai-context-badge relative" ref="badgeRef">
+  <div ref="badgeRef" class="ai-context-badge relative">
     <!-- Trigger Button -->
     <button
       type="button"
-      @click="toggleOverlay"
       :disabled="loading && !insights.length"
       class="inline-flex items-center justify-center px-4 py-2 border shadow-sm text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
       :class="[
@@ -11,6 +10,7 @@
           ? 'bg-purple-50 border-purple-300 text-purple-800 dark:bg-purple-900/30 dark:border-purple-600 dark:text-purple-200' 
           : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700'
       ]"
+      @click="toggleOverlay"
     >
       <i class="material-symbols-outlined text-[18px] mr-2 text-purple-500" :class="{ 'animate-spin': loading && insights.length === 0 }">
         {{ loading && insights.length === 0 ? 'refresh' : 'auto_awesome' }}
@@ -46,7 +46,7 @@
             <i class="material-symbols-outlined mr-2 text-purple-500">auto_awesome</i>
             Insights: {{ contextName }}
           </h4>
-          <button @click="isOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" @click="isOpen = false">
             <span class="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>

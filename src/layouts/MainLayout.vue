@@ -2,7 +2,7 @@
   <div class="font-sans text-gray-800 dark:text-gray-200 h-screen flex overflow-hidden" style="background-color: var(--color-bg-body); font-family: 'Inter', sans-serif;">
     <!-- Mobile Header / Hamburger -->
     <div class="md:hidden flex items-center px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 w-full z-[900] h-[60px]">
-      <button @click="toggleSidebar" class="text-gray-600 dark:text-gray-300 text-2xl p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+      <button class="text-gray-600 dark:text-gray-300 text-2xl p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" @click="toggleSidebar">
         <i class="fa-solid fa-bars"></i>
       </button>
       <img src="@/assets/githa-logo-main.png" alt="Githa" class="ml-4 h-10 w-auto object-contain dark:invert" />
@@ -113,11 +113,11 @@
         </div>
         <div class="flex items-center justify-between">
           <!-- Theme Toggle -->
-          <button @click="toggleTheme" class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" :title="isDark ? 'Tema Claro' : 'Tema Escuro'">
+          <button class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" :title="isDark ? 'Tema Claro' : 'Tema Escuro'" @click="toggleTheme">
             <i :class="isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-indigo-400'" class="text-lg"></i>
           </button>
           <!-- Logout -->
-          <button @click="handleLogout" class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors" title="Sair">
+          <button class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors" title="Sair" @click="handleLogout">
             <i class="fa-solid fa-arrow-right-from-bracket text-xl"></i>
           </button>
         </div>

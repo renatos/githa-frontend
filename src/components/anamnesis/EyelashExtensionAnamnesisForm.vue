@@ -7,30 +7,34 @@
       </h3>
       
       <div class="flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="!modelValue.hadPreviousLashExtension ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Primeira vez fazendo extensão de cílios?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="eye_firstTime" v-model="firstTimeComputed" :disabled="readonly"/>
+            <input id="eye_firstTime" v-model="firstTimeComputed" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
         
         <div v-if="modelValue.hadPreviousLashExtension" class="ml-4 pl-4 border-l-2 border-indigo-500 flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+          <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
                :class="modelValue.hadReactionToPrevious ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Teve reação?</p>
             <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
               <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-              <input class="invisible absolute" type="checkbox" id="eye_hadReactionToPrevious" v-model="modelValue.hadReactionToPrevious" :disabled="readonly"/>
+              <input id="eye_hadReactionToPrevious" v-model="modelValue.hadReactionToPrevious" class="invisible absolute" type="checkbox" :disabled="readonly"/>
             </label>
           </div>
-          <input v-if="modelValue.hadReactionToPrevious" type="text" v-model="modelValue.reactionDetails" 
+          <input
+v-if="modelValue.hadReactionToPrevious" v-model="modelValue.reactionDetails" type="text" 
                  class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                  placeholder="Detalhes da reação" :disabled="readonly" />
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Técnica anterior utilizada</p>
-            <input type="text" v-model="modelValue.previousTechniqueUsed" 
+            <input
+v-model="modelValue.previousTechniqueUsed" type="text" 
                    class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                    :disabled="readonly" />
           </label>
@@ -45,19 +49,21 @@
       </h3>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div v-for="field in ocularFields" :key="field.id"
+        <div
+v-for="field in ocularFields" :key="field.id"
              class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue[field.model] ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ field.label }}</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" :id="field.id" v-model="modelValue[field.model]" :disabled="readonly"/>
+            <input :id="field.id" v-model="modelValue[field.model]" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
       </div>
 
       <div v-if="modelValue.hasOcularInfection" class="mt-3 ml-4 pl-4 border-l-2 border-indigo-500">
-        <input type="text" v-model="modelValue.ocularInfectionDetails" 
+        <input
+v-model="modelValue.ocularInfectionDetails" type="text" 
                class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                :disabled="readonly" placeholder="Detalhes da infecção oftalmológica" />
       </div>
@@ -70,25 +76,29 @@
       </h3>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div v-for="field in healthFields" :key="field.id"
+        <div
+v-for="field in healthFields" :key="field.id"
              class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue[field.model] ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ field.label }}</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" :id="field.id" v-model="modelValue[field.model]" :disabled="readonly"/>
+            <input :id="field.id" v-model="modelValue[field.model]" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
       </div>
 
-      <div class="mt-3 flex flex-col gap-3 ml-4 pl-4 border-l-2 border-indigo-500" v-if="modelValue.hasSensitivityOrAllergyToGlue || modelValue.usesContinuousMedication || modelValue.hasAutoimmuneDermatologicalOrOcularDisease">
-        <input v-if="modelValue.hasSensitivityOrAllergyToGlue" type="text" v-model="modelValue.sensitivityAllergyDetails" 
+      <div v-if="modelValue.hasSensitivityOrAllergyToGlue || modelValue.usesContinuousMedication || modelValue.hasAutoimmuneDermatologicalOrOcularDisease" class="mt-3 flex flex-col gap-3 ml-4 pl-4 border-l-2 border-indigo-500">
+        <input
+v-if="modelValue.hasSensitivityOrAllergyToGlue" v-model="modelValue.sensitivityAllergyDetails" type="text" 
                class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                :disabled="readonly" placeholder="Quais alergias/sensibilidades?" />
-        <input v-if="modelValue.usesContinuousMedication" type="text" v-model="modelValue.continuousMedicationDetails" 
+        <input
+v-if="modelValue.usesContinuousMedication" v-model="modelValue.continuousMedicationDetails" type="text" 
                class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                :disabled="readonly" placeholder="Quais medicações?" />
-        <input v-if="modelValue.hasAutoimmuneDermatologicalOrOcularDisease" type="text" v-model="modelValue.diseaseDetails" 
+        <input
+v-if="modelValue.hasAutoimmuneDermatologicalOrOcularDisease" v-model="modelValue.diseaseDetails" type="text" 
                class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                :disabled="readonly" placeholder="Quais doenças?" />
       </div>
@@ -101,13 +111,14 @@
       </h3>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div v-for="field in beautyFields" :key="field.id"
+        <div
+v-for="field in beautyFields" :key="field.id"
              class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue[field.model] ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ field.label }}</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" :id="field.id" v-model="modelValue[field.model]" :disabled="readonly"/>
+            <input :id="field.id" v-model="modelValue[field.model]" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
       </div>
@@ -128,11 +139,11 @@
         </label>
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Mapping / Estilo</p>
-          <input type="text" v-model="modelValue.mappingStyle" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm transition-colors" placeholder="ex: Gatinho, Boneca" :disabled="readonly" />
+          <input v-model="modelValue.mappingStyle" type="text" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm transition-colors" placeholder="ex: Gatinho, Boneca" :disabled="readonly" />
         </label>
         <label class="flex flex-col md:col-span-2">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Tamanho / Curvatura / Espessura</p>
-          <input type="text" v-model="modelValue.technicalDetails" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm transition-colors" placeholder="ex: 8-12mm / C / 0.15" :disabled="readonly" />
+          <input v-model="modelValue.technicalDetails" type="text" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm transition-colors" placeholder="ex: 8-12mm / C / 0.15" :disabled="readonly" />
         </label>
       </div>
     </div>

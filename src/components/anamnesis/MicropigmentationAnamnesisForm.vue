@@ -20,9 +20,9 @@
             ]"
           >
             <input 
+              v-model="internalProcedureTypes" 
               type="checkbox" 
-              :value="procType.name" 
-              v-model="internalProcedureTypes"
+              :value="procType.name"
               :disabled="readonly"
               class="hidden"
             />
@@ -48,13 +48,14 @@
       </h3>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div v-for="field in healthFields" :key="field.key"
+        <div
+v-for="field in healthFields" :key="field.key"
              class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue[field.key] ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ field.label }}</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" :id="'mic_' + field.key" v-model="modelValue[field.key]" :disabled="readonly"/>
+            <input :id="'mic_' + field.key" v-model="modelValue[field.key]" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
       </div>
@@ -67,12 +68,13 @@
       </h3>
       
       <div class="flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.firstMicropigmentation ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Primeira vez fazendo micropigmentação nesta região?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="mic_firstMicropigmentation" v-model="firstTimeComputed" :disabled="readonly"/>
+            <input id="mic_firstMicropigmentation" v-model="firstTimeComputed" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
 
@@ -80,26 +82,30 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label class="flex flex-col">
               <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Qual técnica anterior?</p>
-              <input type="text" v-model="modelValue.previousTechnique" 
+              <input
+v-model="modelValue.previousTechnique" type="text" 
                      class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                      :disabled="readonly" />
             </label>
             <label class="flex flex-col">
               <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Data aprox. do procedimento anterior?</p>
-              <input type="date" v-model="modelValue.previousProcedureDate" 
+              <input
+v-model="modelValue.previousProcedureDate" type="date" 
                      class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                      :disabled="readonly" />
             </label>
           </div>
-          <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+          <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
                :class="modelValue.hadComplicationsInPrevious ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Houve alguma complicação prévia?</p>
             <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
               <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-              <input class="invisible absolute" type="checkbox" id="mic_hadComplicationsInPrevious" v-model="modelValue.hadComplicationsInPrevious" :disabled="readonly"/>
+              <input id="mic_hadComplicationsInPrevious" v-model="modelValue.hadComplicationsInPrevious" class="invisible absolute" type="checkbox" :disabled="readonly"/>
             </label>
           </div>
-          <textarea v-if="modelValue.hadComplicationsInPrevious" v-model="modelValue.complicationsDetails" 
+          <textarea
+v-if="modelValue.hadComplicationsInPrevious" v-model="modelValue.complicationsDetails" 
                     class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 px-3 py-2 text-sm transition-shadow resize-y min-h-[60px]" 
                     rows="2" :disabled="readonly" placeholder="Detalhes da complicação/insatisfação"></textarea>
         </div>

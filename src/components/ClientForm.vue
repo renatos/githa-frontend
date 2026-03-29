@@ -2,13 +2,14 @@
   <BaseModal
     :show="true"
     title="Cliente"
+    max-width="max-w-4xl"
+    :body-padding="false"
     @close="$emit('close')"
-    maxWidth="max-w-4xl"
-    :bodyPadding="false"
   >
     <template #header-content>
       <div class="flex items-center gap-4 min-w-0">
-        <span class="material-symbols-outlined text-[24px] shrink-0"
+        <span
+class="material-symbols-outlined text-[24px] shrink-0"
               :class="form.personalData?.gender === 'FEMALE' ? 'text-pink-400' : form.personalData?.gender === 'MALE' ? 'text-blue-400' : 'text-slate-900 dark:text-slate-100'">person_edit</span>
         <div class="min-w-0">
           <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
@@ -33,7 +34,7 @@
       <TabNavigation v-model="activeTab" :tabs="tabs" />
     </template>
 
-    <form @submit.prevent="save" id="clientForm" class="flex flex-col h-full">
+    <form id="clientForm" class="flex flex-col h-full" @submit.prevent="save">
       <div class="p-6 flex-1 bg-transparent dark:bg-slate-900/50">
 
         <!-- Tab 0: Dados Gerais -->

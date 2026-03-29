@@ -14,39 +14,44 @@
         <div class="flex items-center gap-3 flex-wrap">
           <!-- Date Navigator -->
           <div class="flex items-center gap-1">
-            <button @click="navigateDate(-1)"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <button
+class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    @click="navigateDate(-1)">
               <span class="material-symbols-outlined text-[18px]">chevron_left</span>
             </button>
-            <button @click="goToToday"
-                    class="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap">
+            <button
+class="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"
+                    @click="goToToday">
               {{ dateRangeLabel }}
             </button>
-            <button @click="navigateDate(1)"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <button
+class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    @click="navigateDate(1)">
               <span class="material-symbols-outlined text-[18px]">chevron_right</span>
             </button>
           </div>
 
           <!-- View Toggle -->
           <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-            <button @click="viewMode = 'list'"
-                    :class="viewMode === 'list' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all">
+            <button
+:class="viewMode === 'list' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @click="viewMode = 'list'">
               <span class="material-symbols-outlined text-[16px]">view_list</span>
               Lista
             </button>
-            <button @click="viewMode = 'calendar'"
-                    :class="viewMode === 'calendar' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all">
+            <button
+:class="viewMode === 'calendar' ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @click="viewMode = 'calendar'">
               <span class="material-symbols-outlined text-[16px]">calendar_view_week</span>
               Calendário
             </button>
           </div>
 
           <button
-            @click="$emit('new')"
-            class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+            class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+            @click="$emit('new')">
             <span class="material-symbols-outlined text-[18px] mr-2">add</span>
             Novo Agendamento
           </button>
@@ -68,7 +73,7 @@
       <div v-if="appointments.length === 0" class="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         <span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-3">event_busy</span>
         <p class="text-slate-500 dark:text-slate-400 font-medium">Nenhum agendamento neste período.</p>
-        <button @click="$emit('new')" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+        <button class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors" @click="$emit('new')">
           <span class="material-symbols-outlined text-[16px]">add</span>
           Novo Agendamento
         </button>
@@ -88,7 +93,8 @@
           <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
         </div>
 
-        <div v-for="item in group.items" :key="item.id"
+        <div
+v-for="item in group.items" :key="item.id"
              class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 md:p-4 flex flex-col md:flex-row md:items-center gap-2 md:gap-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer shadow-sm relative overflow-hidden"
              @click="$emit('edit', item)">
           
@@ -115,7 +121,8 @@
 
           <!-- Status Badge -->
           <div class="absolute md:relative top-2 right-2 md:top-0 md:right-0 md:flex-shrink-0">
-            <span class="inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider shadow-sm border"
+            <span
+class="inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider shadow-sm border"
                   :class="statusBadgeClass(item.status)">
               <span class="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full" :class="statusDotClass(item.status)"></span>
               {{ statusMap[item.status] || item.status }}
@@ -125,27 +132,32 @@
 
           <!-- Actions -->
           <div class="flex-shrink-0 flex items-center justify-end gap-1.5 md:gap-1 mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-700/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity md:relative" @click.stop>
-            <button v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
+            <button
+v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                     title="Confirmar" @click="$emit('confirm', item)">
               <span class="material-symbols-outlined text-[18px]">check_circle</span>
             </button>
-            <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+            <button
+v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
                     title="Concluir" @click="$emit('complete', item)">
               <span class="material-symbols-outlined text-[18px]">star</span>
             </button>
-            <button v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
+            <button
+v-if="['SCHEDULED', 'CONFIRMED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Cancelar" @click="$emit('cancel', item)">
               <span class="material-symbols-outlined text-[18px]">cancel</span>
             </button>
             <div class="w-px h-5 bg-slate-200 dark:bg-slate-600 mx-1"></div>
-            <button class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            <button
+class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     title="Adicionar Procedimento" @click="$emit('add-procedure', item)">
               <span class="material-symbols-outlined text-[18px]">add_circle</span>
             </button>
-            <button class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            <button
+class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     :disabled="isActionDisabled(item)"
                     :title="getDeleteTitle(item)"
                     @click="!isActionDisabled(item) && $emit('delete', item.id)">
@@ -159,14 +171,17 @@
     <!-- CALENDAR VIEW -->
     <div v-else class="bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <!-- Week Day Header -->
-      <div class="grid border-b-2 border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800"
+      <div
+class="grid border-b-2 border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800"
            :style="`grid-template-columns: 64px repeat(${weekDays.length}, 1fr)`">
         <div class="border-r border-slate-300 dark:border-slate-700"></div>
-        <div v-for="day in weekDays" :key="day.iso"
+        <div
+v-for="day in weekDays" :key="day.iso"
              :class="['px-3 py-3 text-center border-r border-slate-300 dark:border-slate-700/50 last:border-r-0',
                        day.isToday ? 'bg-indigo-100 dark:bg-indigo-900/20' : '']">
           <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">{{ day.dayName }}</p>
-          <p :class="['text-lg font-bold mt-0.5',
+          <p
+:class="['text-lg font-bold mt-0.5',
                        day.isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-800 dark:text-white']">
             {{ day.dayNumber }}
           </p>
@@ -184,12 +199,14 @@
               <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ String(hour).padStart(2, '0') }}:00</span>
             </div>
             <!-- Day cell per hour -->
-            <div v-for="day in weekDays" :key="day.iso"
+            <div
+v-for="day in weekDays" :key="day.iso"
                  :class="['border-r border-b border-slate-300 dark:border-slate-700/50 last:border-r-0 relative min-h-[56px] transition-colors cursor-pointer',
                            day.isToday ? (idx % 2 === 0 ? 'bg-indigo-100/60 dark:bg-indigo-900/10 hover:bg-indigo-200/50 dark:hover:bg-indigo-900/30' : 'bg-indigo-50/60 dark:bg-indigo-900/5 hover:bg-indigo-100/50 dark:hover:bg-indigo-900/20') : (idx % 2 === 0 ? 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30')]"
                  @click.stop="onCellClick(day.iso, hour)">  
               <!-- Appointment blocks for this cell -->
-              <div v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
+              <div
+v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
                    class="absolute rounded-md px-2 py-1 cursor-pointer text-xs border-l-2 transition-all duration-200 z-10 hover:z-30 hover:scale-[1.05] hover:shadow-lg group/appt"
                    :class="calendarCardClass(appt.status)"
                    :style="getCardStyle(appt)"

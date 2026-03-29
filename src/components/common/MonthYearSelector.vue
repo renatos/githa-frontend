@@ -1,9 +1,9 @@
 <template>
   <div class="flex items-center bg-slate-900/50 rounded-xl border border-slate-800 p-1 backdrop-blur-sm shadow-inner group">
     <button 
-      @click="previousMonth" 
-      class="p-2 text-slate-400 hover:text-white transition-all transform hover:scale-110 active:scale-95"
+      class="p-2 text-slate-400 hover:text-white transition-all transform hover:scale-110 active:scale-95" 
       title="Mês anterior"
+      @click="previousMonth"
     >
       <span class="material-symbols-outlined text-sm">chevron_left</span>
     </button>
@@ -13,9 +13,9 @@
     </div>
     
     <button 
-      @click="nextMonth" 
-      class="p-2 text-slate-400 hover:text-white transition-all transform hover:scale-110 active:scale-95"
+      class="p-2 text-slate-400 hover:text-white transition-all transform hover:scale-110 active:scale-95" 
       title="Próximo mês"
+      @click="nextMonth"
     >
       <span class="material-symbols-outlined text-sm">chevron_right</span>
     </button>

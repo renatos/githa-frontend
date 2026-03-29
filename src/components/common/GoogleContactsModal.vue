@@ -3,9 +3,9 @@
     :show="visible"
     title="Importar Contatos do Google"
     icon="fa-brands fa-google"
+    max-width="max-w-2xl"
+    :body-padding="false"
     @close="$emit('close')"
-    maxWidth="max-w-2xl"
-    :bodyPadding="false"
   >
     <template #sub-header>
       <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
@@ -42,7 +42,8 @@
           <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
         </div>
         <p class="text-slate-900 dark:text-slate-100 font-medium mb-2">{{ error }}</p>
-        <button v-if="showConnectButton" 
+        <button
+v-if="showConnectButton" 
                 class="mt-4 px-6 py-2.5 bg-[#4285F4] hover:bg-[#3367d6] text-white rounded-lg font-medium shadow-sm transition-all flex items-center gap-2" 
                 @click="connectGoogle">
           <i class="fa-brands fa-google text-lg"></i>
@@ -51,10 +52,12 @@
       </div>
 
       <div v-else class="divide-y divide-slate-100 dark:divide-slate-800">
-        <div v-for="contact in filteredContacts" :key="contact.resourceName" 
+        <div
+v-for="contact in filteredContacts" :key="contact.resourceName" 
              class="px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
           <label class="flex items-center gap-4 cursor-pointer">
-            <input v-model="selectedContacts" :value="contact" type="checkbox" 
+            <input
+v-model="selectedContacts" :value="contact" type="checkbox" 
                    class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
             <div class="min-w-0">
               <p class="font-bold text-slate-900 dark:text-slate-100 truncate">{{ getDisplayName(contact) }}</p>
@@ -71,11 +74,13 @@
     </div>
 
     <template #footer>
-      <button class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors" 
+      <button
+class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors" 
               @click="$emit('close')">
         Cancelar
       </button>
-      <button :disabled="selectedContacts.length === 0" 
+      <button
+:disabled="selectedContacts.length === 0" 
               class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-all shadow-sm shadow-indigo-200 dark:shadow-none" 
               @click="importSelected">
         Importar {{ selectedContacts.length }} contato(s)

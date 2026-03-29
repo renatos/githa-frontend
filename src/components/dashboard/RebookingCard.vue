@@ -4,7 +4,7 @@
       <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
         <span>🔄</span> Smart Rebooking
       </h2>
-      <select v-model="statusFilter" @change="fetchReminders" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" @change="fetchReminders">
         <option value="">Todos</option>
         <option value="NEW">Novos</option>
         <option value="NOTIFIED">Notificados</option>
@@ -21,7 +21,7 @@
     </div>
 
     <div v-else-if="error" class="flex items-center justify-center py-8">
-      <button @click="fetchReminders" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+      <button class="text-sm text-red-500 hover:text-red-400 transition-colors" @click="fetchReminders">
         <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
       </button>
     </div>

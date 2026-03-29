@@ -11,18 +11,12 @@
     </div>
 
     <!-- Standard Header Box -->
-    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
-      <div class="flex flex-col gap-1">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white m-0 flex items-center gap-3">
-          <span class="material-symbols-outlined text-2xl text-indigo-600">account_balance_wallet</span>
-          Extrato: {{ balanceData.professionalName || '...' }}
-        </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1 italic">
-          Consulte o detalhamento de ganhos e retiradas do profissional.
-        </p>
-      </div>
-
-      <div class="flex items-center gap-3 flex-wrap">
+    <PageHeader
+      :title="`Extrato: ${balanceData.professionalName || '...'}`"
+      subtitle="Consulte o detalhamento de ganhos e retiradas do profissional."
+      icon="account_balance_wallet"
+    >
+      <template #actions>
         <PeriodSelector
           v-model:month="selectedMonth"
           v-model:year="selectedYear"
@@ -37,8 +31,8 @@
           <span class="material-symbols-outlined text-base">payments</span>
           Sacar Comissão
         </button>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -152,6 +146,7 @@ import { useRoute } from 'vue-router';
 import { professionalService } from '../../services/professionalService';
 import GenericTable from '../../components/common/GenericTable.vue';
 import PeriodSelector from '../../components/common/PeriodSelector.vue';
+import PageHeader from '../../components/common/PageHeader.vue';
 import WithdrawalForm from '../../components/WithdrawalForm.vue';
 
 const route = useRoute();

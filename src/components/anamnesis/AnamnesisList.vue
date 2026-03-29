@@ -1,7 +1,8 @@
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex justify-end">
-      <button type="button" 
+      <button
+type="button" 
               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
               @click="$emit('new', clientData)">
         <span class="material-symbols-outlined text-[18px]">add</span>

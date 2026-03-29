@@ -4,7 +4,7 @@
       <span class="icon">{{ icon }}</span>
       <span class="message">{{ message }}</span>
     </div>
-    <button v-if="dismissible" @click="$emit('dismiss')" class="close-btn">×</button>
+    <button v-if="dismissible" class="close-btn" @click="$emit('dismiss')">×</button>
   </div>
 </template>
 

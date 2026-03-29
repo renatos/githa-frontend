@@ -5,7 +5,7 @@
     icon="fa-solid fa-comments"
     @close="$emit('close')"
   >
-    <form @submit.prevent="save" id="feedbackForm" class="flex flex-col gap-6">
+    <form id="feedbackForm" class="flex flex-col gap-6" @submit.prevent="save">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Tipo</p>

@@ -12,8 +12,8 @@
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Cliente</label>
               <div 
                 class="text-sm text-gray-900 dark:text-white font-semibold cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-block"
-                @click="$emit('open-client', reminder.client)"
                 title="Ver detalhes do cliente"
+                @click="$emit('open-client', reminder.client)"
               >
                 {{ reminder.client?.name }}
               </div>
@@ -38,7 +38,7 @@
       <div>
           <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex justify-between items-center">
               <span>Mensagem Sugerida</span>
-              <button @click="copyMessage" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-xs flex items-center gap-1 transition-colors font-medium">
+              <button class="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-xs flex items-center gap-1 transition-colors font-medium" @click="copyMessage">
                   <i class="fa-solid fa-copy"></i> Copiar
               </button>
           </label>
@@ -57,7 +57,7 @@
           </div>
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Data do Contato</label>
-              <input type="date" v-model="form.contactDate" disabled class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700/50 dark:text-gray-400 rounded-md shadow-sm p-2 cursor-not-allowed" />
+              <input v-model="form.contactDate" type="date" disabled class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700/50 dark:text-gray-400 rounded-md shadow-sm p-2 cursor-not-allowed" />
           </div>
       </div>
 
@@ -76,14 +76,14 @@
     </div>
 
     <template #footer>
-      <button type="button" @click="$emit('close')" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+      <button type="button" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-sm" @click="$emit('close')">
         Cancelar
       </button>
       <a :href="whatsappUrl" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2">
         <i class="fa-brands fa-whatsapp"></i>
         Enviar Mensagem
       </a>
-      <button type="button" @click="save" :disabled="saving" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
+      <button type="button" :disabled="saving" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2" @click="save">
         <i v-if="saving" class="fa-solid fa-spinner fa-spin"></i>
         {{ saving ? 'Salvando...' : 'Salvar Alterações' }}
       </button>

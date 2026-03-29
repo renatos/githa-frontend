@@ -18,8 +18,8 @@
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">Profissão</p>
           <input 
-            type="text" 
             v-model="modelValue.profession" 
+            type="text" 
             class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm font-normal leading-normal transition-colors"
             :disabled="readonly"
           />
@@ -33,34 +33,38 @@
         <span>🧴</span> Rotina de Cuidados
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.usesSunscreenDaily ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Usa protetor solar diariamente?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_usesSunscreenDaily" v-model="modelValue.usesSunscreenDaily" :disabled="readonly"/>
+            <input id="fac_usesSunscreenDaily" v-model="modelValue.usesSunscreenDaily" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
         
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.usesMakeupFrequently ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Usa maquiagem com frequência?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_usesMakeupFrequently" v-model="modelValue.usesMakeupFrequently" :disabled="readonly"/>
+            <input id="fac_usesMakeupFrequently" v-model="modelValue.usesMakeupFrequently" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
         
-        <div class="flex flex-col gap-2 p-3 rounded-lg transition-colors border md:col-span-2"
+        <div
+class="flex flex-col gap-2 p-3 rounded-lg transition-colors border md:col-span-2"
              :class="modelValue.usesAcidsOrManipulatedCosmetics ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <div class="flex items-center justify-between gap-4">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Faz uso de cosméticos/ácidos?</p>
             <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
               <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-              <input class="invisible absolute" type="checkbox" id="fac_usesAcidsOrManipulatedCosmetics" v-model="modelValue.usesAcidsOrManipulatedCosmetics" :disabled="readonly"/>
+              <input id="fac_usesAcidsOrManipulatedCosmetics" v-model="modelValue.usesAcidsOrManipulatedCosmetics" class="invisible absolute" type="checkbox" :disabled="readonly"/>
             </label>
           </div>
-          <input v-if="modelValue.usesAcidsOrManipulatedCosmetics" type="text" v-model="modelValue.acidsOrCosmeticsDetails" 
+          <input
+v-if="modelValue.usesAcidsOrManipulatedCosmetics" v-model="modelValue.acidsOrCosmeticsDetails" type="text" 
                  class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                  :disabled="readonly" placeholder="Quais cosméticos/ácidos?" />
         </div>
@@ -74,67 +78,75 @@
       </h3>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div class="flex flex-col gap-2 p-3 rounded-lg transition-colors border"
+        <div
+class="flex flex-col gap-2 p-3 rounded-lg transition-colors border"
              :class="modelValue.hasDiabetesHypertensionOrAutoimmune ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <div class="flex items-center justify-between gap-4">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Diabetes, hipertensão ou doença autoimune?</p>
             <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
               <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-              <input class="invisible absolute" type="checkbox" id="fac_hasDiabetesHypertensionOrAutoimmune" v-model="modelValue.hasDiabetesHypertensionOrAutoimmune" :disabled="readonly"/>
+              <input id="fac_hasDiabetesHypertensionOrAutoimmune" v-model="modelValue.hasDiabetesHypertensionOrAutoimmune" class="invisible absolute" type="checkbox" :disabled="readonly"/>
             </label>
           </div>
-          <input v-if="modelValue.hasDiabetesHypertensionOrAutoimmune" type="text" v-model="modelValue.diabetesHypertensionAutoimmuneDetails" 
+          <input
+v-if="modelValue.hasDiabetesHypertensionOrAutoimmune" v-model="modelValue.diabetesHypertensionAutoimmuneDetails" type="text" 
                  class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                  :disabled="readonly" placeholder="Quais alterações?" />
         </div>
 
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.usesAnticoagulants ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Faz uso de anticoagulantes?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_usesAnticoagulants" v-model="modelValue.usesAnticoagulants" :disabled="readonly"/>
+            <input id="fac_usesAnticoagulants" v-model="modelValue.usesAnticoagulants" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
 
-        <div class="flex flex-col gap-2 p-3 rounded-lg transition-colors border"
+        <div
+class="flex flex-col gap-2 p-3 rounded-lg transition-colors border"
              :class="modelValue.hadPreviousFacialProcedures ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <div class="flex items-center justify-between gap-4">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Procedimentos faciais anteriores?</p>
             <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
               <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-              <input class="invisible absolute" type="checkbox" id="fac_hadPreviousFacialProcedures" v-model="modelValue.hadPreviousFacialProcedures" :disabled="readonly"/>
+              <input id="fac_hadPreviousFacialProcedures" v-model="modelValue.hadPreviousFacialProcedures" class="invisible absolute" type="checkbox" :disabled="readonly"/>
             </label>
           </div>
-          <input v-if="modelValue.hadPreviousFacialProcedures" type="text" v-model="modelValue.previousFacialProceduresDetails" 
+          <input
+v-if="modelValue.hadPreviousFacialProcedures" v-model="modelValue.previousFacialProceduresDetails" type="text" 
                  class="form-input flex w-full rounded-md text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-shadow" 
                  :disabled="readonly" placeholder="Quais procedimentos?" />
         </div>
         
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.usesFacialSoap ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Usa sabonete facial?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_usesFacialSoap" v-model="modelValue.usesFacialSoap" :disabled="readonly"/>
+            <input id="fac_usesFacialSoap" v-model="modelValue.usesFacialSoap" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
 
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.usesMoisturizer ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Usa hidratante?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_usesMoisturizer" v-model="modelValue.usesMoisturizer" :disabled="readonly"/>
+            <input id="fac_usesMoisturizer" v-model="modelValue.usesMoisturizer" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
 
-        <div class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
+        <div
+class="flex items-center justify-between gap-4 p-3 rounded-lg transition-colors border"
              :class="modelValue.smoker ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Fumante?</p>
           <label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full border-none bg-slate-300 dark:bg-slate-600 p-1 has-[:checked]:justify-end has-[:checked]:bg-indigo-600 transition-colors shrink-0">
             <div class="h-4 w-4 rounded-full bg-white shadow-sm"></div>
-            <input class="invisible absolute" type="checkbox" id="fac_smoker" v-model="modelValue.smoker" :disabled="readonly"/>
+            <input id="fac_smoker" v-model="modelValue.smoker" class="invisible absolute" type="checkbox" :disabled="readonly"/>
           </label>
         </div>
       </div>
@@ -162,9 +174,9 @@
               ]"
             >
               <input 
+                v-model="internalSkinTypes" 
                 type="checkbox" 
-                :value="skinType.name" 
-                v-model="internalSkinTypes"
+                :value="skinType.name"
                 :disabled="readonly"
                 class="hidden"
               />

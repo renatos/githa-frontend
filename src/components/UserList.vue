@@ -9,12 +9,12 @@
       </div>
       <div class="flex items-center gap-4">
         <label class="flex items-center gap-2 cursor-pointer">
-          <input v-model="showInactive" type="checkbox" @change="refresh" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700">
+          <input v-model="showInactive" type="checkbox" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700" @change="refresh">
           <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Exibir Inativos</span>
         </label>
         <button 
-          @click="$emit('new')"
-          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          @click="$emit('new')">
           <span class="material-symbols-outlined text-[18px] mr-2">add</span>
           Novo Usuário
         </button>
@@ -28,7 +28,8 @@
         @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-active="{ value }">
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+        <span
+class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
               :class="value ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
           <span class="w-1.5 h-1.5 rounded-full" :class="value ? 'bg-emerald-500' : 'bg-slate-400'"></span>
           {{ value ? 'Ativo' : 'Inativo' }}

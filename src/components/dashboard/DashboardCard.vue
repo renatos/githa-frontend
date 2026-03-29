@@ -21,7 +21,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="card-error">
         <p class="error-message">⚠️ {{ errorMessage }}</p>
-        <button v-if="showRetry" @click="$emit('retry')" class="btn btn-secondary btn-sm retry-btn">
+        <button v-if="showRetry" class="btn btn-secondary btn-sm retry-btn" @click="$emit('retry')">
           Tentar Novamente
         </button>
       </div>

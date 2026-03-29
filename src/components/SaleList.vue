@@ -1,6 +1,6 @@
 <template>
   <div class="sale-list">
-    <div class="header-actions" v-if="!embedded">
+    <div v-if="!embedded" class="header-actions">
       <h2>Vendas</h2>
       <button class="btn btn-primary" @click="$emit('new')">
         + Nova Venda
@@ -29,7 +29,7 @@
         {{ formatCurrency(value) }}
       </template>
 
-      <template #actions="{ item }" v-if="!embedded">
+      <template v-if="!embedded" #actions="{ item }">
         <div class="actions-group">
           <button class="btn-icon delete" title="Excluir" @click.stop="$emit('delete', item.id)">✕</button>
         </div>

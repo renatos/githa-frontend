@@ -1,12 +1,11 @@
 <template>
   <div class="p-4 md:p-6 lg:p-8 space-y-8 animate-in fade-in duration-500 pb-20 md:pb-8">
     <!-- Header Section -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Metas de Receita</h1>
-        <p class="text-gray-400 mt-1">Acompanhe seu desempenho e projeções financeiras.</p>
-      </div>
-      <div class="flex items-center gap-3">
+    <PageHeader 
+      title="Metas de Receita" 
+      subtitle="Acompanhe seu desempenho e projeções financeiras."
+    >
+      <template #actions>
         <MonthYearSelector 
           v-model:month="selectedMonth" 
           v-model:year="selectedYear" 
@@ -14,14 +13,14 @@
         />
         <button 
           v-if="isAdmin" 
-          @click="showGoalModal = true"
           class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+          @click="showGoalModal = true"
         >
           <Plus :size="18" />
           <span class="hidden md:inline">Nova Meta</span>
         </button>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
 
     <!-- Professional Selector (Admin only) -->
     <div v-if="isAdmin" class="bg-gray-800/30 border border-gray-700/50 p-4 rounded-2xl flex items-center gap-4">
@@ -31,7 +30,7 @@
         endpoint="/professionals" 
         placeholder="Todos os Profissionais"
         class="max-w-xs"
-        @update:modelValue="fetchData"
+        @update:model-value="fetchData"
       />
     </div>
 
@@ -44,7 +43,7 @@
       <Target :size="48" class="mx-auto text-gray-600 mb-4" />
       <h3 class="text-xl font-semibold text-gray-300">Nenhuma meta definida</h3>
       <p class="text-gray-500 mt-2 max-w-sm mx-auto">Não há metas de receita configuradas para este período e profissional.</p>
-      <button v-if="isAdmin" @click="showGoalModal = true" class="mt-6 text-primary hover:text-white transition-colors">
+      <button v-if="isAdmin" class="mt-6 text-primary hover:text-white transition-colors" @click="showGoalModal = true">
         Configurar meta agora
       </button>
     </div>
@@ -177,7 +176,8 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="need in progressData.servicesNeeded" :key="need.serviceName" 
+          <div
+v-for="need in progressData.servicesNeeded" :key="need.serviceName" 
                class="bg-gray-800/40 p-6 rounded-3xl border border-gray-700/50 flex items-center justify-between">
             <div>
               <p class="text-white font-semibold truncate max-w-[180px]">{{ need.serviceName }}</p>
@@ -220,7 +220,7 @@
 
     <!-- Admin: Add Goal Modal -->
     <BaseModal v-if="showGoalModal" title="Configurar Meta de Receita" @close="showGoalModal = false">
-      <form @submit.prevent="handleSaveGoal" class="space-y-6 p-4">
+      <form class="space-y-6 p-4" @submit.prevent="handleSaveGoal">
         <div class="space-y-2">
           <label class="text-sm font-medium text-gray-400">Profissional (Deixe vazio para Clinic Meta)</label>
           <BaseLookup v-model="newGoal.professionalId" endpoint="/professionals" placeholder="Selecione o profissional ou Meta Geral" />
@@ -245,7 +245,7 @@
         </div>
 
         <div class="flex justify-end gap-3 pt-4">
-          <button type="button" @click="showGoalModal = false" class="px-6 py-2 text-gray-400 hover:text-white transition-colors">Cancelar</button>
+          <button type="button" class="px-6 py-2 text-gray-400 hover:text-white transition-colors" @click="showGoalModal = false">Cancelar</button>
           <button 
             type="submit" 
             :disabled="saving"
@@ -269,6 +269,7 @@ import MonthYearSelector from '../components/common/MonthYearSelector.vue';
 import BaseLookup from '../components/common/BaseLookup.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import CurrencyInput from '../components/common/CurrencyInput.vue';
+import PageHeader from '../components/common/PageHeader.vue';
 import { goalService } from '../services/goalService';
 import { authService } from '../services/authService';
 

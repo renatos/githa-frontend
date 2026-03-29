@@ -89,8 +89,8 @@ onUnmounted(() => {
                 </div>
 
                 <button 
-                    @click="removeToast(toast.id)"
                     class="shrink-0 rounded-lg p-1 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                    @click="removeToast(toast.id)"
                 >
                     <X :size="16" class="opacity-50" />
                 </button>

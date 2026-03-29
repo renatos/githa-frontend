@@ -20,7 +20,7 @@
 
     <!-- Error -->
     <div v-else-if="error" class="flex-1 flex items-center justify-center py-8">
-      <button @click="fetchFinancialSummary" class="text-sm text-red-500 hover:text-red-400 transition-colors">
+      <button class="text-sm text-red-500 hover:text-red-400 transition-colors" @click="fetchFinancialSummary">
         <i class="fa-solid fa-rotate-right mr-1"></i> Tentar novamente
       </button>
     </div>

@@ -4,14 +4,14 @@
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-3">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Feedbacks e Suporte</h2>
-          <AiContextBadge context="FEEDBACKS" contextName="Feedbacks" />
+          <AiContextBadge context="FEEDBACKS" context-name="Feedbacks" />
         </div>
         <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os feedbacks e sugestões do sistema.</p>
       </div>
       <div class="flex items-center gap-3">
         <button 
-          @click="$emit('new')"
-          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+          class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          @click="$emit('new')">
           <span class="material-symbols-outlined text-[18px] mr-2">add</span>
           Novo Feedback
         </button>
@@ -80,14 +80,16 @@
         @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-feedbackType="{ item }">
-        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold"
+        <span
+class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold"
               :class="getTypeBadgeClass(item.feedbackType)">
           {{ formatType(item.feedbackType) }}
         </span>
       </template>
 
       <template #cell-feedbackStatus="{ item }">
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+        <span
+class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
               :class="getStatusBadgeClass(item.feedbackStatus)">
           <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.feedbackStatus)"></span>
           {{ formatStatus(item.feedbackStatus) }}

@@ -1,10 +1,10 @@
 <template>
   <BaseModal
     :show="true"
+    :max-width="entity?.id ? 'max-w-2xl' : 'max-w-lg'"
+    :body-padding="false"
+    :z-index="10000"
     @close="$emit('close')"
-    :maxWidth="entity?.id ? 'max-w-2xl' : 'max-w-lg'"
-    :bodyPadding="false"
-    :zIndex="10000"
   >
     <template #header-content>
       <div class="flex items-center gap-4 min-w-0">
@@ -51,8 +51,8 @@
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">Data do Atendimento</p>
           <input 
-            type="date" 
             v-model="form.attendanceDate" 
+            type="date" 
             class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-base font-normal leading-normal transition-colors"
             :disabled="readonly"
             required 
@@ -63,8 +63,8 @@
 
         <!-- Dynamic Form Component Based on Type -->
         <component 
-          v-if="currentForm" 
           :is="currentForm" 
+          v-if="currentForm" 
           v-model="form" 
           :readonly="readonly"
         />
@@ -87,8 +87,8 @@
         <div class="p-4 rounded-lg bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
           <label class="flex items-start gap-3 cursor-pointer">
             <input 
-              type="checkbox" 
               v-model="form.consentGranted" 
+              type="checkbox" 
               :disabled="readonly"
               required
               class="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-600"
@@ -99,8 +99,8 @@
           </label>
           <label class="flex items-start gap-3 cursor-pointer">
             <input 
-              type="checkbox" 
               v-model="form.photoAuthorizationGranted" 
+              type="checkbox" 
               :disabled="readonly"
               class="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-600"
             />

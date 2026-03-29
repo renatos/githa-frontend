@@ -19,7 +19,8 @@
 
           <div class="form-group">
             <label>Notas (Obrigatório)</label>
-            <textarea v-model="form.notes" class="form-control" placeholder="Motivo do cancelamento..." required
+            <textarea
+v-model="form.notes" class="form-control" placeholder="Motivo do cancelamento..." required
                       rows="4"></textarea>
           </div>
         </div>

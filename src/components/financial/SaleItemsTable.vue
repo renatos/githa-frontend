@@ -41,8 +41,8 @@
             </div>
             <button 
               v-if="canSave" 
-              @click="$emit('removeItem', index)"
               class="p-2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-100 dark:bg-slate-800 dark:hover:bg-rose-500/20 rounded-lg transition-colors"
+              @click="$emit('removeItem', index)"
             >
               <i class="fa-solid fa-trash-can"></i>
             </button>
@@ -89,11 +89,11 @@
           </div>
 
           <!-- Desktop Remove Action -->
-          <div class="hidden md:flex items-center justify-center" v-if="canSave">
+          <div v-if="canSave" class="hidden md:flex items-center justify-center">
             <button 
-              @click="$emit('removeItem', index)"
               class="opacity-0 group-hover/row:opacity-100 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
               title="Remover item"
+              @click="$emit('removeItem', index)"
             >
               <i class="fa-solid fa-trash-can text-sm"></i>
             </button>
@@ -201,9 +201,9 @@
           <div class="mt-2 md:mt-0 flex justify-end md:justify-center">
             <button
               :disabled="!isItemValid"
-              @click="onAddItem"
               class="w-full md:w-auto p-3 md:p-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-20 disabled:scale-90 transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2"
               title="Adicionar item"
+              @click="onAddItem"
             >
               <i class="fa-solid fa-plus"></i>
               <span class="md:hidden font-bold text-sm">Adicionar</span>

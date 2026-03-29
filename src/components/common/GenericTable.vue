@@ -42,7 +42,8 @@
         </tr>
         </thead>
         <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-        <tr v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+        <tr
+v-for="item in processedItems" :key="item.id || item._uid" :class="rowClass(item)" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
             @click="emit('row-click', item)">
           <td
               v-for="col in columns"
@@ -109,7 +110,8 @@
 
     <!-- Mobile Card View -->
     <div class="cards-wrapper">
-      <div v-for="item in processedItems" :key="item.id || item._uid" class="data-card"
+      <div
+v-for="item in processedItems" :key="item.id || item._uid" class="data-card"
            @click="emit('row-click', item)">
         <div v-for="col in columns" :key="col.key" class="card-row">
           <span class="card-label">{{ col.label }}</span>
@@ -141,8 +143,8 @@
           <nav aria-label="Pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px overflow-x-auto max-w-full">
             <button
                 :disabled="currentPage === 0 || loading"
-                @click="currentPage--"
                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="currentPage--"
             >
               <span class="sr-only">Anterior</span>
               <span class="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -152,21 +154,22 @@
               <span v-if="page === '...'" class="relative inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-400 cursor-default">
                 ...
               </span>
-              <button v-else @click="currentPage = page - 1"
-                :class="[
+              <button
+v-else :class="[
                   page - 1 === currentPage 
                     ? 'z-10 bg-indigo-50 dark:bg-indigo-900/50 border-indigo-500 text-indigo-600 dark:text-indigo-400' 
                     : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700',
                   'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
-                ]">
+                ]"
+                @click="currentPage = page - 1">
                 {{ page }}
               </button>
             </template>
 
             <button
                 :disabled="currentPage >= totalPages - 1 || loading"
-                @click="currentPage++"
                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="currentPage++"
             >
               <span class="sr-only">Próximo</span>
               <span class="material-symbols-outlined text-[20px]">chevron_right</span>

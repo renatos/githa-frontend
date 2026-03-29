@@ -23,7 +23,7 @@
           @mousedown.prevent="$emit('select-client', item)"
         >
           <span class="item-name">{{ item.name }}</span>
-          <span class="item-phone" v-if="item.phone">{{ formatPhone(item.phone) }}</span>
+          <span v-if="item.phone" class="item-phone">{{ formatPhone(item.phone) }}</span>
         </div>
       </div>
     </label>

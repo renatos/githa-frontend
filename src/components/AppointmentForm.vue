@@ -1,10 +1,10 @@
 <template>
   <BaseModal
     :show="true"
+    max-width="max-w-2xl"
+    :body-padding="false"
+    :z-index="10000"
     @close="$emit('close')"
-    maxWidth="max-w-2xl"
-    :bodyPadding="false"
-    :zIndex="10000"
   >
     <template #header-content>
       <div class="flex items-center gap-4 min-w-0">
@@ -21,10 +21,11 @@
     </template>
 
     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-6">
-      <form @submit.prevent="save" class="flex flex-col gap-6">
+      <form class="flex flex-col gap-6" @submit.prevent="save">
         <!-- Transaction link badge -->
         <div v-if="form.transactionId" class="flex justify-center">
-          <button type="button"
+          <button
+type="button"
                   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition-colors cursor-pointer"
                   @click="navigateToTransaction">
             <span class="material-symbols-outlined text-[14px]">link</span>
@@ -83,13 +84,15 @@
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Desconto (%)</p>
-            <input v-model="form.discount" :disabled="!canSave"
+            <input
+v-model="form.discount" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                    placeholder="0" step="0.01" type="number"/>
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Valor Final</p>
-            <input :value="formatCurrency(finalPrice)"
+            <input
+:value="formatCurrency(finalPrice)"
                    class="form-input flex w-full rounded-lg text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 h-11 px-4 text-base"
                    disabled type="text"/>
           </label>
@@ -99,20 +102,23 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Data</p>
-            <input v-model="form.date" :disabled="!canSave"
+            <input
+v-model="form.date" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                    required type="date"/>
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Início</p>
-            <input v-model="form.start" :disabled="!canSave"
+            <input
+v-model="form.start" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                    required type="text" placeholder="HH:MM" maxlength="5"
                    @input="e => { form.start = maskTime(e); calculateEndTime(); }"/>
           </label>
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Fim</p>
-            <input v-model="form.end" :disabled="!canSave"
+            <input
+v-model="form.end" :disabled="!canSave"
                    class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                    required type="text" placeholder="HH:MM" maxlength="5"
                    @input="e => form.end = maskTime(e)" @focus="calculateEndTime"/>
@@ -122,7 +128,8 @@
         <!-- Status -->
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Status</p>
-          <select v-model="form.status" :disabled="!canSave"
+          <select
+v-model="form.status" :disabled="!canSave"
                   class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
                   required>
             <option v-for="status in appointmentStatuses" :key="status.name" :value="status.name">
@@ -134,7 +141,8 @@
         <!-- Notas -->
         <label class="flex flex-col">
           <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Notas</p>
-          <textarea v-model="form.notes" :disabled="!canSave"
+          <textarea
+v-model="form.notes" :disabled="!canSave"
                     class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 py-2 text-base transition-colors disabled:opacity-60 resize-none h-20"
                     rows="2"></textarea>
         </label>
@@ -142,11 +150,13 @@
     </div>
 
     <template #footer>
-      <button class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors"
+      <button
+class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 font-medium text-sm transition-colors"
               type="button" @click="$emit('close')">
         Cancelar
       </button>
-      <button :disabled="!canSave" :title="saveTooltip"
+      <button
+:disabled="!canSave" :title="saveTooltip"
               class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
               @click="save">
         Salvar
