@@ -114,13 +114,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import BaseModal from './common/BaseModal.vue';
-import financialService from '../services/financialService';
+import { professionalService } from '../services/professionalService';
 import { toastBridge } from '../services/toastBridge';
 
 const props = defineProps({
+  professionalId: { type: [String, Number], required: true },
   professionalName: { type: String, required: true },
   netAmount: { type: Number, required: true },
   withdrawalAccountGroupId: { type: Number, required: true },
+  referenceMonth: { type: Number, required: true },
+  referenceYear: { type: Number, required: true },
 });
 
 const emit = defineEmits(['close', 'saved']);
@@ -161,13 +164,10 @@ const confirm = async () => {
 
   saving.value = true;
   try {
-    await financialService.createTransaction({
-      description: `Retirada Comissão - ${props.professionalName}`,
+    await professionalService.withdrawCommission(props.professionalId, {
       amount: Number(amount.value),
-      nature: 'EXPENSE',
-      status: 'PAID',
-      accountGroupId: props.withdrawalAccountGroupId,
-      paymentDate: new Date().toISOString(),
+      referenceMonth: props.referenceMonth,
+      referenceYear: props.referenceYear,
       notes: `Saque de comissão - ${props.professionalName}`,
     });
 

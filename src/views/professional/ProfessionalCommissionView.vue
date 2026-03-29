@@ -29,9 +29,10 @@
           :show-mode-toggle="false"
         />
         <button
-          @click="openWithdrawalForm"
-          :disabled="!balanceData.withdrawalAccountGroupId || balanceData.netAmountToReceive <= 0"
           class="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-rose-300/50 active:scale-95"
+          :title="!isCurrentMonth ? 'Só é possível sacar comissões do mês vigente' : ''"
+          :disabled="!balanceData.withdrawalAccountGroupId || balanceData.netAmountToReceive <= 0 || !isCurrentMonth"
+          @click="openWithdrawalForm"
         >
           <span class="material-symbols-outlined text-base">payments</span>
           Sacar Comissão
@@ -134,9 +135,12 @@
   <!-- Withdrawal Form Component (seguindo padrão AppointmentForm) -->
   <WithdrawalForm
     v-if="showWithdrawalForm"
+    :professional-id="professionalId"
     :professional-name="balanceData.professionalName"
     :net-amount="Number(balanceData.netAmountToReceive)"
     :withdrawal-account-group-id="balanceData.withdrawalAccountGroupId"
+    :reference-month="selectedMonth"
+    :reference-year="selectedYear"
     @close="closeWithdrawalForm"
     @saved="onWithdrawalSaved"
   />
@@ -156,6 +160,11 @@ const professionalId = route.params.id;
 // Filter State
 const selectedMonth = ref(new Date().getMonth() + 1);
 const selectedYear = ref(new Date().getFullYear());
+
+const isCurrentMonth = computed(() => {
+  const now = new Date();
+  return selectedMonth.value === now.getMonth() + 1 && selectedYear.value === now.getFullYear();
+});
 
 // Withdrawal Form State
 const showWithdrawalForm = ref(false);
