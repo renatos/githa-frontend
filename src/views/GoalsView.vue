@@ -101,17 +101,23 @@
           
           <div 
             v-if="progressData.onTrack" 
-            class="mt-6 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 group relative cursor-help"
+            class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
-            <CheckCircle :size="14" /> DENTRO DA META <Info :size="12" class="opacity-50" />
-            <BaseTooltip text="O ritmo de faturamento está adequado para atingir o objetivo mensal." />
+            <CheckCircle :size="14" /> DENTRO DA META 
+            <div class="group relative cursor-help flex items-center">
+              <Info :size="12" class="opacity-50 group-hover:opacity-100 transition-opacity" />
+              <BaseTooltip text="O ritmo de faturamento está adequado para atingir o objetivo mensal." />
+            </div>
           </div>
           <div 
             v-else 
-            class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 group relative cursor-help"
+            class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
-            <AlertCircle :size="14" /> ABAIXO DO PRO-RATA <Info :size="12" class="opacity-50" />
-            <BaseTooltip text="Faturamento abaixo do esperado para o estágio atual do mês (baseado em dias úteis)." />
+            <AlertCircle :size="14" /> ABAIXO DO PRO-RATA
+            <div class="group relative cursor-help flex items-center">
+              <Info :size="12" class="opacity-50 group-hover:opacity-100 transition-opacity" />
+              <BaseTooltip text="Faturamento abaixo do esperado para o estágio atual do mês (baseado em dias úteis)." />
+            </div>
           </div>
         </div>
 
@@ -124,12 +130,26 @@
                 <DollarSign :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5 group relative cursor-help">
+                <div class="flex items-center gap-1.5">
                   <p class="text-gray-400 text-sm">Receita Realizada (Paga)</p>
-                  <Info :size="12" class="text-gray-600" />
-                  <BaseTooltip text="Total de vendas efetivamente pagas no período." />
+                  <div class="group relative cursor-help flex items-center">
+                    <Info :size="12" class="text-gray-600 group-hover:text-primary transition-colors" />
+                    <BaseTooltip text="Total de vendas efetivamente pagas no período." />
+                  </div>
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.realizedRevenue) }}</h4>
+                <div class="flex items-center gap-2 mt-2">
+                  <VariationBadge 
+                    :current="progressData.realizedRevenue" 
+                    :comparison="progressData.lastMonthRevenue" 
+                    label="Mês Ant."
+                  />
+                  <VariationBadge 
+                    :current="progressData.realizedRevenue" 
+                    :comparison="progressData.lastYearRevenue" 
+                    label="Ano Ant."
+                  />
+                </div>
               </div>
             </div>
             <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
@@ -144,10 +164,12 @@
                 <Clock :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5 group relative text-left cursor-help">
+                <div class="flex items-center gap-1.5">
                   <p class="text-gray-400 text-sm">Pendente (Vencida/Aberta)</p>
-                  <Info :size="12" class="text-gray-600" />
-                  <BaseTooltip text="Vendas confirmadas que aguardam pagamento ou estão em aberto." />
+                  <div class="group relative cursor-help flex items-center">
+                    <Info :size="12" class="text-gray-600 group-hover:text-primary transition-colors" />
+                    <BaseTooltip text="Vendas confirmadas que aguardam pagamento ou estão em aberto." />
+                  </div>
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.pendingRevenue) }}</h4>
               </div>
@@ -161,10 +183,12 @@
                 <Calendar :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5 group relative cursor-help">
+                <div class="flex items-center gap-1.5">
                   <p class="text-gray-400 text-sm">Agendado (Estimado)</p>
-                  <Info :size="12" class="text-gray-600" />
-                  <BaseTooltip text="Projeção baseada em agendamentos futuros não faturados para este mês." />
+                  <div class="group relative cursor-help flex items-center">
+                    <Info :size="12" class="text-gray-600 group-hover:text-primary transition-colors" />
+                    <BaseTooltip text="Projeção baseada em agendamentos futuros não faturados para este mês." />
+                  </div>
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.scheduledRevenue) }}</h4>
               </div>
@@ -178,10 +202,12 @@
                 <RefreshCw :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5 group relative cursor-help">
+                <div class="flex items-center gap-1.5">
                   <p class="text-gray-400 text-sm">Pipeline Rebooking</p>
-                  <Info :size="12" class="text-gray-600" />
-                  <BaseTooltip text="Oportunidades de retorno baseadas nos 10 atendimentos mais recentes de clientes que ainda não retornaram." />
+                  <div class="group relative cursor-help flex items-center">
+                    <Info :size="12" class="text-gray-600 group-hover:text-primary transition-colors" />
+                    <BaseTooltip text="Oportunidades de retorno baseadas nos 10 atendimentos mais recentes de clientes que ainda não retornaram." />
+                  </div>
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.rebookingPipelineValue) }}</h4>
               </div>
@@ -191,10 +217,12 @@
           <!-- Total Projection -->
           <div class="md:col-span-2 bg-gradient-to-br from-primary/20 to-indigo-900/10 border border-primary/30 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <div class="flex items-center gap-2 mb-1 group relative cursor-help">
-                <p class="text-primary-light font-semibold uppercase tracking-widest text-xs">Total Projetado (Safe Forecast)</p>
-                <Info :size="12" class="text-primary-light/60" />
-                <BaseTooltip text="Projeção conservadora do faturamento total (Pago + Pendente + Agendado + Rebooking)." />
+              <div class="flex items-center gap-1.5 mb-1">
+                <p class="text-gray-400 text-[10px] uppercase tracking-wider font-bold">Total Projetado (Safe Forecast)</p>
+                <div class="group relative cursor-help flex items-center">
+                  <Info :size="12" class="text-gray-600 group-hover:text-primary transition-colors" />
+                  <BaseTooltip text="Projeção conservadora do faturamento total (Pago + Pendente + Agendado + Rebooking)." />
+                </div>
               </div>
               <h3 class="text-4xl font-black text-white">{{ formatCurrency(progressData.totalProjectedRevenue) }}</h3>
               <p class="text-gray-400 text-sm mt-2">Soma de Realizado + Pendente + Agendado + Rebooking</p>
@@ -355,6 +383,7 @@ import BaseModal from '../components/common/BaseModal.vue';
 import CurrencyInput from '../components/common/CurrencyInput.vue';
 import PageHeader from '../components/common/PageHeader.vue';
 import BaseTooltip from '../components/common/BaseTooltip.vue';
+import VariationBadge from '../components/common/VariationBadge.vue';
 import RebookingCard from '../components/dashboard/RebookingCard.vue';
 import { goalService } from '../services/goalService';
 import { authService } from '../services/authService';
