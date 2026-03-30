@@ -52,8 +52,11 @@
       <!-- Main Dashboard Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Radial Progress Card -->
-        <div class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center relative overflow-hidden group">
-          <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
+        <div class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center relative group">
+          <!-- Background decoration with clipping -->
+          <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
+          </div>
           
           <div class="relative w-64 h-64">
             <!-- SVG Radial Chart -->
@@ -96,11 +99,19 @@
             </div>
           </div>
           
-          <div v-if="progressData.onTrack" class="mt-6 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 cursor-help" title="O ritmo de faturamento está adequado para atingir o objetivo mensal.">
+          <div 
+            v-if="progressData.onTrack" 
+            class="mt-6 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 group relative cursor-help"
+          >
             <CheckCircle :size="14" /> DENTRO DA META <Info :size="12" class="opacity-50" />
+            <BaseTooltip text="O ritmo de faturamento está adequado para atingir o objetivo mensal." />
           </div>
-          <div v-else class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 cursor-help" title="Faturamento abaixo do esperado para o estágio atual do mês (baseado em dias úteis).">
+          <div 
+            v-else 
+            class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 group relative cursor-help"
+          >
             <AlertCircle :size="14" /> ABAIXO DO PRO-RATA <Info :size="12" class="opacity-50" />
+            <BaseTooltip text="Faturamento abaixo do esperado para o estágio atual do mês (baseado em dias úteis)." />
           </div>
         </div>
 
@@ -113,11 +124,10 @@
                 <DollarSign :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 group relative cursor-help">
                   <p class="text-gray-400 text-sm">Receita Realizada (Paga)</p>
-                  <span class="cursor-help" title="Total de vendas efetivamente pagas no período.">
-                    <Info :size="12" class="text-gray-600" />
-                  </span>
+                  <Info :size="12" class="text-gray-600" />
+                  <BaseTooltip text="Total de vendas efetivamente pagas no período." />
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.realizedRevenue) }}</h4>
               </div>
@@ -134,11 +144,10 @@
                 <Clock :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 group relative text-left cursor-help">
                   <p class="text-gray-400 text-sm">Pendente (Vencida/Aberta)</p>
-                  <span class="cursor-help" title="Vendas confirmadas que aguardam pagamento ou estão em aberto.">
-                    <Info :size="12" class="text-gray-600" />
-                  </span>
+                  <Info :size="12" class="text-gray-600" />
+                  <BaseTooltip text="Vendas confirmadas que aguardam pagamento ou estão em aberto." />
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.pendingRevenue) }}</h4>
               </div>
@@ -152,11 +161,10 @@
                 <Calendar :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 group relative cursor-help">
                   <p class="text-gray-400 text-sm">Agendado (Estimado)</p>
-                  <span class="cursor-help" title="Projeção baseada em agendamentos futuros não faturados para este mês.">
-                    <Info :size="12" class="text-gray-600" />
-                  </span>
+                  <Info :size="12" class="text-gray-600" />
+                  <BaseTooltip text="Projeção baseada em agendamentos futuros não faturados para este mês." />
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.scheduledRevenue) }}</h4>
               </div>
@@ -170,11 +178,10 @@
                 <RefreshCw :size="24" />
               </div>
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 group relative cursor-help">
                   <p class="text-gray-400 text-sm">Pipeline Rebooking</p>
-                  <span class="cursor-help" title="Oportunidades de retorno baseadas nos 10 atendimentos mais recentes de clientes que ainda não retornaram.">
-                    <Info :size="12" class="text-gray-600" />
-                  </span>
+                  <Info :size="12" class="text-gray-600" />
+                  <BaseTooltip text="Oportunidades de retorno baseadas nos 10 atendimentos mais recentes de clientes que ainda não retornaram." />
                 </div>
                 <h4 class="text-2xl font-bold text-white">{{ formatCurrency(progressData.rebookingPipelineValue) }}</h4>
               </div>
@@ -184,11 +191,10 @@
           <!-- Total Projection -->
           <div class="md:col-span-2 bg-gradient-to-br from-primary/20 to-indigo-900/10 border border-primary/30 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 group relative cursor-help">
                 <p class="text-primary-light font-semibold uppercase tracking-widest text-xs">Total Projetado (Safe Forecast)</p>
-                <span class="cursor-help" title="Projeção conservadora do faturamento total (Pago + Pendente + Agendado + Rebooking).">
-                  <Info :size="12" class="text-primary-light/60" />
-                </span>
+                <Info :size="12" class="text-primary-light/60" />
+                <BaseTooltip text="Projeção conservadora do faturamento total (Pago + Pendente + Agendado + Rebooking)." />
               </div>
               <h3 class="text-4xl font-black text-white">{{ formatCurrency(progressData.totalProjectedRevenue) }}</h3>
               <p class="text-gray-400 text-sm mt-2">Soma de Realizado + Pendente + Agendado + Rebooking</p>
@@ -322,10 +328,18 @@
       <div class="p-2">
         <RebookingCard 
           :service-id="selectedRebookingService?.id" 
-          @select-client="(client) => { showRebookingModal = false; /* Implement navigation if needed */ }"
+          @select-client="(client) => { openClientForm(client); }"
         />
       </div>
     </BaseModal>
+
+    <!-- Client Detail Modal -->
+    <ClientForm
+      v-if="editingClient"
+      :client="editingClient"
+      @close="closeClientForm"
+      @save="saveClient"
+    />
   </div>
 </template>
 
@@ -340,10 +354,14 @@ import BaseLookup from '../components/common/BaseLookup.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import CurrencyInput from '../components/common/CurrencyInput.vue';
 import PageHeader from '../components/common/PageHeader.vue';
+import BaseTooltip from '../components/common/BaseTooltip.vue';
 import RebookingCard from '../components/dashboard/RebookingCard.vue';
 import { goalService } from '../services/goalService';
 import { authService } from '../services/authService';
 import { professionalService } from '../services/professionalService';
+import ClientForm from '../components/ClientForm.vue';
+import { clientService } from '../services/clientService';
+import { toastBridge } from '../services/toastBridge';
 
 
 
@@ -358,6 +376,7 @@ const showGoalModal = ref(false);
 const showRebookingModal = ref(false);
 const selectedRebookingService = ref(null);
 const isAdmin = ref(false);
+const editingClient = ref(null);
 
 const newGoal = ref({
   id: null,
@@ -460,6 +479,46 @@ const resetNewGoal = () => {
     year: selectedYear.value,
     targetAmount: 0
   };
+};
+
+const openClientForm = async (client) => {
+  try {
+    const response = await clientService.getById(client.id);
+    editingClient.value = response.data;
+  } catch (error) {
+    console.error('Error loading client details:', error);
+    toastBridge.getToast().add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível carregar os detalhes do cliente.',
+      life: 3000
+    });
+  }
+};
+
+const closeClientForm = () => {
+  editingClient.value = null;
+};
+
+const saveClient = async (clientData) => {
+  try {
+    await clientService.update(clientData.id, clientData);
+    toastBridge.getToast().add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Cliente atualizado com sucesso!',
+      life: 3000
+    });
+    closeClientForm();
+  } catch (error) {
+    console.error('Error saving client:', error);
+    toastBridge.getToast().add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível salvar as alterações.',
+      life: 3000
+    });
+  }
 };
 
 watch(showGoalModal, (val) => {

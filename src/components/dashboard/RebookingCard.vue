@@ -6,10 +6,7 @@
       </h2>
       <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" @change="fetchReminders">
         <option value="">Todos</option>
-        <option value="NEW">Novos</option>
-        <option value="NOTIFIED">Notificados</option>
-        <option value="SCHEDULED">Agendados</option>
-        <option value="DECLINED">Recusados</option>
+        <option v-for="opt in statusFilterOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
       </select>
     </div>
 
@@ -67,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineEmits } from 'vue';
+import { ref, onMounted, defineEmits, computed } from 'vue';
 
 const emit = defineEmits(['select-client']);
 import { listRebookingReminders } from '../../services/rebookingService';
@@ -75,6 +72,7 @@ import RebookingForm from './RebookingForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
+import { enumService } from '../../services/enumService';
 
 const props = defineProps({
     serviceId: {
@@ -91,11 +89,29 @@ const selectedReminder = ref(null);
 const showAppointmentForm = ref(false);
 const preFilledAppointment = ref({});
 
-const rebookingStatusMap = {
-    NEW: { label: 'Novo', badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
-    NOTIFIED: { label: 'Notificado', badge: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/30', dot: 'bg-yellow-500' },
-    SCHEDULED: { label: 'Agendado', badge: 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30', dot: 'bg-blue-500' },
-    DECLINED: { label: 'Recusado', badge: 'bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30', dot: 'bg-red-500' }
+const statusFilterOptions = ref([]);
+
+const rebookingStyles = {
+    NEW: { badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
+    NOTIFIED: { badge: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/30', dot: 'bg-yellow-500' },
+    SCHEDULED: { badge: 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30', dot: 'bg-blue-500' },
+    DECLINED: { badge: 'bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30', dot: 'bg-red-500' },
+    NO_CONTACT: { badge: 'bg-gray-50 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 border border-gray-200 dark:border-gray-500/30', dot: 'bg-gray-500' }
+};
+
+const rebookingStatusMap = computed(() => {
+    const map = {};
+    statusFilterOptions.value.forEach(opt => {
+        map[opt.name] = {
+            label: opt.description,
+            ...(rebookingStyles[opt.name] || rebookingStyles.NO_CONTACT)
+        };
+    });
+    return map;
+});
+
+const loadStatusOptions = async () => {
+    statusFilterOptions.value = await enumService.getOptions('RebookingStatus');
 };
 
 const fetchReminders = async () => {
@@ -156,6 +172,7 @@ const onAppointmentSaved = () => {
 };
 
 onMounted(() => {
+    loadStatusOptions();
     fetchReminders();
 });
 </script>

@@ -49,10 +49,7 @@
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
               <select v-model="form.status" class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
-                  <option value="NEW">Novo</option>
-                  <option value="NOTIFIED">Notificado</option>
-                  <option value="SCHEDULED">Agendado</option>
-                  <option value="DECLINED">Recusado</option>
+                  <option v-for="opt in statusOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
               </select>
           </div>
           <div>
@@ -62,11 +59,21 @@
       </div>
 
       <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Profissional Responsável</label>
-          <select v-model="form.contactResponsibleId" class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+          <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+            Profissional Responsável
+            <span v-if="isProfessionalRequired" class="text-red-500">*</span>
+          </label>
+          <select 
+            v-model="form.contactResponsibleId" 
+            class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 transition-colors"
+            :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': isProfessionalRequired && !form.contactResponsibleId }"
+          >
               <option :value="null">Selecione o profissional</option>
               <option v-for="prof in professionals" :key="prof.id" :value="prof.id">{{ prof.name }}</option>
           </select>
+          <p v-if="isProfessionalRequired && !form.contactResponsibleId" class="text-[10px] text-red-500 mt-1">
+            A seleção do profissional é obrigatória para os status "{{ currentStatusLabel }}".
+          </p>
       </div>
 
       <div>
@@ -83,7 +90,13 @@
         <i class="fa-brands fa-whatsapp"></i>
         Enviar Mensagem
       </a>
-      <button type="button" :disabled="saving" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2" @click="save">
+      <button 
+        type="button" 
+        :disabled="saving || !isValid" 
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" 
+        @click="save"
+        :title="!isValid ? 'Selecione o profissional para salvar' : ''"
+      >
         <i v-if="saving" class="fa-solid fa-spinner fa-spin"></i>
         {{ saving ? 'Salvando...' : 'Salvar Alterações' }}
       </button>
@@ -96,6 +109,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { updateRebookingReminder } from '../../services/rebookingService';
 import { professionalService } from '../../services/professionalService';
 import BaseModal from '../common/BaseModal.vue';
+import { enumService } from '../../services/enumService';
+import { getWhatsappLink } from '../../utils/whatsappHelper';
 
 const props = defineProps({
     reminder: { type: Object, required: true }
@@ -113,6 +128,25 @@ const form = ref({
     notes: props.reminder.notes || '',
     message: props.reminder.message || ''
 });
+
+const currentStatusLabel = computed(() => {
+    const option = statusOptions.value.find(opt => opt.name === form.value.status);
+    return option ? option.description : form.value.status;
+});
+
+const isProfessionalRequired = computed(() => ['NOTIFIED', 'SCHEDULED', 'DECLINED'].includes(form.value.status));
+const isValid = computed(() => {
+    if (isProfessionalRequired.value && !form.value.contactResponsibleId) {
+        return false;
+    }
+    return true;
+});
+
+const statusOptions = ref([]);
+
+const loadStatusOptions = async () => {
+    statusOptions.value = await enumService.getOptions('RebookingStatus');
+};
 
 watch(() => form.value.status, (newStatus) => {
     if (newStatus === 'NOTIFIED') {
@@ -132,18 +166,7 @@ const copyMessage = () => {
 };
 
 const whatsappUrl = computed(() => {
-    const phone = props.reminder.client?.phone;
-    if (!phone) return '#';
-    
-    // Remove non-digits
-    const cleanPhone = phone.replace(/\D/g, '');
-    const message = encodeURIComponent(form.value.message || '');
-    
-    // If phone starts with 55, don't add it again. 
-    // Usually in Brazil phones are stored without country code.
-    const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
-    
-    return `https://wa.me/${finalPhone}?text=${message}`;
+    return getWhatsappLink(props.reminder.client?.phone, form.value.message);
 });
 
 const save = async () => {
@@ -166,6 +189,7 @@ const save = async () => {
 
 onMounted(() => {
     loadProfessionals();
+    loadStatusOptions();
 });
 </script>
 

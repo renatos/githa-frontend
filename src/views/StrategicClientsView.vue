@@ -60,9 +60,9 @@ v-if="item.client.status" class="inline-flex items-center gap-1 px-2.5 py-1 roun
       <template #actions="{ item }">
         <div class="flex justify-center gap-1">
           <a
-v-if="item.client.phone" :href="getWhatsappLink(item.client)" class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-green-50 hover:border-green-500 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:border-green-500 transition-colors text-slate-500 dark:text-slate-400 grayscale hover:grayscale-0" target="_blank"
+v-if="item.client.phone" :href="getWhatsappLink(item.client.phone)" class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-green-50 hover:border-green-500 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:border-green-500 transition-colors text-slate-500 dark:text-slate-400 grayscale hover:grayscale-0" target="_blank"
              title="WhatsApp" @click.stop>
-            💬
+            <i class="fa-brands fa-whatsapp text-emerald-500"></i>
           </a>
         </div>
       </template>
@@ -87,6 +87,7 @@ import api from '../services/api';
 import { clientService } from '../services/clientService';
 import { confirmBridge } from '../services/confirmBridge';
 import {formatCurrency, formatDate} from '../utils/formatters';
+import { getWhatsappLink } from '../utils/whatsappHelper';
 
 const tableRef = ref(null);
 const recalculating = ref(false);
@@ -170,10 +171,7 @@ const recalculate = async () => {
   }
 };
 
-const getWhatsappLink = (client) => {
-  const phone = client.phone.replace(/\D/g, '');
-  return `https://wa.me/55${phone}`;
-};
+
 
 const handleRowClick = (item) => {
   editingClient.value = { ...item.client };
