@@ -81,9 +81,11 @@ const saveClient = async (clientData) => {
       detail: 'Cliente atualizado com sucesso!',
       life: 3000
     });
+    
+    // Notify globally so components like RebookingCard can sync data seamlessly
+    window.dispatchEvent(new CustomEvent('client-updated', { detail: clientData }));
+    
     closeClientForm();
-    // No need to refresh dash as it doesn't show much client detail that would change here
-    // except if the name changed, but usually dash data for these cards is stable or needs a full refresh
   } catch (error) {
     console.error('Error saving client:', error);
     toastBridge.getToast().add({

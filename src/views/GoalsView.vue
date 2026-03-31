@@ -538,6 +538,10 @@ const saveClient = async (clientData) => {
       detail: 'Cliente atualizado com sucesso!',
       life: 3000
     });
+    
+    // Notify globally so components like RebookingCard can sync data seamlessly
+    window.dispatchEvent(new CustomEvent('client-updated', { detail: clientData }));
+    
     closeClientForm();
   } catch (error) {
     console.error('Error saving client:', error);

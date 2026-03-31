@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineEmits, computed } from 'vue';
+import { ref, onMounted, onUnmounted, defineEmits, computed } from 'vue';
 
 const emit = defineEmits(['select-client']);
 import { listRebookingReminders } from '../../services/rebookingService';
@@ -127,6 +127,20 @@ const fetchReminders = async () => {
     }
 };
 
+const handleClientUpdate = async (event) => {
+    // Optionally we could check event.detail to verify if the client id matches any in our list
+    // But refetching ensures data consistency 
+    await fetchReminders();
+    
+    // If RebookingForm is open for the updated client, update the ref so the UI reacts instantly
+    if (selectedReminder.value) {
+        const updatedMatchingReminder = reminders.value.find(r => r.id === selectedReminder.value.id);
+        if (updatedMatchingReminder) {
+            selectedReminder.value = updatedMatchingReminder;
+        }
+    }
+};
+
 const openForm = (reminder) => {
     selectedReminder.value = reminder;
 };
@@ -174,5 +188,10 @@ const onAppointmentSaved = () => {
 onMounted(() => {
     loadStatusOptions();
     fetchReminders();
+    window.addEventListener('client-updated', handleClientUpdate);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('client-updated', handleClientUpdate);
 });
 </script>
