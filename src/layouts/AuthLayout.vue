@@ -37,10 +37,11 @@
 }
 
 .logo-img {
+  display: block;
+  margin: 0 auto var(--spacing-sm);
   max-width: 250px;
   width: 100%;
   height: auto;
-  margin-bottom: var(--spacing-sm);
   object-fit: contain;
 }
 
