@@ -2,7 +2,8 @@
   <BaseModal
     :show="true"
     :title="professional.id ? 'Editar Profissional' : 'Novo Profissional'"
-    icon="fa-solid fa-user-doctor"
+    icon="material-symbols-outlined:medical_services"
+    :z-index="zIndex"
     @close="$emit('close')"
   >
     <form id="professionalForm" class="flex flex-col gap-6" @submit.prevent="save">
@@ -52,10 +53,8 @@ import BaseModal from './common/BaseModal.vue';
 import { formatPhone } from '../utils/formatters';
 
 const props = defineProps({
-  professional: {
-    type: Object,
-    default: () => ({}),
-  },
+  professional: { type: Object, default: () => ({}) },
+  zIndex: { type: Number, default: 9999 }
 });
 
 const emit = defineEmits(['close', 'save']);

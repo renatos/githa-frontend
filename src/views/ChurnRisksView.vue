@@ -70,14 +70,11 @@
 
       <template #actions="{ item }">
         <div class="flex justify-end gap-2">
-          <button 
-            v-if="item.lastRetentionMessage"
-            class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
-            title="Enviar WhatsApp"
-            @click.stop="openRetentionModal(item)"
-          >
-            <i class="fa-brands fa-whatsapp text-[20px]"></i>
-          </button>
+          <BaseWhatsAppButton
+            variant="outline"
+            title="Abrir Recuperação de Abandono (Follow-up)"
+            @click.stop="openFollowUp(item)"
+          />
           <button 
             class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-500 transition-colors"
             title="Ver Detalhes"
@@ -89,53 +86,19 @@
       </template>
     </GenericTable>
 
-    <!-- Recruitment Message Modal -->
-    <BaseModal
-      :show="showRetentionModal"
-      title="Enviar Mensagem de Recuperação"
-      subtitle="Revise e envie a mensagem personalizada via WhatsApp"
-      icon="fa-solid fa-paper-plane"
-      @close="showRetentionModal = false"
-    >
-      <div v-if="selectedRetentionItem" class="flex flex-col gap-4">
-        <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mensagem do Cliente</label>
-          <textarea 
-            v-model="retentionMessage"
-            class="w-full h-32 bg-transparent border-none focus:ring-0 text-slate-700 dark:text-slate-200 resize-none custom-scrollbar"
-            placeholder="Digite a mensagem..."
-          ></textarea>
-        </div>
-        
-        <div class="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl">
-          <i class="fa-solid fa-circle-info text-amber-500 text-lg"></i>
-          <p class="text-xs text-amber-700 dark:text-amber-300 m-0">
-            Ao clicar em enviar, você será redirecionado para o WhatsApp com esta mensagem preenchida.
-          </p>
-        </div>
-      </div>
-      
-      <template #footer>
-        <button 
-          class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-          @click="showRetentionModal = false"
-        >
-          Cancelar
-        </button>
-        <button 
-          class="flex items-center px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          @click="sendWhatsApp"
-        >
-          <i class="fa-brands fa-whatsapp mr-2 text-lg"></i>
-          Enviar Agora
-        </button>
-      </template>
-    </BaseModal>
+    <!-- Rebooking Form Modal (Unified Retention) -->
+    <RebookingForm
+      v-if="showRebookingForm && activeReminder"
+      :reminder="activeReminder"
+      @close="showRebookingForm = false"
+      @save="onRebookingSaved"
+    />
 
     <!-- Client Edit Modal -->
     <ClientForm
       v-if="showClientForm"
       :client="editingClient"
+      :z-index="11000"
       @close="showClientForm = false"
       @save="onClientSaved"
     />
@@ -147,9 +110,12 @@ import { ref, computed } from 'vue';
 import PageHeader from '../components/common/PageHeader.vue';
 import GenericTable from '../components/common/GenericTable.vue';
 import ClientForm from '../components/ClientForm.vue';
+import RebookingForm from '../components/dashboard/RebookingForm.vue';
+import BaseWhatsAppButton from '../components/common/BaseWhatsAppButton.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import { churnService } from '../services/churnService';
 import { clientService } from '../services/clientService';
+import { getActiveChurnByClient } from '../services/rebookingService';
 import { toastBridge } from '../services/toastBridge';
 import { confirmBridge } from '../services/confirmBridge';
 import { systemParameterService } from '../services/systemParameterService';
@@ -160,9 +126,8 @@ const tableRef = ref(null);
 const onlyHighRisk = ref(true);
 const showClientForm = ref(false);
 const editingClient = ref(null);
-const showRetentionModal = ref(false);
-const selectedRetentionItem = ref(null);
-const retentionMessage = ref('');
+const showRebookingForm = ref(false);
+const activeReminder = ref(null);
 const churnThreshold = ref(50);
 
 const loadParameters = async () => {
@@ -216,19 +181,24 @@ const handleRowClick = (item) => {
   showClientForm.value = true;
 };
 
-const openRetentionModal = (item) => {
-  selectedRetentionItem.value = item;
-  retentionMessage.value = item.lastRetentionMessage || '';
-  showRetentionModal.value = true;
+const openFollowUp = async (item) => {
+  try {
+    const reminder = await getActiveChurnByClient(item.clientId);
+    if (reminder) {
+      activeReminder.value = reminder;
+      showRebookingForm.value = true;
+    } else {
+      toastBridge.error('Indisponível', 'Nenhum lembrete de abandono ativo para este cliente.');
+    }
+  } catch (error) {
+    console.error('Failed to fetch active churn reminder', error);
+    toastBridge.error('Erro', 'Não foi possível carregar o formulário de recuperação.');
+  }
 };
 
-const sendWhatsApp = () => {
-  if (!selectedRetentionItem.value) return;
-  
-  const link = getWhatsappLink(selectedRetentionItem.value.clientPhone, retentionMessage.value);
-  window.open(link, '_blank');
-  showRetentionModal.value = false;
-  toastBridge.success('WhatsApp aberto', 'Mensagem enviada para o navegador.');
+const onRebookingSaved = () => {
+  showRebookingForm.value = false;
+  refresh();
 };
 
 const onClientSaved = async (data) => {

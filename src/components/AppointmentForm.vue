@@ -3,7 +3,7 @@
     :show="true"
     max-width="max-w-2xl"
     :body-padding="false"
-    :z-index="10000"
+    :z-index="zIndex"
     @close="$emit('close')"
   >
     <template #header-content>
@@ -168,18 +168,21 @@ class="px-5 py-2.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:b
     <ClientForm
         v-if="showClientForm"
         :client="editingClient"
+        :z-index="11000"
         @close="showClientForm = false"
         @save="onClientSaved"
     />
     <ProfessionalForm
         v-if="showProfessionalForm"
         :professional="editingProfessional"
+        :z-index="11000"
         @close="showProfessionalForm = false"
         @save="onProfessionalSaved"
     />
     <ServiceForm
         v-if="showServiceForm"
         :service="editingService"
+        :z-index="11000"
         @close="showServiceForm = false"
         @save="onServiceSaved"
     />
@@ -209,10 +212,8 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-  clientId: {
-    type: Number,
-    default: null
-  }
+  clientId: { type: Number, default: null },
+  zIndex: { type: Number, default: 10000 }
 });
 
 const emit = defineEmits(['close', 'save']);

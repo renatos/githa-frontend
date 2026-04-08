@@ -140,9 +140,14 @@ v-if="item.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-ful
 
       <template #actions="{ item }">
         <div class="actions-group">
-          <a v-if="item.phone" :href="getWhatsappLink(item.phone)" target="_blank" class="btn-icon whatsapp" title="WhatsApp">
-              <i class="fa-brands fa-whatsapp text-emerald-500"></i>
-          </a>
+          <BaseWhatsAppButton
+            v-if="item.phone"
+            size="xs"
+            variant="outline"
+            :href="getWhatsappLink(item.phone)"
+            title="WhatsApp"
+            @click.stop
+          />
           <button class="btn-icon delete" @click="$emit('delete', item.id)">✕</button>
         </div>
       </template>
@@ -160,6 +165,7 @@ import { ref, defineEmits, defineExpose, onMounted } from 'vue';
 import GenericTable from './common/GenericTable.vue';
 import GoogleContactsModal from './common/GoogleContactsModal.vue';
 import AiContextBadge from './common/AiContextBadge.vue';
+import BaseWhatsAppButton from './common/BaseWhatsAppButton.vue';
 import { clientService } from '../services/clientService';
 import { formatShortName, formatPhone } from '../utils/formatters';
 import { confirmBridge } from '../services/confirmBridge';
@@ -363,14 +369,6 @@ defineExpose({ refresh });
   color: var(--color-primary);
 }
 
-.btn-icon.whatsapp {
-    transition: filter 0.2s;
-}
-.btn-icon.whatsapp:hover {
-    filter: grayscale(0%);
-    background-color: #dcfce7;
-    border-color: #22c55e;
-}
 
 .btn-icon.delete {
     color: var(--color-error, #ef4444);
@@ -453,14 +451,6 @@ defineExpose({ refresh });
   color: var(--color-primary);
 }
 
-.btn-icon.whatsapp {
-    transition: filter 0.2s;
-}
-.btn-icon.whatsapp:hover {
-    filter: grayscale(0%);
-    background-color: #dcfce7;
-    border-color: #22c55e;
-}
 
 .btn-icon.delete {
     color: var(--color-error, #ef4444);

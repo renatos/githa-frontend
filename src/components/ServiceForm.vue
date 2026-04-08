@@ -4,6 +4,7 @@
     :title="service.id ? 'Editar Procedimento' : 'Novo Procedimento'"
     icon="fa-solid fa-stethoscope"
     :body-padding="false"
+    :z-index="zIndex"
     @close="$emit('close')"
   >
     <template #sub-header>
@@ -94,10 +95,8 @@ import CurrencyInput from './common/CurrencyInput.vue';
 import TabNavigation from './common/TabNavigation.vue';
 
 const props = defineProps({
-  service: {
-    type: Object,
-    default: () => ({}),
-  },
+  service: { type: Object, default: () => ({}) },
+  zIndex: { type: Number, default: 9999 }
 });
 
 const emit = defineEmits(['close', 'save']);

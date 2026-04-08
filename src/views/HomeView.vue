@@ -31,6 +31,7 @@
     <ClientForm
       v-if="editingClient"
       :client="editingClient"
+      :z-index="11000"
       @close="closeClientForm"
       @save="saveClient"
     />

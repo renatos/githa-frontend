@@ -120,7 +120,7 @@ v-for="item in group.items" :key="item.id"
           </div>
 
           <!-- Status Badge -->
-          <div class="absolute md:relative top-2 right-2 md:top-0 md:right-0 md:flex-shrink-0">
+          <div class="absolute md:relative top-2 right-2 md:top-0 md:right-0 md:w-28 md:flex md:justify-start md:flex-shrink-0">
             <span
 class="inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider shadow-sm border"
                   :class="statusBadgeClass(item.status)">
@@ -128,10 +128,19 @@ class="inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full
               {{ statusMap[item.status] || item.status }}
             </span>
           </div>
+
           </div>
 
           <!-- Actions -->
-          <div class="flex-shrink-0 flex items-center justify-end gap-1.5 md:gap-1 mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-700/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity md:relative" @click.stop>
+          <div class="flex-shrink-0 flex items-center justify-end gap-1 md:gap-1.5 mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-700/50 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity md:relative md:w-48" @click.stop>
+            <BaseWhatsAppButton
+              v-if="item.clientPhone"
+              size="xs"
+              variant="ghost"
+              :href="getWhatsappLink(item.clientPhone)"
+              title="WhatsApp"
+              @click.stop
+            />
             <button
 v-if="['SCHEDULED', 'MISSED'].includes(item.status)"
                     class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
@@ -238,6 +247,8 @@ import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
 import { enumService } from '../services/enumService';
 import AiContextBadge from './common/AiContextBadge.vue';
+import BaseWhatsAppButton from './common/BaseWhatsAppButton.vue';
+import { getWhatsappLink } from '../utils/whatsappHelper';
 
 const props = defineProps({
   embedded: { type: Boolean, default: false },

@@ -303,7 +303,7 @@
     </template>
 
     <!-- Admin: Add/Edit Goal Modal -->
-    <BaseModal v-if="showGoalModal" :show="showGoalModal" :title="newGoal.id ? 'Editar Meta de Receita' : 'Configurar Meta de Receita'" @close="showGoalModal = false">
+    <BaseModal v-if="showGoalModal" :show="showGoalModal" :title="newGoal.id ? 'Editar Meta de Receita' : 'Configurar Meta de Receita'" :z-index="10000" @close="showGoalModal = false">
       <form class="space-y-6 p-4" @submit.prevent="handleSaveGoal">
         <div class="space-y-2">
           <label class="text-sm font-medium text-gray-400">Profissional (Deixe vazio para meta geral)</label>
@@ -351,6 +351,7 @@
       :show="showRebookingModal" 
       :title="`Retornos Pendentes: ${selectedRebookingService?.name}`" 
       size="lg"
+      :z-index="10000"
       @close="showRebookingModal = false"
     >
       <div class="p-2">
@@ -365,6 +366,7 @@
     <ClientForm
       v-if="editingClient"
       :client="editingClient"
+      :z-index="11000"
       @close="closeClientForm"
       @save="saveClient"
     />

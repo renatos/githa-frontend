@@ -57,6 +57,7 @@
     <AppointmentForm 
       v-if="showAppointmentForm" 
       :appointment="preFilledAppointment" 
+      :z-index="11000"
       @close="showAppointmentForm = false" 
       @save="onAppointmentSaved"
     />
