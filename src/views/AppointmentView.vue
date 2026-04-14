@@ -7,6 +7,11 @@
         @dismiss="alert.message = ''"
     />
 
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Agenda</h1>
+      <WsStatusIndicator :status="connectionStatus" />
+    </div>
+
     <AppointmentList
         ref="listRef"
         @cancel="openCancellationModal"
@@ -40,8 +45,26 @@ import AppointmentList from '../components/AppointmentList.vue';
 import AppointmentForm from '../components/AppointmentForm.vue';
 import AppointmentCancellationModal from '../components/AppointmentCancellationModal.vue';
 import AlertMessage from '../components/common/AlertMessage.vue';
+import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
+import {useAppointmentWebSocket} from '../composables/useAppointmentWebSocket';
+
+const token = localStorage.getItem('token');
+const { connectionStatus, onMessage } = useAppointmentWebSocket(token);
+
+onMessage((data) => {
+  console.log('Real-time update received:', data);
+  // We could be smarter and update only the specific item, 
+  // but refreshList() is safer and easier to ensure consistency.
+  refreshList();
+  
+  if (data.action === 'CANCELLED') {
+    showAlert('info', `Um agendamento foi cancelado via Google Calendar.`);
+  } else {
+    showAlert('info', `A agenda foi atualizada via Google Calendar.`);
+  }
+});
 
 const {
   listRef, showForm, editingItem, alert,
