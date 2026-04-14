@@ -25,7 +25,7 @@ export function useAppointmentWebSocket(token) {
     // Construct WebSocket URL (assuming same host as API for now)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/ws/appointments/${token}`;
+    const wsUrl = `${protocol}//${host}/ws/appointments/${token}`;
 
     console.log('Connecting to WebSocket:', wsUrl);
     socket = new WebSocket(wsUrl);
