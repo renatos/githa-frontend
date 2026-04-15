@@ -42,7 +42,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           port: 22
-          source: "dist/*"
+          source: "dist/*,nginx.conf"
           target: "/tmp/githa-frontend-deploy"
           strip_components: 1
       
@@ -61,7 +61,15 @@ jobs:
             sudo rm -rf /var/www/githa/*
             
             # Mover arquivos do deploy
+            # Nota: scp para dist/* remove o prefixo dist/ se strip_components: 1 for usado? 
+            # Na verdade, se passamos dist/* e nginx.conf, precisamos lidar com as pastas.
             sudo mv /tmp/githa-frontend-deploy/* /var/www/githa/
+            
+            # Mover configuração do Nginx para o local padrão
+            if [ -f "/var/www/githa/nginx.conf" ]; then
+                sudo mv /var/www/githa/nginx.conf /etc/nginx/sites-available/default
+            fi
+            
             sudo rm -rf /tmp/githa-frontend-deploy
             
             # Ajustar permissões
