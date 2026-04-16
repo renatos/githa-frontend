@@ -167,6 +167,12 @@ class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 tr
         </div>
       </div>
     </div>
+    
+    <!-- Sync Status for List View (Discrete at the bottom) -->
+    <div v-if="viewMode === 'list'" class="flex justify-end px-1 pt-2">
+      <WsStatusIndicator :status="syncStatus" />
+    </div>
+
 
     <!-- CALENDAR VIEW -->
     <div v-else class="bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -220,12 +226,15 @@ v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
         </div>
       </div>
 
-      <!-- Calendar legend -->
-      <div class="flex items-center gap-4 px-4 py-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
-        <div v-for="(label, key) in statusLegend" :key="key" class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-sm" :class="statusDotClass(key)"></span>
-          <span class="text-xs text-slate-500 dark:text-slate-400">{{ label }}</span>
+      <!-- Calendar legend & Sync Status -->
+      <div class="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-700 flex-wrap gap-4">
+        <div class="flex items-center gap-4 flex-wrap">
+          <div v-for="(label, key) in statusLegend" :key="key" class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-sm" :class="statusDotClass(key)"></span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">{{ label }}</span>
+          </div>
         </div>
+        <WsStatusIndicator :status="syncStatus" />
       </div>
     </div>
 
@@ -238,10 +247,12 @@ import { appointmentService } from '../services/appointmentService';
 import { authService } from '../services/authService';
 import { enumService } from '../services/enumService';
 import AiContextBadge from './common/AiContextBadge.vue';
+import WsStatusIndicator from './common/WsStatusIndicator.vue';
 
 const props = defineProps({
   embedded: { type: Boolean, default: false },
-  clientId: { type: Number, default: null }
+  clientId: { type: Number, default: null },
+  syncStatus: { type: String, default: 'disconnected' }
 });
 
 const emit = defineEmits(['new', 'edit', 'delete', 'confirm', 'complete', 'cancel', 'add-procedure']);

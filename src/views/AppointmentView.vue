@@ -7,14 +7,12 @@
         @dismiss="alert.message = ''"
     />
 
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Agenda</h1>
-      <WsStatusIndicator :status="connectionStatus" />
-    </div>
 
     <AppointmentList
         ref="listRef"
+        :sync-status="connectionStatus"
         @cancel="openCancellationModal"
+
         @complete="completeItem"
         @confirm="confirmItem"
         @delete="deleteItem"
