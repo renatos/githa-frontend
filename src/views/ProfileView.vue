@@ -19,8 +19,8 @@
         <div class="integration-header">
           <div class="icon-google">G</div>
           <div class="integration-info">
-            <h3>Google Agenda e Contatos</h3>
-            <p>Sincronize seus agendamentos e importe contatos.</p>
+            <h3>Conta Google</h3>
+            <p>Login e perfil unificados via Google.</p>
           </div>
           <div :class="{ connected: isGoogleConnected }" class="integration-status">
             {{ isGoogleConnected ? 'Conectado' : 'Desconectado' }}
@@ -88,8 +88,7 @@ const connectGoogle = () => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const redirectUri = window.location.origin + '/auth/google/callback';
   const scope = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/contacts',
+    'openid',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile'
   ].join(' ');

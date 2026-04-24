@@ -173,8 +173,7 @@ const connectGoogle = () => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const redirectUri = window.location.origin + '/auth/google/callback';
   const scope = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/contacts',
+    'openid',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile'
   ].join(' ');
