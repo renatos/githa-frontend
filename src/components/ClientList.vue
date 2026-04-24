@@ -28,12 +28,6 @@
       </div>
       <div class="flex items-center gap-3">
         <button 
-          class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-          @click="showImportModal = true">
-          <span class="material-symbols-outlined text-[18px] mr-2">download</span>
-          Importar do Google
-        </button>
-        <button 
           class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           @click="$emit('new')">
           <span class="material-symbols-outlined text-[18px] mr-2">add</span>
@@ -147,18 +141,12 @@ v-if="item.status" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-ful
         </div>
       </template>
     </GenericTable>
-    <GoogleContactsModal 
-      :visible="showImportModal" 
-      @close="showImportModal = false"
-      @import="handleImportGoogle"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, defineEmits, defineExpose, onMounted } from 'vue';
 import GenericTable from './common/GenericTable.vue';
-import GoogleContactsModal from './common/GoogleContactsModal.vue';
 import AiContextBadge from './common/AiContextBadge.vue';
 import { clientService } from '../services/clientService';
 import { formatShortName, formatPhone } from '../utils/formatters';
@@ -169,27 +157,7 @@ import { getWhatsappLink } from '../utils/whatsappHelper';
 defineEmits(['new', 'edit', 'delete']);
 
 const tableRef = ref(null);
-const showImportModal = ref(false);
 
-const handleImportGoogle = async (clients) => {
-    try {
-        await clientService.createBatch(clients);
-        showImportModal.value = false;
-        refresh();
-        confirmBridge.alert({
-          title: 'Importação Concluída',
-          message: 'Os contatos foram importados com sucesso!',
-          type: 'info'
-        });
-    } catch (e) {
-        console.error(e);
-        confirmBridge.alert({
-          title: 'Erro na Importação',
-          message: 'Ocorreu um erro ao tentar importar os contatos do Google.',
-          type: 'danger'
-        });
-    }
-};
 
 // --- AI Insights State ---
 const atRiskCount = ref(0);

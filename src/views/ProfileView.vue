@@ -32,15 +32,11 @@
             Conectar conta Google
           </button>
           <div v-else class="connected-actions">
-            <div class="toggles">
-              <label class="toggle-row">
-                <input v-model="syncSettings.calendar" checked disabled type="checkbox"/>
-                <span>Sincronizar Agenda</span>
-              </label>
-              <label class="toggle-row">
-                <input v-model="syncSettings.contacts" checked disabled type="checkbox"/>
-                <span>Sincronizar Contatos</span>
-              </label>
+            <div class="connected-info">
+              <p class="text-sm text-green-600 dark:text-green-400">
+                <i class="fa-solid fa-check-circle mr-2"></i>
+                Seus agendamentos são sincronizados automaticamente com a agenda central.
+              </p>
             </div>
             <!-- Future: Disconnect button -->
             <!-- <button class="btn btn-outline-danger">Desconectar</button> -->
@@ -56,13 +52,9 @@ import {ref, computed, onMounted} from 'vue';
 import {authService} from '../services/authService';
 
 const user = ref(null);
-const syncSettings = ref({
-  calendar: false,
-  contacts: false
-});
 
 const isGoogleConnected = computed(() => {
-  return syncSettings.value.calendar || syncSettings.value.contacts;
+  return !!user.value;
 });
 
 const userInitials = computed(() => {
@@ -78,9 +70,7 @@ onMounted(() => {
     // For now assuming we might have it in token or need an endpoint
     // Assuming authService.getCurrentUser() returns what was stored from login/callback
 
-    // Check if we have sync flags in user object (from login response or local storage)
-    if (currentUser.calendarSyncEnabled) syncSettings.value.calendar = true;
-    if (currentUser.contactsSyncEnabled) syncSettings.value.contacts = true;
+    user.value = currentUser;
   }
 });
 
@@ -221,22 +211,7 @@ const connectGoogle = () => {
   background-color: #3367d6;
 }
 
-.toggles {
-  display: flex;
-  gap: var(--spacing-lg);
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-text-main);
-  cursor: default;
-}
-
-input[type="checkbox"] {
-  accent-color: var(--color-primary);
-  width: 1.2em;
-  height: 1.2em;
+.connected-info {
+  margin-top: 0.5rem;
 }
 </style>
