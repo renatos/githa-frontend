@@ -18,19 +18,19 @@
     <!-- Sidebar -->
     <aside 
       aria-label="Sidebar" 
-      class="w-[260px] bg-white dark:bg-gray-800 flex-shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 z-[1000] shadow-sm overflow-y-auto no-scrollbar fixed md:relative transition-transform duration-300"
+      class="w-[260px] bg-white dark:bg-gray-800 flex-shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 z-[1000] shadow-sm fixed md:relative transition-transform duration-300"
       :class="{ '-translate-x-full md:translate-x-0': !isSidebarOpen, 'translate-x-0': isSidebarOpen }"
     >
-      <!-- Logo Section -->
-      <div class="p-6 flex justify-center items-center border-b border-gray-100 dark:border-gray-700">
+      <!-- Logo Section (Fixed Top) -->
+      <div class="p-6 flex-shrink-0 flex justify-center items-center border-b border-gray-100 dark:border-gray-700">
         <img src="@/assets/githa-logo-main.png" alt="Githa" class="max-w-full h-auto max-h-[80px] object-contain dark:invert" />
         <button class="md:hidden absolute right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xl" @click="closeSidebar">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- Navigation Menu -->
-      <nav class="flex-1 px-3 space-y-1 py-4">
+      <!-- Navigation Menu (Scrollable Body) -->
+      <nav class="flex-1 px-3 space-y-1 py-4 overflow-y-auto no-scrollbar">
         <router-link to="/appointments" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-calendar w-6 text-lg"></i>
           <span class="ml-2">Agenda</span>
@@ -105,8 +105,8 @@
         </router-link>
       </nav>
 
-      <!-- Bottom Sidebar Section -->
-      <div class="p-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+      <!-- Bottom Sidebar Section (Fixed Bottom) -->
+      <div class="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
         <div class="flex items-center mb-4">
           <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full mr-3 text-gray-600 dark:text-gray-400">
             <i class="fa-regular fa-user"></i>
@@ -122,7 +122,7 @@
           </button>
           <!-- Logout -->
           <button class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors" title="Sair" @click="handleLogout">
-            <i class="fa-solid fa-arrow-right-from-bracket text-xl"></i>
+            <i class="fa-solid fa-right-from-bracket text-[20px]"></i>
           </button>
         </div>
       </div>

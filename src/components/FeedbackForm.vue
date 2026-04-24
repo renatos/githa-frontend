@@ -123,6 +123,7 @@ import BaseLookup from './common/BaseLookup.vue';
 import BaseModal from './common/BaseModal.vue';
 import { professionalService } from '../services/professionalService';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
   feedback: {
@@ -160,9 +161,9 @@ const isMarkdown = computed(() => {
 
 const renderedDescription = computed(() => {
   if (isMarkdown.value && form.value.description) {
-    return marked(form.value.description);
+    return DOMPurify.sanitize(marked(form.value.description));
   }
-  return form.value.description || '';
+  return DOMPurify.sanitize(form.value.description || '');
 });
 
 onMounted(async () => {
