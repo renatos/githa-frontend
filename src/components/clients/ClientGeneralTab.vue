@@ -40,7 +40,16 @@
 
     <label class="flex flex-col">
       <p class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-2">Telefone</p>
-      <PhoneInput v-model="form.phone" />
+      <div class="flex gap-2">
+        <PhoneInput v-model="form.phone" class="flex-1" />
+        <BaseWhatsAppButton
+          v-if="form.phone && form.id"
+          size="sm"
+          variant="primary"
+          :href="getWhatsappLink(form.phone)"
+          title="Abrir no WhatsApp"
+        />
+      </div>
     </label>
 
     <label class="flex flex-col">
@@ -79,7 +88,9 @@
 <script setup>
 import BaseLookup from '../common/BaseLookup.vue';
 import PhoneInput from '../common/PhoneInput.vue';
+import BaseWhatsAppButton from '../common/BaseWhatsAppButton.vue';
 import { formatPhone } from '../../utils/formatters';
+import { getWhatsappLink } from '../../utils/whatsappHelper';
 
 defineProps({
   form: { type: Object, required: true },

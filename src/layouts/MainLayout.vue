@@ -47,6 +47,10 @@
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>
         </router-link>
+        <router-link to="/churn-risks" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-chart-line w-6 text-lg"></i>
+          <span class="ml-2">Previsão de Churn</span>
+        </router-link>
         <router-link to="/professionals?view=commissions" class="nav-link" :class="{ 'nav-link-active': isCommissionsActive }" active-class="" @click="closeSidebar">
           <i class="fa-solid fa-hand-holding-dollar w-6 text-lg"></i>
           <span class="ml-2">Comissões</span>

@@ -36,13 +36,14 @@ class="w-10 h-10 rounded-full flex items-center justify-center text-white font-b
             </p>
           </div>
         </div>
-        <a
-v-if="client.phone"
-           :href="getWhatsappLink(client.phone, 'Parabéns pelo seu aniversário!')"
-           target="_blank"
-           class="w-full py-2 px-4 border border-gray-300 dark:border-slate-600 hover:border-green-500 hover:text-green-500 text-gray-500 dark:text-slate-300 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm no-underline">
-          <i class="fa-brands fa-whatsapp text-emerald-500"></i> Enviar Mensagem
-        </a>
+        <BaseWhatsAppButton
+          v-if="client.phone"
+          :href="getWhatsappLink(client.phone, 'Parabéns pelo seu aniversário!')"
+          label="Enviar Mensagem"
+          size="md"
+          variant="outline"
+          class="w-full"
+        />
         <div v-else class="text-xs text-gray-400 dark:text-slate-500 italic text-center">Sem telefone cadastrado</div>
       </div>
     </div>
@@ -56,6 +57,7 @@ import { useRouter } from 'vue-router';
 const emit = defineEmits(['select-client']);
 import api from '../../services/api';
 import { getWhatsappLink } from '../../utils/whatsappHelper';
+import BaseWhatsAppButton from '../common/BaseWhatsAppButton.vue';
 
 const router = useRouter();
 const loading = ref(true);

@@ -2,11 +2,22 @@
   <BaseModal
     :show="true"
     title="Detalhes do Rebooking"
-    subtitle="Protocolo de Retorno Inteligente"
-    icon="fa-solid fa-arrows-rotate"
+    :subtitle="reminder.type === 'CHURN' ? 'Protocolo de Recuperação de Abandono' : 'Protocolo de Retorno Inteligente'"
+    :icon="reminder.type === 'CHURN' ? 'fa-solid fa-heart-pulse' : 'fa-solid fa-arrows-rotate'"
+    :z-index="zIndex"
     @close="$emit('close')"
   >
     <div class="space-y-5 text-left">
+      <div v-if="reminder.type === 'CHURN'" class="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+              <p class="text-xs font-bold text-red-700 dark:text-red-300 uppercase">Atenção: Risco de Abandono</p>
+              <p class="text-[10px] text-red-600 dark:text-red-400">Este cliente foi identificado pelo motor de predição como passível de evasão.</p>
+          </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Cliente</label>
@@ -86,10 +97,10 @@
       <button type="button" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-sm" @click="$emit('close')">
         Cancelar
       </button>
-      <a :href="whatsappUrl" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2">
-        <i class="fa-brands fa-whatsapp"></i>
-        Enviar Mensagem
-      </a>
+      <BaseWhatsAppButton
+        :href="whatsappUrl"
+        label="Enviar Mensagem"
+      />
       <button 
         type="button" 
         :disabled="saving || !isValid" 
@@ -109,11 +120,13 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { updateRebookingReminder } from '../../services/rebookingService';
 import { professionalService } from '../../services/professionalService';
 import BaseModal from '../common/BaseModal.vue';
+import BaseWhatsAppButton from '../common/BaseWhatsAppButton.vue';
 import { enumService } from '../../services/enumService';
 import { getWhatsappLink } from '../../utils/whatsappHelper';
 
 const props = defineProps({
-    reminder: { type: Object, required: true }
+    reminder: { type: Object, required: true },
+    zIndex: { type: Number, default: 10000 }
 });
 
 const emit = defineEmits(['close', 'save', 'open-client']);

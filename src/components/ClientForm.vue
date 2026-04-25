@@ -4,6 +4,7 @@
     title="Cliente"
     max-width="max-w-4xl"
     :body-padding="false"
+    :z-index="zIndex"
     @close="$emit('close')"
   >
     <template #header-content>
@@ -179,10 +180,8 @@ const clientStatusMap = {
 };
 
 const props = defineProps({
-  client: {
-    type: Object,
-    default: () => ({}),
-  },
+  client: { type: Object, default: () => ({}) },
+  zIndex: { type: Number, default: 9999 }
 });
 
 const emit = defineEmits(['close', 'save']);

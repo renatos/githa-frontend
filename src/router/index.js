@@ -42,6 +42,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/churn-risks',
+            name: 'churn-risks',
+            component: () => import('../views/ChurnRisksView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/admin/parameters',
             name: 'system-parameters',
             component: () => import('../views/SystemParametersView.vue'),
