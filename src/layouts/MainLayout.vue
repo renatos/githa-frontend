@@ -1,24 +1,28 @@
 <template>
   <div class="font-sans text-gray-800 dark:text-gray-200 h-screen flex overflow-hidden" style="background-color: var(--color-bg-body); font-family: 'Inter', sans-serif;">
     <!-- Mobile Header / Hamburger -->
-    <div class="md:hidden flex items-center px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 w-full z-[900] h-[60px]">
+    <div class="md:hidden flex items-center px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 w-full z-[1000] h-[60px]">
       <button class="text-gray-600 dark:text-gray-300 text-2xl p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" @click="toggleSidebar">
         <i class="fa-solid fa-bars"></i>
       </button>
       <img src="@/assets/githa-logo-main.png" alt="Githa" class="ml-4 h-10 w-auto object-contain dark:invert" />
+      <div class="flex-1"></div>
+      <button class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors p-2" title="Sair" @click="handleLogout">
+        <i class="fa-solid fa-right-from-bracket text-xl"></i>
+      </button>
     </div>
 
     <!-- Backdrop -->
     <div 
       v-if="isSidebarOpen" 
-      class="fixed inset-0 bg-black/50 z-[950] md:hidden"
+      class="fixed inset-0 bg-black/50 z-[1050] md:hidden"
       @click="closeSidebar"
     ></div>
 
     <!-- Sidebar -->
     <aside 
       aria-label="Sidebar" 
-      class="w-[260px] bg-white dark:bg-gray-800 flex-shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 z-[1000] shadow-sm fixed md:relative transition-transform duration-300"
+      class="w-[260px] bg-white dark:bg-gray-800 flex-shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-gray-700 z-[1100] shadow-sm fixed md:relative transition-transform duration-300"
       :class="{ '-translate-x-full md:translate-x-0': !isSidebarOpen, 'translate-x-0': isSidebarOpen }"
     >
       <!-- Logo Section (Fixed Top) -->
