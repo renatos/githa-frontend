@@ -324,6 +324,16 @@ onMounted(() => {
     if (apt.transactionId) form.value.transactionId = apt.transactionId;
   }
 
+  if (!form.value.professional.id) {
+    const currentUser = authService.getCurrentUser();
+    if (currentUser.professionalId) {
+      form.value.professional = {
+        id: currentUser.professionalId,
+        name: currentUser.professionalName
+      };
+    }
+  }
+
   checkUserRole();
   loadStatuses();
 });

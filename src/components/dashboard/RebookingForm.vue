@@ -121,6 +121,7 @@ import { updateRebookingReminder } from '../../services/rebookingService';
 import { professionalService } from '../../services/professionalService';
 import BaseModal from '../common/BaseModal.vue';
 import BaseWhatsAppButton from '../common/BaseWhatsAppButton.vue';
+import { authService } from '../../services/authService';
 import { enumService } from '../../services/enumService';
 import { getWhatsappLink } from '../../utils/whatsappHelper';
 
@@ -203,6 +204,13 @@ const save = async () => {
 onMounted(() => {
     loadProfessionals();
     loadStatusOptions();
+
+    if (!form.value.contactResponsibleId) {
+        const currentUser = authService.getCurrentUser();
+        if (currentUser.professionalId) {
+            form.value.contactResponsibleId = currentUser.professionalId;
+        }
+    }
 });
 </script>
 

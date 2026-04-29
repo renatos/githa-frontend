@@ -4,7 +4,14 @@ export const authService = {
     login: async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
         if (response.data.token) {
-            authService.setSession(response.data.token, response.data.email);
+            authService.setSession(
+                response.data.token, 
+                response.data.email, 
+                response.data.calendarSyncEnabled, 
+                response.data.contactsSyncEnabled, 
+                response.data.professionalId, 
+                response.data.professionalName
+            );
         }
         return response.data;
     },
@@ -12,7 +19,14 @@ export const authService = {
     async loginWithGoogle(token) {
         const response = await api.post('/auth/google', { token });
         if (response.data.token) {
-            authService.setSession(response.data.token, response.data.email);
+            authService.setSession(
+                response.data.token, 
+                response.data.email, 
+                response.data.calendarSyncEnabled, 
+                response.data.contactsSyncEnabled, 
+                response.data.professionalId, 
+                response.data.professionalName
+            );
         }
         return response.data;
     },
@@ -20,7 +34,14 @@ export const authService = {
     mockLogin: async () => {
         const response = await api.post('/auth/mock-login');
         if (response.data.token) {
-            authService.setSession(response.data.token, response.data.email);
+            authService.setSession(
+                response.data.token, 
+                response.data.email, 
+                response.data.calendarSyncEnabled, 
+                response.data.contactsSyncEnabled, 
+                response.data.professionalId, 
+                response.data.professionalName
+            );
         }
         return response.data;
     },
@@ -31,10 +52,43 @@ export const authService = {
         window.location.href = '/login';
     },
 
-    setSession: (token, email) => {
+    setSession: (token, email, calendarSyncEnabled, contactsSyncEnabled, professionalId, professionalName) => {
         localStorage.setItem('token', token);
         const roles = authService.extractRoles(token);
-        localStorage.setItem('user', JSON.stringify({ email, roles }));
+        localStorage.setItem('user', JSON.stringify({ 
+            email, 
+            roles, 
+            calendarSyncEnabled, 
+            contactsSyncEnabled, 
+            professionalId, 
+            professionalName 
+        }));
+    },
+
+    updateSessionProperty: (key, value) => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            user[key] = value;
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+    },
+
+    refreshSession: async () => {
+        if (!authService.isAuthenticated()) return;
+        try {
+            const response = await api.get('/auth/session');
+            if (response.data) {
+                const user = authService.getCurrentUser();
+                user.calendarSyncEnabled = response.data.calendarSyncEnabled;
+                user.contactsSyncEnabled = response.data.contactsSyncEnabled;
+                user.professionalId = response.data.professionalId || null;
+                user.professionalName = response.data.professionalName || null;
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+        } catch (error) {
+            console.error('Failed to refresh session', error);
+        }
     },
 
     extractRoles: (token) => {

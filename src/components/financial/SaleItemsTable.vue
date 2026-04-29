@@ -217,9 +217,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import BaseLookup from '../common/BaseLookup.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
+import { authService } from '../../services/authService';
 
 const props = defineProps({
   items: { type: Array, required: true },
@@ -234,7 +235,7 @@ const props = defineProps({
 const emit = defineEmits(['addItem', 'removeItem', 'typeChange']);
 
 const newItem = ref({
-  type: 'PRODUCT',
+  type: 'SERVICE',
   productId: null,
   productName: '',
   serviceId: null,
@@ -244,6 +245,18 @@ const newItem = ref({
   professionalName: '',
   appointmentId: null,
   quantity: 1
+});
+
+const preFillProfessional = () => {
+    const currentUser = authService.getCurrentUser();
+    if (currentUser.professionalId) {
+        newItem.value.professionalId = currentUser.professionalId;
+        newItem.value.professionalName = currentUser.professionalName;
+    }
+};
+
+onMounted(() => {
+    preFillProfessional();
 });
 
 const isItemValid = computed(() => {
@@ -295,6 +308,7 @@ const resetNewItem = () => {
     appointmentId: null,
     quantity: 1
   };
+  preFillProfessional();
 };
 
 const setItemData = (data) => {

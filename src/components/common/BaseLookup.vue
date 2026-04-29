@@ -3,10 +3,9 @@
     <!-- Combobox Mode (Select) -->
     <div v-if="isComboboxMode" class="w-full">
       <select
+          v-model="internalValue"
           :disabled="disabled"
-          :value="modelValue"
           class="form-select flex w-full max-w-full truncate resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-12 px-4 py-3 text-sm font-normal leading-normal transition-colors disabled:opacity-50"
-          @change="onSelectChange"
       >
         <option value="">{{ placeholder }}</option>
         <option v-for="item in allItems" :key="item.id" :value="item.id">
@@ -242,12 +241,14 @@ watch(showResults, (val) => {
 
 
 // Methods for Combobox Mode
-const onSelectChange = (event) => {
-  const newId = event.target.value;
-  emit('update:modelValue', newId);
-  const selectedItem = allItems.value.find(item => String(item.id) === String(newId));
-  emit('select', selectedItem || null);
-};
+const internalValue = computed({
+  get: () => props.modelValue || '',
+  set: (newId) => {
+    emit('update:modelValue', newId);
+    const selectedItem = allItems.value.find(item => String(item.id) === String(newId));
+    emit('select', selectedItem || null);
+  }
+});
 
 // Methods for Lookup Mode
 const onIdInput = (event) => {

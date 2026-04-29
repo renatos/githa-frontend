@@ -31,6 +31,18 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
           <input v-model="form.active" class="invisible absolute" type="checkbox" />
         </label>
       </div>
+      
+      <div class="flex flex-col">
+        <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Usuário do Sistema</p>
+        <BaseLookup
+          v-model="form.userId"
+          placeholder="Pesquisar usuário..."
+          :search-service="userService"
+          :initial-description="form.userName"
+          @update:model-value="(val) => !val && (form.userName = '')"
+        />
+        <p class="text-xs text-slate-500 mt-1">Opcional. Permite que o usuário logado seja identificado como este profissional.</p>
+      </div>
 
       <button type="submit" class="hidden"></button>
     </form>
@@ -49,7 +61,9 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { professionalService } from '../services/professionalService';
+import { userService } from '../services/userService';
 import BaseModal from './common/BaseModal.vue';
+import BaseLookup from './common/BaseLookup.vue';
 import { formatPhone } from '../utils/formatters';
 
 const props = defineProps({
@@ -66,6 +80,8 @@ const form = ref({
   phone: '',
   commissionRate: 0,
   active: true,
+  userId: null,
+  userName: '',
 });
 
 onMounted(() => {
