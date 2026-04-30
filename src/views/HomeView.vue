@@ -1,8 +1,10 @@
 <template>
   <div class="p-8">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Dashboard Principal</h1>
-      <p class="text-gray-500 dark:text-slate-400">Bem-vindo(a), acompanhe os indicadores da sua clínica.</p>
+    <header class="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+        {{ professionalName ? `Olá, ${professionalName}! 👋` : 'Dashboard Principal' }}
+      </h1>
+      <p class="text-gray-500 dark:text-slate-400">Acompanhe os indicadores da sua clínica em tempo real.</p>
     </header>
 
     <!-- Stitch Dark Mode: 3-column grid on desktop, single column on mobile -->
@@ -39,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import FinancialSummaryCard from '../components/dashboard/FinancialSummaryCard.vue';
 import TodayAppointmentsCard from '../components/dashboard/TodayAppointmentsCard.vue';
 import RebookingCard from '../components/dashboard/RebookingCard.vue';
@@ -50,8 +52,17 @@ import LowStockProductsCard from '../components/dashboard/LowStockProductsCard.v
 import ClientForm from '../components/ClientForm.vue';
 import { clientService } from '../services/clientService';
 import { toastBridge } from '../services/toastBridge';
+import { authService } from '../services/authService';
 
 const editingClient = ref(null);
+const professionalName = ref('');
+
+onMounted(() => {
+  const user = authService.getCurrentUser();
+  if (user && user.professionalName) {
+    professionalName.value = user.professionalName;
+  }
+});
 
 const openClientForm = async (client) => {
   try {

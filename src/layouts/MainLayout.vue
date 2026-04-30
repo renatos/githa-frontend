@@ -7,6 +7,10 @@
       </button>
       <img src="@/assets/githa-logo-main.png" alt="Githa" class="ml-4 h-10 w-auto object-contain dark:invert" />
       <div class="flex-1"></div>
+      <div v-if="professionalName" class="mr-3 text-right">
+        <p class="text-[9px] uppercase font-bold tracking-widest text-slate-500 leading-none">Profissional</p>
+        <p class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 truncate max-w-[100px]">{{ professionalName }}</p>
+      </div>
       <button class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors p-2" title="Sair" @click="handleLogout">
         <i class="fa-solid fa-right-from-bracket text-xl"></i>
       </button>
@@ -112,11 +116,12 @@
       <!-- Bottom Sidebar Section (Fixed Bottom) -->
       <div class="p-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
         <div class="flex items-center mb-4">
-          <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full mr-3 text-gray-600 dark:text-gray-400">
-            <i class="fa-regular fa-user"></i>
+          <div class="bg-indigo-50 dark:bg-indigo-500/10 p-2.5 rounded-xl mr-3 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
+            <i class="fa-solid fa-user-tie"></i>
           </div>
           <div class="overflow-hidden">
-            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate w-32">{{ userEmail }}</p>
+            <p v-if="professionalName" class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ professionalName }}</p>
+            <p class="text-[10px] font-medium text-gray-500 dark:text-gray-400 truncate">{{ userEmail }}</p>
           </div>
         </div>
         <div class="flex items-center justify-between">
@@ -159,6 +164,7 @@ const router = useRouter();
 const route = useRoute();
 const { isDark, toggleTheme } = useTheme();
 const userEmail = ref('');
+const professionalName = ref('');
 const isAdmin = ref(false);
 const isSidebarOpen = ref(false);
 
@@ -187,6 +193,7 @@ onMounted(() => {
   const user = authService.getCurrentUser();
   if (user) {
     userEmail.value = user.email || user.sub; 
+    professionalName.value = user.professionalName || '';
     isAdmin.value = user.roles && user.roles.includes('ADMIN');
   }
 });
