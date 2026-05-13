@@ -34,6 +34,11 @@
             <textarea v-model="form.description" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors" rows="3"></textarea>
           </label>
 
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Detalhes do Procedimento (Texto Aberto)</p>
+            <textarea v-model="form.procedureDetails" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors" rows="4" placeholder="Instruções técnicas, protocolos, recomendações pré/pós..."></textarea>
+          </label>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <label class="flex flex-col">
               <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Duração (minutos)</p>
@@ -110,6 +115,7 @@ const tabs = [
 const form = ref({
   name: '',
   description: '',
+  procedureDetails: '',
   durationMinutes: 30,
   idealReturnDays: null,
   rebookingTemplate: '',
