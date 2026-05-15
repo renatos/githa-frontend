@@ -1,4 +1,5 @@
 import api from './api';
+import { professionalService } from './professionalService';
 
 export const authService = {
     login: async (email, password) => {
@@ -8,25 +9,23 @@ export const authService = {
                 response.data.token, 
                 response.data.email, 
                 response.data.calendarSyncEnabled, 
-                response.data.contactsSyncEnabled, 
-                response.data.professionalId, 
-                response.data.professionalName
+                response.data.contactsSyncEnabled
             );
+            await authService.fetchProfessionalProfile();
         }
         return response.data;
     },
 
-    async loginWithGoogle(token) {
-        const response = await api.post('/auth/google', { token });
+    async loginWithGoogle(code, state) {
+        const response = await api.get('/auth/google/callback', { params: { code, state } });
         if (response.data.token) {
             authService.setSession(
                 response.data.token, 
                 response.data.email, 
                 response.data.calendarSyncEnabled, 
-                response.data.contactsSyncEnabled, 
-                response.data.professionalId, 
-                response.data.professionalName
+                response.data.contactsSyncEnabled
             );
+            await authService.fetchProfessionalProfile();
         }
         return response.data;
     },
@@ -38,10 +37,9 @@ export const authService = {
                 response.data.token, 
                 response.data.email, 
                 response.data.calendarSyncEnabled, 
-                response.data.contactsSyncEnabled, 
-                response.data.professionalId, 
-                response.data.professionalName
+                response.data.contactsSyncEnabled
             );
+            await authService.fetchProfessionalProfile();
         }
         return response.data;
     },
@@ -52,17 +50,32 @@ export const authService = {
         window.location.href = '/login';
     },
 
-    setSession: (token, email, calendarSyncEnabled, contactsSyncEnabled, professionalId, professionalName) => {
+    setSession: (token, email, calendarSyncEnabled, contactsSyncEnabled) => {
         localStorage.setItem('token', token);
         const roles = authService.extractRoles(token);
         localStorage.setItem('user', JSON.stringify({ 
             email, 
             roles, 
             calendarSyncEnabled, 
-            contactsSyncEnabled, 
-            professionalId, 
-            professionalName 
+            contactsSyncEnabled
         }));
+    },
+
+    fetchProfessionalProfile: async () => {
+        try {
+            const response = await professionalService.getMe();
+            if (response.data) {
+                authService.updateSessionProperty('professionalId', response.data.id);
+                authService.updateSessionProperty('professionalName', response.data.name);
+                return response.data;
+            }
+        } catch (error) {
+            // Silence 404 errors as ADMIN users might not have a professional associated
+            if (error.response?.status !== 404) {
+                console.error('Failed to fetch professional profile', error);
+            }
+        }
+        return null;
     },
 
     updateSessionProperty: (key, value) => {
@@ -82,9 +95,10 @@ export const authService = {
                 const user = authService.getCurrentUser();
                 user.calendarSyncEnabled = response.data.calendarSyncEnabled;
                 user.contactsSyncEnabled = response.data.contactsSyncEnabled;
-                user.professionalId = response.data.professionalId || null;
-                user.professionalName = response.data.professionalName || null;
                 localStorage.setItem('user', JSON.stringify(user));
+                
+                // Refresh full professional profile
+                await authService.fetchProfessionalProfile();
             }
         } catch (error) {
             console.error('Failed to refresh session', error);

@@ -6,7 +6,7 @@
       <div v-if="user" class="user-info">
         <div class="avatar-circle">{{ userInitials }}</div>
         <div class="details">
-          <h2>{{ user.name || 'Usuário' }}</h2>
+          <h2>{{ user.professionalName || user.name || 'Usuário' }}</h2>
           <p>{{ user.email }}</p>
         </div>
       </div>
@@ -58,8 +58,9 @@ const isGoogleConnected = computed(() => {
 });
 
 const userInitials = computed(() => {
-  if (!user.value || !user.value.name) return 'U';
-  return user.value.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const name = user.value?.professionalName || user.value?.name || 'U';
+  if (name === 'U') return 'U';
+  return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 });
 
 onMounted(() => {

@@ -29,7 +29,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import api from '../services/api';
+import { authService } from '../services/authService';
 
 const router = useRouter();
 const route = useRoute();
@@ -49,29 +49,10 @@ onMounted(async () => {
   }
 
   try {
-    const response = await api.get('/auth/google/callback', {
-      params: {
-        code: code,
-        state: route.query.state
-      }
-    });
+    const data = await authService.loginWithGoogle(code, route.query.state);
 
-    // If token is present, this is a login flow - save credentials
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      
-      // Create user object with available data
-      const user = {
-        email: response.data.email,
-        calendarSyncEnabled: response.data.calendarSyncEnabled || false,
-        contactsSyncEnabled: response.data.contactsSyncEnabled || false
-      };
-      
-      localStorage.setItem('user', JSON.stringify(user));
-    }
-
-    calendarSyncEnabled.value = response.data.calendarSyncEnabled || false;
-    contactsSyncEnabled.value = response.data.contactsSyncEnabled || false;
+    calendarSyncEnabled.value = data.calendarSyncEnabled || false;
+    contactsSyncEnabled.value = data.contactsSyncEnabled || false;
     
     loading.value = false;
 

@@ -59,8 +59,15 @@ api.interceptors.response.use(
     },
     error => {
         stopLoading();
-        const toast = getToast();
-        errorHandler.handle(error, toast);
+        
+        // Skip global error handling for 404 on /professionals/me (ADMIN users without professional record)
+        const isMeEndpoint = error.config?.url?.includes('/professionals/me');
+        const is404 = error.response?.status === 404;
+
+        if (!(isMeEndpoint && is404)) {
+            const toast = getToast();
+            errorHandler.handle(error, toast);
+        }
 
         if (error.response && (error.response.status === 403 || error.response.status === 401)) {
             // Give user a chance to read the error toast or see the modal before redirecting

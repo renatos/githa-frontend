@@ -191,12 +191,20 @@ const handleLogout = () => {
   authService.logout();
 };
 
-onMounted(() => {
+onMounted(async () => {
   const user = authService.getCurrentUser();
   if (user) {
     userEmail.value = user.email || user.sub; 
     professionalName.value = user.professionalName || '';
     isAdmin.value = user.roles && user.roles.includes('ADMIN');
+
+    // If professional name is missing (old session), fetch it from /me
+    if (!professionalName.value && authService.isAuthenticated()) {
+      const profile = await authService.fetchProfessionalProfile();
+      if (profile) {
+        professionalName.value = profile.name;
+      }
+    }
 
     // WebSocket Notifications
     const token = authService.getToken();
