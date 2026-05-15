@@ -159,6 +159,8 @@ import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
+import { useAppointmentWebSocket } from '../composables/useAppointmentWebSocket';
+import { toastBridge } from '../services/toastBridge';
 
 const router = useRouter();
 const route = useRoute();
@@ -195,6 +197,25 @@ onMounted(() => {
     userEmail.value = user.email || user.sub; 
     professionalName.value = user.professionalName || '';
     isAdmin.value = user.roles && user.roles.includes('ADMIN');
+
+    // WebSocket Notifications
+    const token = authService.getToken();
+    if (token) {
+      const { onMessage } = useAppointmentWebSocket(token);
+      onMessage((data) => {
+        if (data.type === 'WHATSAPP_NOTIFICATION') {
+          const toast = toastBridge.getToast();
+          if (toast) {
+            toast.add({
+              severity: data.status === 'SENT' ? 'success' : 'error',
+              summary: 'Notificação WhatsApp',
+              detail: data.status === 'SENT' ? 'Enviada com sucesso.' : 'Falha ao enviar notificação para o profissional.',
+              life: 5000
+            });
+          }
+        }
+      });
+    }
   }
 });
 </script>
