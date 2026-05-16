@@ -1,10 +1,10 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 
 /**
- * Composable for WebSocket connection to receive real-time appointment updates.
+ * Composable for WebSocket connection to receive real-time notifications.
  * @param {string} token JWT token for authentication
  */
-export function useAppointmentWebSocket(token) {
+export function useNotificationWebSocket(token) {
   const connectionStatus = ref('disconnected'); // connecting, connected, disconnected, failed
   let socket = null;
   let reconnectAttempts = 0;
@@ -26,7 +26,7 @@ export function useAppointmentWebSocket(token) {
     // This allows the Vite proxy (vite.config.js) to handle the /ws mapping
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/appointments/${token}`;
+    const wsUrl = `${protocol}//${host}/ws/notifications/${token}`;
 
     console.log('Connecting to WebSocket:', wsUrl);
     socket = new WebSocket(wsUrl);

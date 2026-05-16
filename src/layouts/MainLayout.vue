@@ -159,7 +159,7 @@ import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
-import { useAppointmentWebSocket } from '../composables/useAppointmentWebSocket';
+import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
 import { toastBridge } from '../services/toastBridge';
 
 const router = useRouter();
@@ -171,7 +171,7 @@ const isAdmin = ref(false);
 const isSidebarOpen = ref(false);
 
 const token = authService.getToken();
-const { connect, disconnect, onMessage } = useAppointmentWebSocket(token);
+const { connect, disconnect, onMessage } = useNotificationWebSocket(token);
 
 onMessage((data) => {
   if (data.type === 'WHATSAPP_NOTIFICATION') {
