@@ -1,11 +1,5 @@
 <template>
   <div class="appointment-view">
-    <AlertMessage
-        v-if="alert.message"
-        :message="alert.message"
-        :type="alert.type"
-        @dismiss="alert.message = ''"
-    />
 
 
     <AppointmentList
@@ -38,35 +32,58 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AppointmentList from '../components/AppointmentList.vue';
 import AppointmentForm from '../components/AppointmentForm.vue';
 import AppointmentCancellationModal from '../components/AppointmentCancellationModal.vue';
-import AlertMessage from '../components/common/AlertMessage.vue';
+import {authService} from '../services/authService';
+import {toastBridge} from '../services/toastBridge';
 import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
 import {useAppointmentWebSocket} from '../composables/useAppointmentWebSocket';
 
-const token = localStorage.getItem('token');
-const { connectionStatus, onMessage } = useAppointmentWebSocket(token);
+const token = authService.getToken();
+const { connectionStatus, onMessage, connect, disconnect } = useAppointmentWebSocket(token);
 
 onMessage((data) => {
   console.log('Real-time update received:', data);
-  // We could be smarter and update only the specific item, 
-  // but refreshList() is safer and easier to ensure consistency.
-  refreshList();
   
-  if (data.action === 'CANCELLED') {
-    showAlert('info', `Um agendamento foi cancelado via Google Calendar.`);
+  if (data.type === 'WHATSAPP_NOTIFICATION') {
+    const status = data.data?.status;
+    if (status === 'SENT') {
+      toastBridge.success('WhatsApp', 'Notificação enviada com sucesso!');
+    } else {
+      toastBridge.error('WhatsApp', 'Falha ao enviar notificação via WhatsApp.');
+    }
+    return;
+  }
+
+  // Default handling for CALENDAR_UPDATE or generic updates
+  refreshList();
+  const action = data.data?.action;
+  if (action === 'CANCELLED') {
+    toastBridge.info('Atualização', `Um agendamento foi cancelado via Google Calendar.`);
   } else {
-    showAlert('info', `A agenda foi atualizada via Google Calendar.`);
+    toastBridge.info('Atualização', `A agenda foi atualizada via Google Calendar.`);
   }
 });
 
+
+
+onMounted(() => {
+  if (token) {
+    connect();
+  }
+});
+
+onUnmounted(() => {
+  disconnect();
+});
+
 const {
-  listRef, showForm, editingItem, alert,
-  showAlert, openForm, closeForm, refreshList, deleteItem,
+  listRef, showForm, editingItem,
+  openForm, closeForm, refreshList, deleteItem,
 } = useCrudView(appointmentService, {singular: 'Agendamento', plural: 'Agendamentos'});
 
 // --- Cancellation modal ---
@@ -88,11 +105,11 @@ const updateStatus = async (item, status, successMessage) => {
   try {
     const updated = {...item, status};
     await appointmentService.update(item.id, updated);
-    showAlert('success', successMessage);
+    toastBridge.success('Sucesso', successMessage);
     refreshList();
   } catch (error) {
     console.error('Error updating status:', error);
-    showAlert('error', 'Erro ao atualizar status.');
+    toastBridge.error('Erro', 'Erro ao atualizar status.');
   }
 };
 
@@ -108,12 +125,12 @@ const cancelItem = async (data) => {
   try {
     const fullData = {...cancelingItem.value, ...data};
     await appointmentService.update(data.id, fullData);
-    showAlert('success', 'Agendamento cancelado com sucesso!');
+    toastBridge.success('Sucesso', 'Agendamento cancelado com sucesso!');
     refreshList();
     closeCancellationModal();
   } catch (error) {
     console.error('Error canceling appointment:', error);
-    showAlert('error', 'Erro ao cancelar agendamento.');
+    toastBridge.error('Erro', 'Erro ao cancelar agendamento.');
   }
 };
 
@@ -135,23 +152,23 @@ const saveAppointment = async (data) => {
     if (data.id) {
       await appointmentService.update(data.id, data);
       if (data.status === 'COMPLETED') {
-        showAlert('success', 'Agendamento concluído e lançamento financeiro gerado!');
+        toastBridge.success('Sucesso', 'Agendamento concluído e lançamento financeiro gerado!');
       } else {
-        showAlert('success', 'Agendamento atualizado com sucesso!');
+        toastBridge.success('Sucesso', 'Agendamento atualizado com sucesso!');
       }
     } else {
       await appointmentService.create(data);
       if (data.status === 'COMPLETED') {
-        showAlert('success', 'Agendamento criado e lançamento financeiro gerado!');
+        toastBridge.success('Sucesso', 'Agendamento criado e lançamento financeiro gerado!');
       } else {
-        showAlert('success', 'Agendamento criado com sucesso!');
+        toastBridge.success('Sucesso', 'Agendamento criado com sucesso!');
       }
     }
     refreshList();
     closeForm();
   } catch (error) {
     console.error('Error saving appointment:', error);
-    showAlert('error', 'Erro ao salvar agendamento.');
+    toastBridge.error('Erro', 'Erro ao salvar agendamento.');
   }
 };
 </script>
