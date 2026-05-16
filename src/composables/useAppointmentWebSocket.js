@@ -22,7 +22,8 @@ export function useAppointmentWebSocket(token) {
 
     connectionStatus.value = 'connecting';
     
-    // Construct WebSocket URL (assuming same host as API for now)
+    // Construct WebSocket URL using the current browser's host
+    // This allows the Vite proxy (vite.config.js) to handle the /ws mapping
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws/appointments/${token}`;
@@ -82,14 +83,6 @@ export function useAppointmentWebSocket(token) {
   const onMessage = (callback) => {
     onMessageCallbacks.push(callback);
   };
-
-  onMounted(() => {
-    connect();
-  });
-
-  onUnmounted(() => {
-    disconnect();
-  });
 
   return {
     connectionStatus,

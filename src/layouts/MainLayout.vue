@@ -153,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
@@ -169,6 +169,24 @@ const userEmail = ref('');
 const professionalName = ref('');
 const isAdmin = ref(false);
 const isSidebarOpen = ref(false);
+
+const token = authService.getToken();
+const { connect, disconnect, onMessage } = useAppointmentWebSocket(token);
+
+onMessage((data) => {
+  if (data.type === 'WHATSAPP_NOTIFICATION') {
+    const toast = toastBridge.getToast();
+    const status = data.data?.status;
+    if (toast) {
+      toast.add({
+        severity: status === 'SENT' ? 'success' : 'error',
+        summary: 'Notificação WhatsApp',
+        detail: status === 'SENT' ? 'Enviada com sucesso.' : 'Falha ao enviar notificação para o profissional.',
+        life: 5000
+      });
+    }
+  }
+});
 
 const isProfessionalsActive = computed(() => {
   return route.path === '/professionals' && !route.query.view;
@@ -207,24 +225,15 @@ onMounted(async () => {
     }
 
     // WebSocket Notifications
-    const token = authService.getToken();
     if (token) {
-      const { onMessage } = useAppointmentWebSocket(token);
-      onMessage((data) => {
-        if (data.type === 'WHATSAPP_NOTIFICATION') {
-          const toast = toastBridge.getToast();
-          if (toast) {
-            toast.add({
-              severity: data.status === 'SENT' ? 'success' : 'error',
-              summary: 'Notificação WhatsApp',
-              detail: data.status === 'SENT' ? 'Enviada com sucesso.' : 'Falha ao enviar notificação para o profissional.',
-              life: 5000
-            });
-          }
-        }
-      });
+      connect();
     }
   }
+});
+
+
+onUnmounted(() => {
+  disconnect();
 });
 </script>
 
