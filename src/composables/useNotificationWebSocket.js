@@ -4,21 +4,26 @@ import { ref, onMounted, onUnmounted } from 'vue';
  * Composable for WebSocket connection to receive real-time notifications.
  * @param {string} token JWT token for authentication
  */
-export function useNotificationWebSocket(token) {
+export function useNotificationWebSocket(initialToken) {
   const connectionStatus = ref('disconnected'); // connecting, connected, disconnected, failed
   let socket = null;
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 5;
   const reconnectDelays = [1000, 2000, 4000, 8000, 16000];
   
+  let currentToken = initialToken;
   const onMessageCallbacks = [];
-
-  const connect = () => {
-    if (!token) {
+ 
+  const connect = (newToken) => {
+    if (newToken) currentToken = newToken;
+    
+    if (!currentToken) {
       connectionStatus.value = 'failed';
       console.error('No token provided for WebSocket connection');
       return;
     }
+
+    const tokenToUse = currentToken;
 
     connectionStatus.value = 'connecting';
     
@@ -26,7 +31,7 @@ export function useNotificationWebSocket(token) {
     // This allows the Vite proxy (vite.config.js) to handle the /ws mapping
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/notifications/${token}`;
+    const wsUrl = `${protocol}//${host}/ws/notifications/${tokenToUse}`;
 
     console.log('Connecting to WebSocket:', wsUrl);
     socket = new WebSocket(wsUrl);

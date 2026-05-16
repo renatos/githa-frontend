@@ -4,9 +4,7 @@
 
     <AppointmentList
         ref="listRef"
-        :sync-status="connectionStatus"
         @cancel="openCancellationModal"
-
         @complete="completeItem"
         @confirm="confirmItem"
         @delete="deleteItem"
@@ -37,54 +35,26 @@ import AppointmentList from '../components/AppointmentList.vue';
 import AppointmentForm from '../components/AppointmentForm.vue';
 import AppointmentCancellationModal from '../components/AppointmentCancellationModal.vue';
 import {authService} from '../services/authService';
-import {toastBridge} from '../services/toastBridge';
-import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
-import {useNotificationWebSocket} from '../composables/useNotificationWebSocket';
-
-const token = authService.getToken();
-const { connectionStatus, onMessage, connect, disconnect } = useNotificationWebSocket(token);
-
-onMessage((data) => {
-  console.log('Real-time update received:', data);
-  
-  if (data.type === 'WHATSAPP_NOTIFICATION') {
-    const status = data.data?.status;
-    if (status === 'SENT') {
-      toastBridge.success('WhatsApp', 'Notificação enviada com sucesso!');
-    } else {
-      toastBridge.error('WhatsApp', 'Falha ao enviar notificação via WhatsApp.');
-    }
-    return;
-  }
-
-  // Default handling for CALENDAR_UPDATE or generic updates
-  refreshList();
-  const action = data.data?.action;
-  if (action === 'CANCELLED') {
-    toastBridge.info('Atualização', `Um agendamento foi cancelado via Google Calendar.`);
-  } else {
-    toastBridge.info('Atualização', `A agenda foi atualizada via Google Calendar.`);
-  }
-});
-
-
-
-onMounted(() => {
-  if (token) {
-    connect();
-  }
-});
-
-onUnmounted(() => {
-  disconnect();
-});
 
 const {
   listRef, showForm, editingItem,
   openForm, closeForm, refreshList, deleteItem,
 } = useCrudView(appointmentService, {singular: 'Agendamento', plural: 'Agendamentos'});
+
+const handleGlobalNotification = () => {
+  console.log('[AppointmentView] Global notification received, refreshing list...');
+  refreshList();
+};
+
+onMounted(() => {
+  window.addEventListener('githa:notification', handleGlobalNotification);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('githa:notification', handleGlobalNotification);
+});
 
 // --- Cancellation modal ---
 const showCancellationModal = ref(false);

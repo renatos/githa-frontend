@@ -13,6 +13,47 @@ import LoadingOverlay from './components/LoadingOverlay.vue';
 const route = useRoute();
 const { isDark } = useTheme(); // Initialize theme globally
 
+import { useNotificationWebSocket } from './composables/useNotificationWebSocket';
+import { toastBridge } from './services/toastBridge';
+
+const { connect, onMessage } = useNotificationWebSocket();
+
+onMessage((data) => {
+  console.log('[Global-Notification] Message received:', data);
+  
+  // Handle WhatsApp messages
+  if (data.type === 'WHATSAPP_STATUS') {
+    const status = data.data?.status;
+    if (status === 'SENT') {
+      toastBridge.success('WhatsApp', 'Notificação enviada com sucesso!');
+    } else {
+      toastBridge.error('WhatsApp', 'Falha ao enviar notificação via WhatsApp.');
+    }
+  } else {
+    // Default handling for CALENDAR_UPDATE or generic updates
+    const action = data.data?.action;
+    const notes = data.data?.notes;
+    
+    if (action === 'CANCELLED') {
+      toastBridge.info('Atualização', notes || 'Um agendamento foi cancelado via Google Calendar.');
+    } else {
+      toastBridge.info('Atualização', notes || 'A agenda foi atualizada via Google Calendar.');
+    }
+  }
+
+  // Dispatch a global event so specific views can react (e.g. refresh lists)
+  window.dispatchEvent(new CustomEvent('githa:notification', { detail: data }));
+});
+
+import { authService } from './services/authService';
+
+onMounted(() => {
+  const token = authService.getToken();
+  if (token) {
+    connect(token);
+  }
+});
+
 const layout = computed(() => {
   return route.meta.layout === 'auth' ? AuthLayout : MainLayout;
 });
