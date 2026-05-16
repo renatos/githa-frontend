@@ -41,10 +41,10 @@ import {toastBridge} from '../services/toastBridge';
 import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
-import {useAppointmentWebSocket} from '../composables/useAppointmentWebSocket';
+import {useNotificationWebSocket} from '../composables/useNotificationWebSocket';
 
 const token = authService.getToken();
-const { connectionStatus, onMessage, connect, disconnect } = useAppointmentWebSocket(token);
+const { connectionStatus, onMessage, connect, disconnect } = useNotificationWebSocket(token);
 
 onMessage((data) => {
   console.log('Real-time update received:', data);
