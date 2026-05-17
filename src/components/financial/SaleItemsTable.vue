@@ -134,15 +134,31 @@
           <div>
             <span class="md:hidden block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Item</span>
             <div class="flex flex-col gap-3">
-              <BaseLookup
-                v-if="newItem.type === 'PRODUCT'"
-                v-model="newItem.productId"
-                :initial-description="newItem.productName"
-                :search-service="productServiceAdapter"
-                placeholder="Selecione o produto..."
-                hide-id
-                @select="onProductSelect"
-              />
+              <!-- Product Lookup & Optional Professional -->
+              <div v-if="newItem.type === 'PRODUCT'" class="flex flex-col xl:flex-row gap-3">
+                <div class="flex-1 min-w-0">
+                  <BaseLookup
+                    v-model="newItem.productId"
+                    :initial-description="newItem.productName"
+                    :search-service="productServiceAdapter"
+                    placeholder="Selecione o produto..."
+                    hide-id
+                    @select="onProductSelect"
+                  />
+                </div>
+                <div v-if="newItem.productId" class="w-full xl:w-48 flex-shrink-0 animate-in fade-in slide-in-from-top-1">
+                  <BaseLookup
+                    v-model="newItem.professionalId"
+                    :initial-description="newItem.professionalName"
+                    :search-service="professionalService"
+                    placeholder="Profissional (Opcional)..."
+                    hide-id
+                    @select="onProfessionalSelect"
+                  />
+                </div>
+              </div>
+
+              <!-- Service Lookup & Required Professional -->
               <div v-else class="flex flex-col xl:flex-row gap-3">
                 <div class="flex-1 min-w-0">
                   <BaseLookup
