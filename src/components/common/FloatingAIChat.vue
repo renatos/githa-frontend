@@ -5,6 +5,7 @@ import { toastBridge } from '../../services/toastBridge';
 import BaseModal from './BaseModal.vue';
 import { professionalService } from '../../services/professionalService';
 import { appointmentService } from '../../services/appointmentService';
+import { authService } from '../../services/authService';
 import { 
   Sparkles, 
   Send, 
@@ -34,7 +35,9 @@ const loadProfessionals = async () => {
         const response = await professionalService.getAll({ size: 100 });
         professionals.value = response.data.content || response.data;
         if (professionals.value?.length > 0) {
-            selectedProfessional.value = professionals.value[0];
+            const currentUser = authService.getCurrentUser();
+            const matchingProf = professionals.value.find(p => p.id === currentUser.professionalId);
+            selectedProfessional.value = matchingProf || professionals.value[0];
         }
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar profissionais.', life: 3000 });

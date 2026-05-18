@@ -134,6 +134,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 
+const currentUser = ref(authService.getCurrentUser());
+
 const form = ref({
   title: '',
   description: '',
@@ -141,16 +143,18 @@ const form = ref({
   feedbackStatus: 'NEW',
   userId: null,
   user: null,
-  reporterId: null,
-  reporter: null
+  reporterId: currentUser.value.professionalId || null,
+  reporter: currentUser.value.professionalId ? {
+    id: currentUser.value.professionalId,
+    name: currentUser.value.professionalName
+  } : null
 });
 
 const localReplies = ref([]);
 const newReply = ref('');
-const replyAuthorId = ref(null);
+const replyAuthorId = ref(currentUser.value.professionalId || null);
 const sendingReply = ref(false);
 const chatContainer = ref(null);
-const currentUser = ref({});
 
 const feedbackStatuses = ref([]);
 const feedbackTypes = ref([]);
@@ -181,6 +185,18 @@ onMounted(async () => {
     };
     localReplies.value = props.feedback.replies || [];
     scrollToBottom();
+  } else {
+    if (currentUser.value.professionalId && !form.value.reporterId) {
+      form.value.reporterId = currentUser.value.professionalId;
+      form.value.reporter = {
+        id: currentUser.value.professionalId,
+        name: currentUser.value.professionalName
+      };
+    }
+  }
+  
+  if (currentUser.value.professionalId && !replyAuthorId.value) {
+    replyAuthorId.value = currentUser.value.professionalId;
   }
 });
 

@@ -140,6 +140,7 @@ import ErrorModal from '../common/ErrorModal.vue';
 import financialService from '../../services/financialService';
 import {serviceService} from '../../services/serviceService';
 import {professionalService} from '../../services/professionalService';
+import {authService} from '../../services/authService';
 
 const props = defineProps({
   transaction: {
@@ -178,6 +179,12 @@ onMounted(() => {
   if (props.transaction.professionalId) {
     form.value.professionalId = props.transaction.professionalId;
     initialProfessionalName.value = props.transaction.professionalName;
+  } else {
+    const currentUser = authService.getCurrentUser();
+    if (currentUser.professionalId) {
+      form.value.professionalId = currentUser.professionalId;
+      initialProfessionalName.value = currentUser.professionalName;
+    }
   }
   form.value.amount = 0;
   form.value.description = `Procedimento - ${props.transaction.clientName || 'Cliente'}`;
