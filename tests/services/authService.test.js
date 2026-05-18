@@ -35,4 +35,36 @@ describe('authService', () => {
         expect(user.professionalId).toBe(123);
         expect(user.professionalName).toBe('Dr. House');
     });
+
+    describe('isTokenActive', () => {
+        it('should return false if there is no token', () => {
+            expect(authService.isTokenActive()).toBe(false);
+        });
+
+        it('should return false if the token is invalid/malformed', () => {
+            localStorage.setItem('token', 'invalid-token-format');
+            expect(authService.isTokenActive()).toBe(false);
+        });
+
+        it('should return true if the token is valid and active (exp in the future)', () => {
+            // Token payload: {"groups":["ROLE_ADMIN"],"exp":1924953600} (Dec 31, 2030)
+            const token = 'header.eyJncm91cHMiOlsiUk9MRV9BRE1JTiJdLCJleHAiOjE5MjQ5NTM2MDB9.signature';
+            localStorage.setItem('token', token);
+            expect(authService.isTokenActive()).toBe(true);
+        });
+
+        it('should return false if the token is expired (exp in the past)', () => {
+            // Token payload: {"groups":["ROLE_ADMIN"],"exp":1578028800} (Jan 3, 2020)
+            const token = 'header.eyJncm91cHMiOlsiUk9MRV9BRE1JTiJdLCJleHAiOjE1NzgwMjg4MDB9.signature';
+            localStorage.setItem('token', token);
+            expect(authService.isTokenActive()).toBe(false);
+        });
+
+        it('should return true if the token has no exp claim', () => {
+            // Token payload: {"groups":["ROLE_ADMIN"]}
+            const token = 'header.eyJncm91cHMiOlsiUk9MRV9BRE1JTiJdfQ.signature';
+            localStorage.setItem('token', token);
+            expect(authService.isTokenActive()).toBe(true);
+        });
+    });
 });

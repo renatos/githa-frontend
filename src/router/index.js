@@ -139,7 +139,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem('token');
+    // Authenticated redirect — if logged in with an active token, don't show login
+    if (to.path === '/login' && authService.isTokenActive()) {
+        next('/');
+        return;
+    }
 
     // Public routes — always allow
     if (to.meta.public) {
@@ -147,13 +151,8 @@ router.beforeEach((to, from, next) => {
         return;
     }
 
-    // Authenticated redirect — if logged in, don't show login
-    if (to.path === '/login' && token) {
-        next('/');
-        return;
-    }
-
     // Protected routes — require token
+    const token = localStorage.getItem('token');
     if (to.meta.requiresAuth && !token) {
         next('/login');
         return;
