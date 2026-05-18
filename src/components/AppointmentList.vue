@@ -300,13 +300,12 @@ const groupedAppointments = computed(() => {
     groups[dateStr].push(appt);
   });
 
-  // Sort groups by date descending (newest first)
+  // Sort groups by date ascending (oldest first)
   return Object.keys(groups)
     .sort()
-    .reverse()
     .map(date => ({
       date,
-      items: groups[date].sort((a, b) => b.startTime.localeCompare(a.startTime))
+      items: groups[date].sort((a, b) => a.startTime.localeCompare(b.startTime))
     }));
 });
 
