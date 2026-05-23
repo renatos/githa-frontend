@@ -66,7 +66,8 @@
 
 
 
-          <div v-if="form.nature === 'INCOME'" class="space-y-2">
+          <!-- Single Payment Method (Manual or Edit Mode) -->
+          <div v-if="form.nature === 'INCOME' && (transaction.id || launchMode === 'MANUAL')" class="space-y-2">
             <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Forma de Pagamento</label>
             <div class="h-12 w-full mt-1">
               <BaseLookup
@@ -77,6 +78,101 @@
                 placeholder="Selecione o método..."
                 @select="onPaymentMethodSelect"
               />
+            </div>
+          </div>
+
+          <!-- Multiple Payment Methods (Sale Launch Mode) -->
+          <div v-if="!transaction.id && launchMode === 'SALE'" class="space-y-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex items-center justify-between">
+              <label class="text-slate-900 dark:text-slate-100 text-sm font-bold block ml-1">Formas de Pagamento (Divisão de Valores)</label>
+              <button
+                v-if="canSave"
+                type="button"
+                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline flex items-center gap-1"
+                @click="addPaymentSplit"
+              >
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                Adicionar Forma
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <div
+                v-for="(split, index) in paymentSplits"
+                :key="index"
+                class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm"
+              >
+                <!-- Method Lookup -->
+                <div class="flex-1 min-w-0">
+                  <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-1">Forma</span>
+                  <div class="h-10 w-full">
+                    <BaseLookup
+                      v-model="split.paymentMethodId"
+                      :disabled="!canSave"
+                      :initial-description="split.paymentMethodName"
+                      :search-service="paymentMethodService"
+                      placeholder="Selecione o método..."
+                      @select="(item) => { split.paymentMethodName = item?.name; split.paymentMethodId = item?.id; split.discountPercentage = item?.discountPercentage; }"
+                    />
+                  </div>
+                </div>
+
+                <!-- Split Amount -->
+                <div class="w-full sm:w-36">
+                  <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-1">Valor</span>
+                  <div class="h-10 w-full">
+                    <CurrencyInput
+                      v-model="split.amount"
+                      :disabled="!canSave"
+                      class="h-10 text-sm font-bold"
+                    />
+                  </div>
+                </div>
+
+                <!-- Status -->
+                <div class="w-full sm:w-32">
+                  <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-1">Status</span>
+                  <select
+                    v-model="split.status"
+                    :disabled="!canSave"
+                    class="form-select flex w-full h-10 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 outline-none text-sm font-normal"
+                  >
+                    <option value="PENDING">Pendente</option>
+                    <option value="PAID">Pago</option>
+                  </select>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex items-end justify-center h-10 pt-4 sm:pt-0">
+                  <button
+                    type="button"
+                    :disabled="paymentSplits.length === 1 || !canSave"
+                    class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg disabled:opacity-30 transition-colors"
+                    title="Remover"
+                    @click="removePaymentSplit(index)"
+                  >
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Splits Validation Summary -->
+            <div
+              class="flex items-center gap-3 p-3 rounded-lg border text-xs font-semibold mt-3"
+              :class="isSplitsBalanced
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400'"
+            >
+              <i class="fa-solid" :class="isSplitsBalanced ? 'fa-circle-check text-emerald-500' : 'fa-triangle-exclamation text-amber-500'"></i>
+              <div class="flex-1 min-w-0">
+                <span v-if="isSplitsBalanced">
+                  Valores conciliados com sucesso! Total: {{ formatCurrency(form.amount) }}
+                </span>
+                <span v-else>
+                  A soma das formas de pagamento ({{ formatCurrency(splitsSum) }}) não corresponde ao total da venda ({{ formatCurrency(form.amount) }}). Diferença: {{ formatCurrency(Math.abs(form.amount - splitsSum)) }}.
+                </span>
+              </div>
             </div>
           </div>
 
@@ -180,11 +276,11 @@
     </form>
 
     <template #footer>
-      <div v-show="!canSave" class="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg">
+      <div v-show="!isFormValid" class="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg">
         <i class="fa-solid fa-lock text-rose-500 text-xs"></i>
         <span class="text-[10px] font-bold text-rose-600 dark:text-rose-300 uppercase leading-none">{{ saveTooltip }}</span>
       </div>
-      <div v-show="canSave" class="hidden sm:block"></div>
+      <div v-show="isFormValid" class="hidden sm:block"></div>
       
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <button 
@@ -195,7 +291,7 @@
           Cancelar
         </button>
         <button 
-          :disabled="!canSave"
+          :disabled="!isFormValid"
           class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:grayscale"
           @click="save"
         >
@@ -248,6 +344,38 @@ const checkUserRole = () => {
 };
 
 const launchMode = ref('SALE'); // 'MANUAL' or 'SALE'
+
+const paymentSplits = ref([
+  { paymentMethodId: undefined, paymentMethodName: '', amount: 0, status: 'PAID' }
+]);
+
+const splitsSum = computed(() => {
+  return paymentSplits.value.reduce((sum, s) => sum + (s.amount || 0), 0);
+});
+
+const isSplitsBalanced = computed(() => {
+  return Math.abs(splitsSum.value - (form.value.amount || 0)) <= 0.01;
+});
+
+const addPaymentSplit = () => {
+  const remaining = Math.max(0, form.value.amount - splitsSum.value);
+  paymentSplits.value.push({
+    paymentMethodId: undefined,
+    paymentMethodName: '',
+    amount: remaining,
+    status: 'PAID'
+  });
+};
+
+const removePaymentSplit = (index) => {
+  if (paymentSplits.value.length > 1) {
+    paymentSplits.value.splice(index, 1);
+  }
+};
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+};
 
 const form = ref({
   description: '',
@@ -316,8 +444,38 @@ const canSave = computed(() => {
   return true;
 });
 
+const isFormValid = computed(() => {
+  if (!canSave.value) return false;
+  if (!props.transaction.id) {
+    if (launchMode.value === 'SALE') {
+      if (!isSplitsBalanced.value) return false;
+      if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
+    }
+    if (launchMode.value === 'MANUAL') {
+      if (!form.value.description) return false;
+    }
+  }
+  return true;
+});
+
 const saveTooltip = computed(() => {
-  return !canSave.value ? 'Transação paga, apenas ADMIN pode salvar alterações.' : '';
+  if (!canSave.value) {
+    return 'Transação paga, apenas ADMIN pode salvar alterações.';
+  }
+  if (!isFormValid.value) {
+    if (!props.transaction.id && launchMode.value === 'SALE') {
+      if (!isSplitsBalanced.value) {
+        return `A soma das formas de pagamento (${formatCurrency(splitsSum.value)}) não corresponde ao total da venda (${formatCurrency(form.value.amount || 0)}).`;
+      }
+      if (paymentSplits.value.some(s => !s.paymentMethodId)) {
+        return 'Selecione a forma de pagamento para todas as divisões.';
+      }
+    }
+    if (launchMode.value === 'MANUAL' && !form.value.description) {
+      return 'A descrição é obrigatória para lançamentos manuais.';
+    }
+  }
+  return '';
 });
 
 onMounted(async () => {
@@ -366,6 +524,10 @@ onMounted(async () => {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     form.value.paymentDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+
+  if (!props.transaction?.id) {
+    paymentSplits.value[0].amount = form.value.amount;
   }
 });
 
@@ -446,8 +608,9 @@ const save = async () => {
     return;
   }
 
-  if (launchMode.value === 'MANUAL') {
-    if (!form.value.description) {
+  // If editing an existing transaction, we save the individual transaction directly via updateTransaction (in list)
+  if (props.transaction?.id || launchMode.value === 'MANUAL') {
+    if (launchMode.value === 'MANUAL' && !form.value.description) {
       confirmBridge.alert({
         title: 'Descrição Obrigatória',
         message: 'A descrição é obrigatória para lançamentos manuais.',
@@ -486,13 +649,22 @@ const save = async () => {
             unitPrice: item.unitPrice
           }))
         },
-        transaction: {
-          ...form.value,
-          description: form.value.description || `Venda para ${form.value.clientName}`,
-          nature: 'INCOME',
-          amount: form.value.amount,
-          originalAmount: form.value.amount
-        }
+        transactions: paymentSplits.value.map(split => {
+          let baseDesc = form.value.description || `Venda para ${form.value.clientName}`;
+          // Clean up any existing payment method tag from the end to avoid duplication
+          baseDesc = baseDesc.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
+
+          return {
+            ...form.value,
+            description: split.paymentMethodName ? `${baseDesc} [${split.paymentMethodName}]` : baseDesc,
+            nature: 'INCOME',
+            paymentMethodId: split.paymentMethodId,
+            paymentMethodName: split.paymentMethodName,
+            amount: split.amount,
+            originalAmount: split.amount,
+            status: split.status
+          };
+        })
       };
       await saleService.launchSale(payload);
       emit('save', {refresh: true});
@@ -509,6 +681,9 @@ const save = async () => {
 watch(() => form.value.amount, (newVal) => {
   if (!props.transaction?.id || form.value.amount !== props.transaction.amount) {
      form.value.originalAmount = newVal;
+  }
+  if (paymentSplits.value.length === 1) {
+    paymentSplits.value[0].amount = newVal;
   }
 });
 
