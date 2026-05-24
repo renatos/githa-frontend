@@ -66,9 +66,20 @@
 
 
 
-          <!-- Single Payment Method (Manual or Edit Mode) -->
-          <div v-if="form.nature === 'INCOME' && (launchMode === 'MANUAL' || (transaction.id && !transaction.saleId))" class="space-y-2">
-            <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Forma de Pagamento</label>
+          <!-- Single Payment Method (Manual, Edit Mode, or Sale with single payment) -->
+          <div v-if="form.nature === 'INCOME' && (launchMode === 'MANUAL' || (transaction.id && !transaction.saleId) || (launchMode === 'SALE' && !isSplitPayment))" class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Forma de Pagamento</label>
+              <button
+                v-if="launchMode === 'SALE' && canSave"
+                type="button"
+                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline flex items-center gap-1"
+                @click="enableSplitPayment"
+              >
+                <i class="fa-solid fa-code-fork text-[10px] rotate-90"></i>
+                Dividir Pagamento
+              </button>
+            </div>
             <div class="h-12 w-full mt-1">
               <BaseLookup
                 v-model="form.paymentMethodId"
@@ -81,8 +92,8 @@
             </div>
           </div>
 
-          <!-- Multiple Payment Methods (Sale Launch Mode) -->
-          <div v-if="launchMode === 'SALE'" class="space-y-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
+          <!-- Multiple Payment Methods (Sale Launch Mode with multiple payments) -->
+          <div v-if="launchMode === 'SALE' && isSplitPayment" class="space-y-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex items-center justify-between">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-bold block ml-1">Formas de Pagamento (Divisão de Valores)</label>
               <button
@@ -133,7 +144,7 @@
                 <div class="flex items-end justify-center h-10 pt-4 sm:pt-0">
                   <button
                     type="button"
-                    :disabled="paymentSplits.length === 1 || !canSave"
+                    :disabled="!canSave"
                     class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg disabled:opacity-30 transition-colors"
                     title="Remover"
                     @click="removePaymentSplit(index)"
@@ -164,7 +175,7 @@
           </div>
 
           <!-- Financial Details Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 gap-6" :class="launchMode === 'MANUAL' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'">
              <div v-if="launchMode === 'MANUAL'" class="space-y-2">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Natureza</label>
               <div class="form-input flex w-full h-12 mt-1 resize-none overflow-hidden rounded-lg text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 font-semibold items-center gap-2 cursor-not-allowed text-base">
@@ -220,7 +231,7 @@
 
           <!-- Discount Preview -->
           <TransactionDiscountBadge 
-            v-if="selectedPaymentMethod"
+            v-if="selectedPaymentMethod && (launchMode === 'MANUAL' || !isSplitPayment)"
             :amount="form.amount"
             :payment-method="selectedPaymentMethod"
           />
@@ -331,10 +342,21 @@ const checkUserRole = () => {
 };
 
 const launchMode = ref('SALE'); // 'MANUAL' or 'SALE'
+const isSplitPayment = ref(false);
 
 const paymentSplits = ref([
   { paymentMethodId: undefined, paymentMethodName: '', amount: 0, status: 'PAID' }
 ]);
+
+const enableSplitPayment = () => {
+  isSplitPayment.value = true;
+  if (paymentSplits.value.length === 1) {
+    paymentSplits.value[0].paymentMethodId = form.value.paymentMethodId;
+    paymentSplits.value[0].paymentMethodName = form.value.paymentMethodName;
+    paymentSplits.value[0].amount = form.value.amount;
+    addPaymentSplit();
+  }
+};
 
 const splitsSum = computed(() => {
   return paymentSplits.value.reduce((sum, s) => sum + (s.amount || 0), 0);
@@ -357,6 +379,25 @@ const addPaymentSplit = () => {
 const removePaymentSplit = (index) => {
   if (paymentSplits.value.length > 1) {
     paymentSplits.value.splice(index, 1);
+  }
+  if (paymentSplits.value.length === 1) {
+    isSplitPayment.value = false;
+    const remaining = paymentSplits.value[0];
+    form.value.paymentMethodId = remaining.paymentMethodId;
+    form.value.paymentMethodName = remaining.paymentMethodName;
+    remaining.amount = form.value.amount;
+    
+    if (remaining.paymentMethodId) {
+      paymentMethodService.getById(remaining.paymentMethodId).then(res => {
+        if (res.data) {
+          selectedPaymentMethod.value = res.data;
+        }
+      }).catch(err => {
+        console.error('Error fetching payment method:', err);
+      });
+    } else {
+      selectedPaymentMethod.value = null;
+    }
   }
 };
 
@@ -434,8 +475,12 @@ const canSave = computed(() => {
 const isFormValid = computed(() => {
   if (!canSave.value) return false;
   if (launchMode.value === 'SALE') {
-    if (!isSplitsBalanced.value) return false;
-    if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
+    if (isSplitPayment.value) {
+      if (!isSplitsBalanced.value) return false;
+      if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
+    } else {
+      if (form.value.status === 'PAID' && !form.value.paymentMethodId) return false;
+    }
   }
   if (launchMode.value === 'MANUAL') {
     if (!form.value.description) return false;
@@ -449,11 +494,17 @@ const saveTooltip = computed(() => {
   }
   if (!isFormValid.value) {
     if (launchMode.value === 'SALE') {
-      if (!isSplitsBalanced.value) {
-        return `A soma das formas de pagamento (${formatCurrency(splitsSum.value)}) não corresponde ao total da venda (${formatCurrency(form.value.amount || 0)}).`;
-      }
-      if (paymentSplits.value.some(s => !s.paymentMethodId)) {
-        return 'Selecione a forma de pagamento para todas as divisões.';
+      if (isSplitPayment.value) {
+        if (!isSplitsBalanced.value) {
+          return `A soma das formas de pagamento (${formatCurrency(splitsSum.value)}) não corresponde ao total da venda (${formatCurrency(form.value.amount || 0)}).`;
+        }
+        if (paymentSplits.value.some(s => !s.paymentMethodId)) {
+          return 'Selecione a forma de pagamento para todas as divisões.';
+        }
+      } else {
+        if (form.value.status === 'PAID' && !form.value.paymentMethodId) {
+          return 'Selecione a forma de pagamento para a transação paga.';
+        }
       }
     }
     if (launchMode.value === 'MANUAL' && !form.value.description) {
@@ -501,6 +552,17 @@ onMounted(async () => {
                       paymentMethodName: tx.paymentMethodName,
                       amount: tx.amount
                   }));
+                  
+                  if (paymentSplits.value.length > 1) {
+                      isSplitPayment.value = true;
+                  } else {
+                      isSplitPayment.value = false;
+                      const single = paymentSplits.value[0];
+                      if (single.paymentMethodId && !form.value.paymentMethodId) {
+                          form.value.paymentMethodId = single.paymentMethodId;
+                          form.value.paymentMethodName = single.paymentMethodName;
+                      }
+                  }
               }
           } catch (err) {
               console.error('Error loading payment splits:', err);
@@ -510,7 +572,11 @@ onMounted(async () => {
       launchMode.value = 'MANUAL';
     }
 
-    if (form.value.originalAmount) form.value.amount = form.value.originalAmount;
+    if (form.value.saleId && form.value.saleTotal) {
+      form.value.amount = form.value.saleTotal;
+    } else if (form.value.originalAmount) {
+      form.value.amount = form.value.originalAmount;
+    }
     if (form.value.paymentDate?.length > 16) form.value.paymentDate = form.value.paymentDate.substring(0, 19);
     
     // Recovery of names for lookups
@@ -603,6 +669,12 @@ const onPaymentMethodSelect = (item) => {
   selectedPaymentMethod.value = item;
   form.value.paymentMethodId = item?.id;
   form.value.paymentMethodName = item?.name || '';
+  
+  if (paymentSplits.value.length === 1) {
+    paymentSplits.value[0].paymentMethodId = item?.id;
+    paymentSplits.value[0].paymentMethodName = item?.name || '';
+    paymentSplits.value[0].amount = form.value.amount;
+  }
 };
 
 const save = async () => {
@@ -704,15 +776,25 @@ const viewAppointment = () => {
 const isAppointmentTransaction = computed(() => !!form.value.appointmentId);
 
 watch(() => form.value.status, (newVal) => {
-  if (newVal !== 'PAID') {
+  if (launchMode.value === 'MANUAL' && newVal !== 'PAID') {
      form.value.paymentMethodId = undefined;
      form.value.paymentMethodName = '';
      selectedPaymentMethod.value = null;
   }
 });
 
+watch(() => form.value.paymentMethodId, (newId) => {
+  if (!isSplitPayment.value && paymentSplits.value.length === 1) {
+    paymentSplits.value[0].paymentMethodId = newId;
+    paymentSplits.value[0].paymentMethodName = form.value.paymentMethodName;
+  }
+});
+
 watch(launchMode, (newVal) => {
-  if (newVal === 'SALE') form.value.nature = 'INCOME';
+  if (newVal === 'SALE') {
+    form.value.nature = 'INCOME';
+    isSplitPayment.value = false;
+  }
   else if (!form.value.accountGroupId && !form.value.id) form.value.nature = 'EXPENSE';
 });
 
@@ -727,6 +809,19 @@ watch(() => form.value.nature, (newVal) => {
 watch(() => form.value.appointmentId, (newVal) => {
   if (newVal) form.value.nature = 'INCOME';
 }, {immediate: true});
+
+watch([() => form.value.clientName, () => paymentSplits.value.length], ([clientName, splitsCount]) => {
+  if (launchMode.value === 'SALE' && clientName) {
+    const defaultPattern = new RegExp(`^Venda para ${clientName}( com \\d+ formas? de pgto)?$`);
+    if (!form.value.description || defaultPattern.test(form.value.description)) {
+      if (splitsCount > 1) {
+        form.value.description = `Venda para ${clientName} com ${splitsCount} formas de pgto`;
+      } else {
+        form.value.description = `Venda para ${clientName}`;
+      }
+    }
+  }
+}, { immediate: true, deep: true });
 </script>
 
 <style scoped>
