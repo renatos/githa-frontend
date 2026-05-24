@@ -67,7 +67,7 @@
 
 
           <!-- Single Payment Method (Manual or Edit Mode) -->
-          <div v-if="form.nature === 'INCOME' && (transaction.id || launchMode === 'MANUAL')" class="space-y-2">
+          <div v-if="form.nature === 'INCOME' && (launchMode === 'MANUAL' || (transaction.id && !transaction.saleId))" class="space-y-2">
             <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Forma de Pagamento</label>
             <div class="h-12 w-full mt-1">
               <BaseLookup
@@ -82,7 +82,7 @@
           </div>
 
           <!-- Multiple Payment Methods (Sale Launch Mode) -->
-          <div v-if="!transaction.id && launchMode === 'SALE'" class="space-y-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
+          <div v-if="launchMode === 'SALE'" class="space-y-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex items-center justify-between">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-bold block ml-1">Formas de Pagamento (Divisão de Valores)</label>
               <button
@@ -127,19 +127,6 @@
                       class="h-10 text-sm font-bold"
                     />
                   </div>
-                </div>
-
-                <!-- Status -->
-                <div class="w-full sm:w-32">
-                  <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-1">Status</span>
-                  <select
-                    v-model="split.status"
-                    :disabled="!canSave"
-                    class="form-select flex w-full h-10 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 outline-none text-sm font-normal"
-                  >
-                    <option value="PENDING">Pendente</option>
-                    <option value="PAID">Pago</option>
-                  </select>
                 </div>
 
                 <!-- Action Button -->
@@ -446,14 +433,12 @@ const canSave = computed(() => {
 
 const isFormValid = computed(() => {
   if (!canSave.value) return false;
-  if (!props.transaction.id) {
-    if (launchMode.value === 'SALE') {
-      if (!isSplitsBalanced.value) return false;
-      if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
-    }
-    if (launchMode.value === 'MANUAL') {
-      if (!form.value.description) return false;
-    }
+  if (launchMode.value === 'SALE') {
+    if (!isSplitsBalanced.value) return false;
+    if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
+  }
+  if (launchMode.value === 'MANUAL') {
+    if (!form.value.description) return false;
   }
   return true;
 });
@@ -463,7 +448,7 @@ const saveTooltip = computed(() => {
     return 'Transação paga, apenas ADMIN pode salvar alterações.';
   }
   if (!isFormValid.value) {
-    if (!props.transaction.id && launchMode.value === 'SALE') {
+    if (launchMode.value === 'SALE') {
       if (!isSplitsBalanced.value) {
         return `A soma das formas de pagamento (${formatCurrency(splitsSum.value)}) não corresponde ao total da venda (${formatCurrency(form.value.amount || 0)}).`;
       }
@@ -491,6 +476,11 @@ onMounted(async () => {
     form.value = {...props.transaction};
     originalStatus.value = props.transaction.status;
 
+    // Clean up payment method name in brackets from the end of the description
+    if (form.value.description) {
+      form.value.description = form.value.description.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
+    }
+
     if (props.transaction.saleId || props.transaction.sale) {
       launchMode.value = 'SALE';
       if (props.transaction.sale?.items) {
@@ -498,6 +488,23 @@ onMounted(async () => {
               ...item,
               type: item.type || (item.productId ? 'PRODUCT' : 'SERVICE')
           }));
+      }
+
+      const sId = props.transaction.saleId || props.transaction.sale?.id;
+      if (sId) {
+          try {
+              const res = await financialService.getTransactionsBySaleId(sId);
+              if (res.data && res.data.length > 0) {
+                  paymentSplits.value = res.data.map(tx => ({
+                      id: tx.id,
+                      paymentMethodId: tx.paymentMethodId,
+                      paymentMethodName: tx.paymentMethodName,
+                      amount: tx.amount
+                  }));
+              }
+          } catch (err) {
+              console.error('Error loading payment splits:', err);
+          }
       }
     } else {
       launchMode.value = 'MANUAL';
@@ -608,8 +615,10 @@ const save = async () => {
     return;
   }
 
-  // If editing an existing transaction, we save the individual transaction directly via updateTransaction (in list)
-  if (props.transaction?.id || launchMode.value === 'MANUAL') {
+  const isPaidSaleEdit = props.transaction?.id && (props.transaction.saleId || props.transaction.sale) && originalStatus.value === 'PAID';
+
+  // If manual, manual edit, or a paid sale edit (which cannot go through launchSale due to lock), save individual transaction directly
+  if (launchMode.value === 'MANUAL' || (props.transaction?.id && !props.transaction.saleId) || isPaidSaleEdit) {
     if (launchMode.value === 'MANUAL' && !form.value.description) {
       confirmBridge.alert({
         title: 'Descrição Obrigatória',
@@ -635,7 +644,7 @@ const save = async () => {
     try {
       const payload = {
         sale: {
-          id: form.value.saleId,
+          id: form.value.saleId || props.transaction?.saleId || props.transaction?.sale?.id,
           clientId: form.value.clientId,
           notes: form.value.description,
           items: saleItems.value.map(item => ({
@@ -656,13 +665,14 @@ const save = async () => {
 
           return {
             ...form.value,
-            description: split.paymentMethodName ? `${baseDesc} [${split.paymentMethodName}]` : baseDesc,
+            id: split.id || null,
+            description: baseDesc,
             nature: 'INCOME',
             paymentMethodId: split.paymentMethodId,
             paymentMethodName: split.paymentMethodName,
             amount: split.amount,
             originalAmount: split.amount,
-            status: split.status
+            status: form.value.status
           };
         })
       };

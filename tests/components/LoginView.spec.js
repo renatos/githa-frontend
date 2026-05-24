@@ -15,6 +15,13 @@ vi.mock('../../src/services/authService', () => ({
 }));
 
 describe('LoginView.vue Component', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_MOCK_LOGIN_ENABLED', 'false');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 
   it('renders GoogleLoginButton by default in test env', () => {
     const wrapper = mount(LoginView, {
