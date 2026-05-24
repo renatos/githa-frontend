@@ -231,9 +231,10 @@
 
           <!-- Discount Preview -->
           <TransactionDiscountBadge 
-            v-if="selectedPaymentMethod && (launchMode === 'MANUAL' || !isSplitPayment)"
             :amount="form.amount"
             :payment-method="selectedPaymentMethod"
+            :payment-splits="paymentSplits"
+            :is-split="launchMode === 'SALE' && isSplitPayment"
           />
 
           <!-- Secondary Details Row -->
@@ -546,12 +547,28 @@ onMounted(async () => {
           try {
               const res = await financialService.getTransactionsBySaleId(sId);
               if (res.data && res.data.length > 0) {
-                  paymentSplits.value = res.data.map(tx => ({
+                  const splits = res.data.map(tx => ({
                       id: tx.id,
                       paymentMethodId: tx.paymentMethodId,
                       paymentMethodName: tx.paymentMethodName,
-                      amount: tx.amount
+                      amount: tx.amount,
+                      discountPercentage: tx.discountPercentage
                   }));
+                  
+                  for (const split of splits) {
+                      if (split.paymentMethodId && (split.discountPercentage === undefined || split.discountPercentage === null)) {
+                          try {
+                              const pmRes = await paymentMethodService.getById(split.paymentMethodId);
+                              if (pmRes.data) {
+                                  split.discountPercentage = pmRes.data.discountPercentage;
+                              }
+                          } catch (err) {
+                              console.error('Error fetching payment method for split:', err);
+                          }
+                      }
+                  }
+                  
+                  paymentSplits.value = splits;
                   
                   if (paymentSplits.value.length > 1) {
                       isSplitPayment.value = true;
@@ -674,6 +691,7 @@ const onPaymentMethodSelect = (item) => {
     paymentSplits.value[0].paymentMethodId = item?.id;
     paymentSplits.value[0].paymentMethodName = item?.name || '';
     paymentSplits.value[0].amount = form.value.amount;
+    paymentSplits.value[0].discountPercentage = item?.discountPercentage;
   }
 };
 
