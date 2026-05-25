@@ -86,7 +86,7 @@ class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-2
           <div class="flex items-center gap-2 whitespace-nowrap" :class="isToday(group.date) ? 'text-indigo-600 dark:text-indigo-400 scale-105 transition-transform' : 'text-slate-500 dark:text-slate-400'">
             <span class="material-symbols-outlined" :class="isToday(group.date) ? 'text-[20px]' : 'text-[18px]'">calendar_today</span>
             <span :class="isToday(group.date) ? 'text-sm font-black' : 'text-xs font-bold'" class="uppercase tracking-widest">
-              Dia {{ formatDate(group.date) }} — {{ group.items.length }} 
+              Dia {{ formatDateWithWeekday(group.date) }} — {{ group.items.length }} 
               {{ group.items.length === 1 ? 'Agendamento' : 'Agendamentos' }}
             </span>
           </div>
@@ -311,7 +311,10 @@ const groupedAppointments = computed(() => {
 
 // --- Date Navigation ---
 const dateRangeLabel = computed(() => {
-  const start = getMonday(currentDate.value);
+  const start = viewMode.value === 'list'
+    ? new Date(currentDate.value)
+    : getMonday(currentDate.value);
+  start.setHours(0, 0, 0, 0);
   const end = new Date(start);
 
   if (viewMode.value === 'list') {
@@ -379,7 +382,10 @@ const loadAppointments = async () => {
   loading.value = true;
   try {
     let query = {};
-    const start = getMonday(currentDate.value);
+    const start = viewMode.value === 'list'
+      ? new Date(currentDate.value)
+      : getMonday(currentDate.value);
+    start.setHours(0, 0, 0, 0);
     let end = new Date(start);
 
     if (viewMode.value === 'list') {
@@ -446,6 +452,23 @@ const formatDate = (isoDate) => {
   if (!isoDate) return '';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
+};
+
+const getWeekdayAbbreviation = (isoDate) => {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-');
+  const date = new Date(year, month - 1, day);
+  let weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+  weekday = weekday.replace('.', '');
+  weekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  return weekday;
+};
+
+const formatDateWithWeekday = (isoDate) => {
+  if (!isoDate) return '';
+  const formattedDate = formatDate(isoDate);
+  const weekday = getWeekdayAbbreviation(isoDate);
+  return `${formattedDate} (${weekday})`;
 };
 
 const isToday = (dateStr) => {
