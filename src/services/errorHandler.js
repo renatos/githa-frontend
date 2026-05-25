@@ -30,6 +30,17 @@ export const errorHandler = {
             } else if (error.response.data && error.response.data.error) {
                 message = error.response.data.error;
             }
+
+            // Check if it is a warning type validation/business error
+            if (error.response.data && error.response.data.type === 'warning') {
+                const title = error.response.data.title || 'Aviso';
+                confirmBridge.alert({
+                    title: title,
+                    message: message,
+                    type: 'warning'
+                });
+                return message;
+            }
         } else if (error.request) {
             message = 'Servidor indisponível. Verifique se o backend está rodando.';
         }
