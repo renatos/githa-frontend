@@ -4,6 +4,7 @@
 
     <AppointmentList
         ref="listRef"
+        :sync-status="connectionStatus"
         @cancel="openCancellationModal"
         @complete="completeItem"
         @confirm="confirmItem"
@@ -37,6 +38,9 @@ import AppointmentCancellationModal from '../components/AppointmentCancellationM
 import {toastBridge} from '../services/toastBridge';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
+import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
+
+const { connectionStatus } = useNotificationWebSocket();
 
 const {
   listRef, showForm, editingItem,

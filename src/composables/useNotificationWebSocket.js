@@ -1,29 +1,54 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
+
+// Global state shared across all hook instances (Singleton Pattern)
+const connectionStatus = ref('disconnected'); // connecting, connected, disconnected, failed
+let socket = null;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
+const reconnectDelays = [1000, 2000, 4000, 8000, 16000];
+
+let currentToken = null;
+const onMessageCallbacks = new Set();
 
 /**
  * Composable for WebSocket connection to receive real-time notifications.
- * @param {string} token JWT token for authentication
+ * @param {string} [initialToken] JWT token for authentication
  */
 export function useNotificationWebSocket(initialToken) {
-  const connectionStatus = ref('disconnected'); // connecting, connected, disconnected, failed
-  let socket = null;
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 5;
-  const reconnectDelays = [1000, 2000, 4000, 8000, 16000];
-  
-  let currentToken = initialToken;
-  const onMessageCallbacks = [];
- 
+  if (initialToken) {
+    currentToken = initialToken;
+  }
+
   const connect = (newToken) => {
-    if (newToken) currentToken = newToken;
-    
+    if (newToken) {
+      currentToken = newToken;
+    }
+
     if (!currentToken) {
       connectionStatus.value = 'failed';
       console.error('No token provided for WebSocket connection');
       return;
     }
 
-    const tokenToUse = currentToken;
+    // If socket is already open or connecting, reuse it and do not open a new one
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+      console.warn('WebSocket connection already active or connecting.');
+      if (socket.readyState === WebSocket.OPEN) {
+        connectionStatus.value = 'connected';
+      } else {
+        connectionStatus.value = 'connecting';
+      }
+      return;
+    }
+
+    // Clean up any existing closed/closing socket
+    if (socket) {
+      try {
+        socket.close();
+      } catch {
+        // ignore
+      }
+    }
 
     connectionStatus.value = 'connecting';
     
@@ -31,13 +56,13 @@ export function useNotificationWebSocket(initialToken) {
     // This allows the Vite proxy (vite.config.js) to handle the /ws mapping
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/notifications/${tokenToUse}`;
+    const wsUrl = `${protocol}//${host}/ws/notifications/${currentToken}`;
 
-    console.log('Connecting to WebSocket:', wsUrl);
+    console.warn('Connecting to WebSocket:', wsUrl);
     socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
-      console.log('WebSocket connected');
+      console.warn('WebSocket connected');
       connectionStatus.value = 'connected';
       reconnectAttempts = 0;
     };
@@ -45,7 +70,6 @@ export function useNotificationWebSocket(initialToken) {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
         onMessageCallbacks.forEach(callback => callback(data));
       } catch (e) {
         console.error('Failed to parse WebSocket message:', e);
@@ -53,21 +77,24 @@ export function useNotificationWebSocket(initialToken) {
     };
 
     socket.onclose = (event) => {
-      console.log('WebSocket closed:', event.code, event.reason);
+      console.warn('WebSocket closed:', event.code, event.reason);
       
-      if (connectionStatus.value !== 'disconnected' && reconnectAttempts < maxReconnectAttempts) {
+      // If we disconnected intentionally, do not try to reconnect
+      if (connectionStatus.value === 'disconnected') {
+        return;
+      }
+
+      if (reconnectAttempts < maxReconnectAttempts) {
         connectionStatus.value = 'connecting';
         const delay = reconnectDelays[reconnectAttempts];
-        console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+        console.warn(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
         
         setTimeout(() => {
           reconnectAttempts++;
           connect();
         }, delay);
-      } else if (reconnectAttempts >= maxReconnectAttempts) {
-        connectionStatus.value = 'failed';
       } else {
-        connectionStatus.value = 'disconnected';
+        connectionStatus.value = 'failed';
       }
     };
 
@@ -78,15 +105,20 @@ export function useNotificationWebSocket(initialToken) {
   };
 
   const disconnect = () => {
-    const prevStatus = connectionStatus.value;
     connectionStatus.value = 'disconnected';
     if (socket) {
       socket.close();
+      socket = null;
     }
+    reconnectAttempts = 0;
   };
 
   const onMessage = (callback) => {
-    onMessageCallbacks.push(callback);
+    onMessageCallbacks.add(callback);
+    // Return a cleanup function to unsubscribe
+    return () => {
+      onMessageCallbacks.delete(callback);
+    };
   };
 
   return {
@@ -96,3 +128,4 @@ export function useNotificationWebSocket(initialToken) {
     disconnect
   };
 }
+
