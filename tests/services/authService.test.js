@@ -13,7 +13,9 @@ describe('authService', () => {
         const professionalId = 123;
         const professionalName = 'Dr. House';
 
-        authService.setSession(token, email, professionalId, professionalName);
+        authService.setSession(token, email, false, false);
+        authService.updateSessionProperty('professionalId', professionalId);
+        authService.updateSessionProperty('professionalName', professionalName);
 
         const user = JSON.parse(localStorage.getItem('user'));
         expect(user.email).toBe(email);
