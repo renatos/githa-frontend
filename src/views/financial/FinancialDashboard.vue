@@ -20,48 +20,105 @@
     <!-- Summary Cards (Monthly Context) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Income Card -->
-      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5">
+      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 h-[160px] flex flex-col justify-between">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
           <i class="fa-solid fa-arrow-trend-up text-5xl text-emerald-500"></i>
         </div>
-        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Receitas ({{ currentMonthLabel }})</h3>
-        <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">{{ formatCurrency(summary.totalIncome) }}</div>
-        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+        <div>
+          <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Receitas ({{ currentMonthLabel }})</h3>
+          <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">{{ formatCurrency(summary.totalIncome) }}</div>
+        </div>
+        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
           <span class="mr-2">Pendente:</span>
           <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingIncome || 0) }}</span>
         </div>
       </div>
       
       <!-- Expense Card -->
-      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/5">
+      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/5 h-[160px] flex flex-col justify-between">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
           <i class="fa-solid fa-arrow-trend-down text-5xl text-rose-500"></i>
         </div>
-        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Despesas ({{ currentMonthLabel }})</h3>
-        <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
-        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+        <div>
+          <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Despesas ({{ currentMonthLabel }})</h3>
+          <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
+        </div>
+        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
           <span class="mr-2">Pendente:</span>
           <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingExpense || 0) }}</span>
         </div>
       </div>
       
-      <!-- Balance Card -->
+      <!-- Balance Card (Flip Card) -->
       <div 
-        class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/5"
-        :class="summary.balance < 0 ? 'hover:border-rose-500/30' : 'hover:border-indigo-500/30'"
+        class="flip-card h-[160px] cursor-pointer"
+        @click="isFlipped = !isFlipped"
       >
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="fa-solid fa-scale-balanced text-5xl" :class="summary.balance < 0 ? 'text-rose-500' : 'text-indigo-500'"></i>
-        </div>
-        <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Saldo Acumulado</h3>
-        <div class="text-3xl font-bold mb-2 transition-colors" :class="summary.balance < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'">
-          {{ formatCurrency(summary.balance) }}
-        </div>
-        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
-          <span class="mr-2">Soma Pendentes:</span>
-          <span class="font-medium" :class="summary.pendingBalance < 0 ? 'text-rose-600 dark:text-rose-500' : 'text-slate-700 dark:text-slate-300'">
-            {{ formatCurrency(summary.pendingBalance || 0) }}
-          </span>
+        <div 
+          class="flip-card-inner h-full w-full relative transition-transform duration-500 transform-style-3d"
+          :class="{ 'rotate-y-180': isFlipped }"
+        >
+          <!-- Front Face (Option 2: Compact Equation) -->
+          <div 
+            class="flip-card-front absolute inset-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/5 backface-hidden flex flex-col justify-between"
+            :class="summary.balance < 0 ? 'hover:border-rose-500/30' : 'hover:border-indigo-500/30'"
+          >
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+              <i class="fa-solid fa-scale-balanced text-5xl" :class="summary.balance < 0 ? 'text-rose-500' : 'text-indigo-500'"></i>
+            </div>
+            
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Saldo Acumulado</h3>
+                <span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold hover:underline">Ver Fórmula</span>
+              </div>
+              <div class="text-3xl font-bold mb-2 transition-colors" :class="summary.balance < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'">
+                {{ formatCurrency(summary.balance) }}
+              </div>
+            </div>
+
+            <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
+              <span class="mr-2">Soma Pendentes:</span>
+              <span class="font-medium" :class="summary.pendingBalance < 0 ? 'text-rose-600 dark:text-rose-500' : 'text-slate-700 dark:text-slate-300'">
+                {{ formatCurrency(summary.pendingBalance || 0) }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Back Face (Option 4: Detailed Breakdown) -->
+          <div 
+            class="flip-card-back absolute inset-0 bg-white dark:bg-slate-800 border border-indigo-500/30 dark:border-indigo-500/40 rounded-2xl p-6 backface-hidden rotate-y-180 flex flex-col justify-between"
+          >
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+              <i class="fa-solid fa-calculator text-5xl text-indigo-500"></i>
+            </div>
+            
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Detalhamento do Cálculo</h3>
+                <span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold hover:underline">Voltar</span>
+              </div>
+              <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex justify-between">
+                  <span>Saldo Anterior (Mês Ant.):</span>
+                  <span class="font-mono">{{ formatCurrency(previousBalance) }}</span>
+                </div>
+                <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>(+) Receitas do Mês:</span>
+                  <span class="font-mono font-bold">+ {{ formatCurrency(summary.totalIncome) }}</span>
+                </div>
+                <div class="flex justify-between text-rose-600 dark:text-rose-400">
+                  <span>(-) Despesas do Mês:</span>
+                  <span class="font-mono font-bold">- {{ formatCurrency(summary.totalExpense) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border-t border-slate-200 dark:border-slate-700/50 pt-2 flex justify-between items-center text-xs mt-auto">
+              <span class="font-semibold text-slate-700 dark:text-slate-300">Total Acumulado:</span>
+              <span class="font-mono font-black text-indigo-600 dark:text-indigo-400">{{ formatCurrency(summary.balance) }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -129,11 +186,16 @@ import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
 
 const viewMode = ref('MONTH'); // 'MONTH' or 'DAY'
+const isFlipped = ref(false);
 
 const summary = ref({
   totalIncome: 0,
   totalExpense: 0,
   balance: 0
+});
+
+const previousBalance = computed(() => {
+  return (summary.value.balance || 0) - (summary.value.totalIncome || 0) + (summary.value.totalExpense || 0);
 });
 
 const dailySummary = ref({
@@ -241,3 +303,19 @@ const saveAppointment = async (data) => {
   }
 };
 </script>
+
+<style scoped>
+.flip-card {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+</style>
