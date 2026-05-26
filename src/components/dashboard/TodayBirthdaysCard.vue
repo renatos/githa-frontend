@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
     <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-      <span>🎂</span> Aniversariantes (Mês Atual)
+      <span>🎂</span> Aniversariantes de {{ currentMonthName }}
     </h2>
 
     <div v-if="loading" class="flex-1 flex items-center justify-center py-8">
@@ -51,7 +51,7 @@ class="w-10 h-10 rounded-full flex items-center justify-center text-white font-b
 </template>
 
 <script setup>
-import { ref, onMounted, defineEmits } from 'vue';
+import { ref, onMounted, defineEmits, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const emit = defineEmits(['select-client']);
@@ -63,6 +63,14 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref(false);
 const clients = ref([]);
+
+const currentMonthName = computed(() => {
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  return months[new Date().getMonth()];
+});
 
 const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500', 'bg-indigo-500'];
 
@@ -102,19 +110,9 @@ const fetchBirthdays = async () => {
   error.value = false;
   try {
     const currentMonth = new Date().getMonth() + 1;
-    const response = await api.get('/clients', { params: { size: 200, sort: 'name,asc' } });
-    const content = response?.data?.content || response?.data || [];
-    const allClients = Array.isArray(content) ? content : [];
-    const birthdaysThisMonth = allClients.filter(client => {
-      if (!client.birthday) return false;
-      const parts = client.birthday.split('-');
-      return parts.length === 3 && parseInt(parts[1], 10) === currentMonth;
-    });
-    birthdaysThisMonth.sort((a, b) => {
-      const dayA = parseInt(a.birthday.split('-')[2], 10);
-      const dayB = parseInt(b.birthday.split('-')[2], 10);
-      return dayA - dayB;
-    });
+    const response = await api.get('/clients/birthdays', { params: { month: currentMonth } });
+    const content = response?.data || [];
+    const birthdaysThisMonth = Array.isArray(content) ? content : [];
     clients.value = birthdaysThisMonth.slice(0, 5);
   } catch (err) {
     console.error('Failed to fetch birthdays:', err);
