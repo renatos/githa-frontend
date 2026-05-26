@@ -4,10 +4,35 @@
       <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
         <span>🔄</span> Smart Rebooking
       </h2>
-      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" @change="fetchReminders">
+      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         <option value="">Todos</option>
         <option v-for="opt in statusFilterOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
       </select>
+    </div>
+
+    <!-- Metrics Summary Section -->
+    <div v-if="!loading && !error" class="grid grid-cols-2 gap-4 mb-6">
+      <!-- Potential Revenue -->
+      <div class="bg-gradient-to-br from-amber-500/10 to-amber-600/5 dark:from-amber-500/15 dark:to-transparent border border-amber-500/20 dark:border-amber-500/30 rounded-lg p-3 flex flex-col">
+        <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Potencial</span>
+        <span class="text-lg font-bold text-amber-700 dark:text-amber-300 mt-1">
+          {{ formatCurrency(potentialRevenue) }}
+        </span>
+        <span class="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+          {{ newAndNotifiedCount }} {{ newAndNotifiedCount === 1 ? 'pendente' : 'pendentes' }}
+        </span>
+      </div>
+
+      <!-- Converted Revenue -->
+      <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/15 dark:to-transparent border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg p-3 flex flex-col">
+        <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Recuperado</span>
+        <span class="text-lg font-bold text-emerald-700 dark:text-emerald-300 mt-1">
+          {{ formatCurrency(convertedRevenue) }}
+        </span>
+        <span class="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+          {{ scheduledCount }} {{ scheduledCount === 1 ? 'agendado' : 'agendados' }}
+        </span>
+      </div>
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-8">
@@ -42,7 +67,12 @@
                 Último atendimento: {{ new Date(reminder.lastAppointmentDate).toLocaleDateString('pt-BR') }}
             </span>
         </div>
-        <StatusBadge :status="reminder.status" :status-map="rebookingStatusMap" />
+        <div class="flex flex-col items-end gap-1.5">
+            <span class="font-semibold text-gray-700 dark:text-slate-200">
+                {{ formatCurrency(reminder.service?.price) }}
+            </span>
+            <StatusBadge :status="reminder.status" :status-map="rebookingStatusMap" />
+        </div>
       </div>
     </div>
 
@@ -74,6 +104,7 @@ import StatusBadge from '../common/StatusBadge.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { enumService } from '../../services/enumService';
+import { formatCurrency } from '../../utils/formatters';
 
 const props = defineProps({
     serviceId: {
@@ -84,7 +115,7 @@ const props = defineProps({
 
 const loading = ref(true);
 const error = ref(false);
-const reminders = ref([]);
+const allReminders = ref([]);
 const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
 const showAppointmentForm = ref(false);
@@ -115,11 +146,36 @@ const loadStatusOptions = async () => {
     statusFilterOptions.value = await enumService.getOptions('RebookingStatus');
 };
 
+const reminders = computed(() => {
+    if (!statusFilter.value) return allReminders.value;
+    return allReminders.value.filter(r => r.status === statusFilter.value);
+});
+
+const potentialRevenue = computed(() => {
+    return allReminders.value
+        .filter(r => r.status === 'NEW' || r.status === 'NOTIFIED')
+        .reduce((acc, r) => acc + (r.service?.price || 0), 0);
+});
+
+const convertedRevenue = computed(() => {
+    return allReminders.value
+        .filter(r => r.status === 'SCHEDULED')
+        .reduce((acc, r) => acc + (r.service?.price || 0), 0);
+});
+
+const newAndNotifiedCount = computed(() => {
+    return allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+});
+
+const scheduledCount = computed(() => {
+    return allReminders.value.filter(r => r.status === 'SCHEDULED').length;
+});
+
 const fetchReminders = async () => {
     loading.value = true;
     error.value = false;
     try {
-        reminders.value = await listRebookingReminders(statusFilter.value, props.serviceId);
+        allReminders.value = await listRebookingReminders(null, props.serviceId);
     } catch(e) {
         error.value = true;
         console.error(e);
