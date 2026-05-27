@@ -70,27 +70,38 @@
               <!-- Progress Fill -->
               <circle 
                 cx="128" cy="128" r="110" 
-                fill="none" :stroke="progressData.onTrack ? '#484cb0' : '#f59e0b'" stroke-width="12" 
+                fill="none" :stroke="strokeColor" stroke-width="12" 
                 stroke-linecap="round"
                 :stroke-dasharray="circumference"
                 :stroke-dashoffset="progressOffset"
                 class="transition-all duration-1000 ease-out"
+                :class="{ 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]': percentage >= 100 }"
               />
             </svg>
             <!-- Center Text -->
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-5xl font-black text-white">{{ percentage }}%</span>
-              <span class="text-sm font-medium text-gray-400 mt-1 uppercase tracking-widest">Atingido</span>
+              <span 
+                class="text-5xl font-black transition-colors duration-500"
+                :class="percentage >= 100 ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' : 'text-white'"
+              >
+                {{ percentage }}%
+              </span>
+              <span 
+                class="text-xs font-semibold mt-1 uppercase tracking-widest transition-colors duration-500"
+                :class="percentage >= 100 ? 'text-emerald-400' : 'text-gray-400'"
+              >
+                {{ percentage > 100 ? 'Superado' : 'Atingido' }}
+              </span>
             </div>
           </div>
 
           <div class="mt-8 text-center space-y-1 group/goal relative">
             <p class="text-gray-400 text-sm">Meta mensal</p>
-            <div class="flex items-center justify-center gap-2">
+            <div class="relative flex items-center justify-center">
               <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
               <button 
                 v-if="isAdmin" 
-                class="p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                class="absolute -right-8 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
                 title="Editar Meta"
                 @click="handleEditGoal"
               >
@@ -103,10 +114,10 @@
             v-if="progressData.onTrack" 
             class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
-            <CheckCircle :size="14" /> DENTRO DA META 
+            <CheckCircle :size="14" /> {{ percentage > 100 ? 'ACIMA DA META!' : 'DENTRO DA META' }} 
             <div class="group relative cursor-help flex items-center">
               <Info :size="12" class="opacity-50 group-hover:opacity-100 transition-opacity" />
-              <BaseTooltip text="O ritmo de faturamento está adequado para atingir o objetivo mensal." />
+              <BaseTooltip :text="percentage > 100 ? 'A meta de faturamento mensal foi superada com sucesso!' : 'O ritmo de faturamento está adequado para atingir o objetivo mensal.'" />
             </div>
           </div>
           <div 
@@ -428,11 +439,17 @@ const circumference = 2 * Math.PI * 110;
 // Computed
 const percentage = computed(() => {
   if (!progressData.value || !progressData.value.goal.targetAmount) return 0;
-  return Math.min(100, Math.round((progressData.value.realizedRevenue / progressData.value.goal.targetAmount) * 100));
+  return Math.round((progressData.value.realizedRevenue / progressData.value.goal.targetAmount) * 100);
+});
+
+const strokeColor = computed(() => {
+  if (!progressData.value) return '#484cb0';
+  if (percentage.value >= 100) return '#10b981'; // Vibrant emerald green for >= 100%
+  return progressData.value.onTrack ? '#484cb0' : '#f59e0b';
 });
 
 const progressOffset = computed(() => {
-  const p = percentage.value / 100;
+  const p = Math.min(100, percentage.value) / 100;
   return circumference * (1 - p);
 });
 
