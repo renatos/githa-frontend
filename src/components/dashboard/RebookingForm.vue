@@ -148,7 +148,7 @@ const currentStatusLabel = computed(() => {
     return option ? option.description : form.value.status;
 });
 
-const isProfessionalRequired = computed(() => ['NOTIFIED', 'SCHEDULED', 'DECLINED'].includes(form.value.status));
+const isProfessionalRequired = computed(() => ['NOTIFIED', 'SCHEDULED', 'CONVERTED', 'DECLINED'].includes(form.value.status));
 const isValid = computed(() => {
     if (isProfessionalRequired.value && !form.value.contactResponsibleId) {
         return false;
