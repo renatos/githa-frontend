@@ -75,6 +75,10 @@
           <i class="fa-solid fa-bullseye w-6 text-lg"></i>
           <span class="ml-2">Metas</span>
         </router-link>
+        <router-link to="/investments" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-chart-line w-6 text-lg"></i>
+          <span class="ml-2">Investimentos</span>
+        </router-link>
         <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>

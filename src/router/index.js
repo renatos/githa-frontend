@@ -134,6 +134,18 @@ const router = createRouter({
             component: () => import('../views/GoalsView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/investments',
+            name: 'investments',
+            component: () => import('../components/financial/InvestmentList.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/investments/:id/metrics',
+            name: 'investment-metrics',
+            component: () => import('../views/InvestmentMetricsView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })

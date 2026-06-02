@@ -163,8 +163,22 @@ const loadStatusOptions = async () => {
     statusFilterOptions.value = await enumService.getOptions('RebookingStatus');
 };
 
+const isWithinLast30Days = (dateStr) => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30;
+};
+
 const reminders = computed(() => {
-    if (!statusFilter.value) return allReminders.value;
+    if (!statusFilter.value) {
+        return allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt));
+    }
+    if (statusFilter.value === 'CONVERTED') {
+        return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt));
+    }
     return allReminders.value.filter(r => r.status === statusFilter.value);
 });
 
@@ -182,7 +196,7 @@ const scheduledRevenue = computed(() => {
 
 const convertedRevenue = computed(() => {
     return allReminders.value
-        .filter(r => r.status === 'CONVERTED')
+        .filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt))
         .reduce((acc, r) => acc + (r.service?.price || 0), 0);
 });
 
@@ -195,7 +209,7 @@ const scheduledCount = computed(() => {
 });
 
 const convertedCount = computed(() => {
-    return allReminders.value.filter(r => r.status === 'CONVERTED').length;
+    return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt)).length;
 });
 
 const fetchReminders = async () => {
