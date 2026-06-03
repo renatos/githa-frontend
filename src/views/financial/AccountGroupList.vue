@@ -32,6 +32,18 @@ class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medi
         </span>
       </template>
 
+      <template #cell-classification="{ value, item }">
+        <span
+          v-if="item.nature === 'EXPENSE' && value"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+          :class="value === 'OPEX' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full" :class="value === 'OPEX' ? 'bg-blue-500' : 'bg-purple-500'"></span>
+          {{ value === 'OPEX' ? 'Operacional' : 'Investimento' }}
+        </span>
+        <span v-else class="text-slate-400 dark:text-slate-500 italic text-xs">N/A</span>
+      </template>
+
       <template #cell-active="{ value }">
         <span
 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
@@ -72,6 +84,7 @@ const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'name', label: 'Nome', sortable: true, filterable: true },
   { key: 'nature', label: 'Natureza', sortable: true, align: 'center' },
+  { key: 'classification', label: 'Classificação', sortable: true, align: 'center' },
   { key: 'active', label: 'Status', sortable: true, align: 'center' },
 ];
 

@@ -20,6 +20,14 @@
         </select>
       </label>
 
+      <label v-if="form.nature === 'EXPENSE'" class="flex flex-col">
+        <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Classificação</p>
+        <select v-model="form.classification" class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" required>
+          <option value="OPEX">Operacional</option>
+          <option value="CAPEX">Investimento</option>
+        </select>
+      </label>
+
       <div
 class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors border"
            :class="form.active ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-100/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
@@ -45,7 +53,7 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import financialService from '../../services/financialService';
 import { enumService } from '../../services/enumService';
 import BaseModal from '../common/BaseModal.vue';
@@ -63,7 +71,16 @@ const accountNatures = ref([]);
 const form = ref({
   name: '',
   nature: 'EXPENSE',
-  active: true
+  active: true,
+  classification: 'OPEX'
+});
+
+watch(() => form.value.nature, (newNature) => {
+  if (newNature === 'INCOME') {
+    form.value.classification = null;
+  } else if (!form.value.classification) {
+    form.value.classification = 'OPEX';
+  }
 });
 
 const init = async () => {
@@ -74,6 +91,9 @@ const init = async () => {
   }
   if (props.accountGroup.id) {
     form.value = { ...props.accountGroup };
+    if (form.value.nature === 'EXPENSE' && !form.value.classification) {
+      form.value.classification = 'OPEX';
+    }
   }
 };
 

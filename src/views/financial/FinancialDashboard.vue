@@ -34,18 +34,72 @@
         </div>
       </div>
       
-      <!-- Expense Card -->
-      <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/5 h-[160px] flex flex-col justify-between">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="fa-solid fa-arrow-trend-down text-5xl text-rose-500"></i>
-        </div>
-        <div>
-          <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Despesas ({{ currentMonthLabel }})</h3>
-          <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
-        </div>
-        <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
-          <span class="mr-2">Pendente:</span>
-          <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingExpense || 0) }}</span>
+      <!-- Expense Card (Flip Card) -->
+      <div 
+        class="flip-card h-[160px] cursor-pointer"
+        @click="isExpenseFlipped = !isExpenseFlipped"
+      >
+        <div 
+          class="flip-card-inner h-full w-full relative transition-transform duration-500 transform-style-3d"
+          :class="{ 'rotate-y-180': isExpenseFlipped }"
+        >
+          <!-- Front Face -->
+          <div 
+            class="flip-card-front absolute inset-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/5 backface-hidden flex flex-col justify-between"
+          >
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+              <i class="fa-solid fa-arrow-trend-down text-5xl text-rose-500"></i>
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Despesas ({{ currentMonthLabel }})</h3>
+                <span class="text-[10px] text-rose-500 dark:text-rose-400 font-bold hover:underline">Ver Tipos</span>
+              </div>
+              <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
+            </div>
+            <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
+              <span class="mr-2">Pendente:</span>
+              <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingExpense || 0) }}</span>
+            </div>
+          </div>
+          
+          <!-- Back Face -->
+          <div 
+            class="flip-card-back absolute inset-0 bg-white dark:bg-slate-800 border border-rose-500/30 dark:border-rose-500/40 rounded-2xl p-6 backface-hidden rotate-y-180 flex flex-col justify-between"
+          >
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+              <i class="fa-solid fa-chart-pie text-5xl text-rose-500"></i>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Origem das Despesas</h3>
+                <span class="text-[10px] text-rose-500 dark:text-rose-400 font-bold hover:underline">Voltar</span>
+              </div>
+              <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex justify-between">
+                  <span>Operacional (OPEX):</span>
+                  <span class="font-mono">{{ formatCurrency(summary.totalOpex || 0) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-400 dark:text-slate-500 text-[10px] pl-2">
+                  <span>Pendentes OPEX:</span>
+                  <span class="font-mono">{{ formatCurrency(summary.pendingOpex || 0) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Investimento (CAPEX):</span>
+                  <span class="font-mono">{{ formatCurrency(summary.totalCapex || 0) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-400 dark:text-slate-500 text-[10px] pl-2">
+                  <span>Pendentes CAPEX:</span>
+                  <span class="font-mono">{{ formatCurrency(summary.pendingCapex || 0) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border-t border-slate-200 dark:border-slate-700/50 pt-2 flex justify-between items-center text-xs mt-auto">
+              <span class="font-semibold text-slate-700 dark:text-slate-300">Total Despesas:</span>
+              <span class="font-mono font-black text-rose-600 dark:text-rose-400">{{ formatCurrency(summary.totalExpense) }}</span>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -187,6 +241,7 @@ import { toastBridge } from '../../services/toastBridge';
 
 const viewMode = ref('MONTH'); // 'MONTH' or 'DAY'
 const isFlipped = ref(false);
+const isExpenseFlipped = ref(false);
 
 const summary = ref({
   totalIncome: 0,
