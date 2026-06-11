@@ -35,6 +35,10 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
         <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Perfis de Acesso</p>
         <div class="flex flex-wrap gap-4">
           <label class="flex items-center gap-2 cursor-pointer">
+            <input v-model="form.roles" type="checkbox" value="SYS_ADMIN" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700" />
+            <span class="text-sm text-slate-700 dark:text-slate-300">Sys Admin</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
             <input v-model="form.roles" type="checkbox" value="ADMIN" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-600 dark:bg-slate-700" />
             <span class="text-sm text-slate-700 dark:text-slate-300">Admin</span>
           </label>
