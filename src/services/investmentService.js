@@ -34,5 +34,9 @@ export const investmentService = {
   getInvestmentMetricsTransactions(id, year, month) {
     const params = { year, month };
     return api.get(`/investments/${id}/metrics/transactions`, { params });
+  },
+
+  getInvestmentCampaignClients(id) {
+    return api.get(`/investments/${id}/metrics/campaign-clients`);
   }
 };

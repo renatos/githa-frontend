@@ -5,7 +5,7 @@
         <div class="flex items-center gap-2">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Investimentos Estratégicos</h2>
         </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os investimentos e analise o ROI de novos procedimentos.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Gerencie os investimentos e analise o ROI de procedimentos ou campanhas de marketing.</p>
       </div>
       <div class="flex items-center gap-3">
         <button 
@@ -24,6 +24,16 @@
       :fetch-data="fetchDataAdapter"
       @row-click="openEditForm"
     >
+      <!-- Type Column -->
+      <template #cell-type="{ value }">
+        <span 
+          class="px-2.5 py-1 rounded-full text-xs font-semibold"
+          :class="value === 'MARKETING' ? 'bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800' : 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800'"
+        >
+          {{ value === 'MARKETING' ? 'Marketing' : 'Procedimento' }}
+        </span>
+      </template>
+
       <!-- Cost Column -->
       <template #cell-cost="{ value }">
         <span class="font-bold text-slate-900 dark:text-slate-100 font-mono">
@@ -36,9 +46,14 @@
         {{ formatDate(value) }}
       </template>
 
-      <!-- Services Column -->
-      <template #cell-enabledServices="{ value }">
-        <div class="flex flex-wrap gap-1">
+      <!-- Services / Details Column -->
+      <template #cell-enabledServices="{ value, item }">
+        <div v-if="item.type === 'MARKETING'">
+          <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+            Recorrência: {{ item.recurrence === 'MONTHLY' ? 'Mensal' : item.recurrence === 'WEEKLY' ? 'Semanal' : 'Nenhuma' }}
+          </span>
+        </div>
+        <div v-else class="flex flex-wrap gap-1">
           <span 
             v-for="service in value" 
             :key="service.id" 
@@ -99,9 +114,10 @@ const editingItem = ref(null);
 const columns = [
   { key: 'id', label: '#', width: '50px', sortable: true },
   { key: 'name', label: 'Nome', sortable: true, filterable: true },
+  { key: 'type', label: 'Tipo', sortable: true, filterable: true },
   { key: 'cost', label: 'Custo', sortable: true, align: 'right' },
   { key: 'date', label: 'Data', sortable: true, align: 'center' },
-  { key: 'enabledServices', label: 'Procedimentos Habilitados', width: '300px' }
+  { key: 'enabledServices', label: 'Detalhes / Procedimentos', width: '300px' }
 ];
 
 const fetchDataAdapter = async (params) => {
@@ -167,6 +183,19 @@ const deleteItem = (item) => {
 };
 
 const viewMetrics = (item) => {
+  if (!item.operatingExpenseId) {
+    confirmBridge.confirm({
+      title: 'Transação não associada',
+      message: `O investimento "${item.name}" não possui uma transação associada. Vincule uma despesa CAPEX antes de visualizar as métricas de ROI.`,
+      type: 'warning',
+      confirmLabel: 'Vincular Agora',
+      cancelLabel: 'Fechar',
+      onConfirm: () => {
+        openEditForm(item);
+      }
+    });
+    return;
+  }
   router.push(`/investments/${item.id}/metrics`);
 };
 

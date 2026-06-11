@@ -102,8 +102,14 @@
               </div>
             </div>
             
-            <!-- Linked Services -->
-            <div>
+            <!-- Linked Services / Campaign Info -->
+            <div v-if="metrics.investment?.type === 'MARKETING'">
+              <p class="text-xs text-slate-400 mb-1">Tipo de Investimento</p>
+              <p class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Campanha de Marketing</p>
+              <p class="text-xs text-slate-400 mb-2">Janela de ROI (Parâmetro)</p>
+              <p class="font-semibold text-slate-900 dark:text-slate-100 mb-4">90 dias</p>
+            </div>
+            <div v-else>
               <p class="text-xs text-slate-400 mb-2">Procedimentos Habilitados</p>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -133,13 +139,15 @@
               <span class="material-symbols-outlined text-6xl">payments</span>
             </div>
             <div>
-              <span class="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Faturamento Habilitado</span>
+              <span class="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                {{ metrics.investment?.type === 'MARKETING' ? 'Faturamento da Campanha' : 'Faturamento Habilitado' }}
+              </span>
               <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2 font-mono">
                 {{ formatCurrency(metrics.totalRevenue) }}
               </p>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Soma das consultas concluídas dos procedimentos associados no período.
+              {{ metrics.investment?.type === 'MARKETING' ? 'Soma das receitas dos clientes associados dentro da janela configurada.' : 'Soma das consultas concluídas dos procedimentos associados no período.' }}
             </p>
           </div>
 
@@ -230,8 +238,8 @@
           </div>
         </div>
 
-        <!-- Histórico de Fechamentos Mensais -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6">
+        <!-- Histórico de Fechamentos Mensais (Only for Procedures) -->
+        <div v-if="metrics.investment?.type !== 'MARKETING'" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span class="material-symbols-outlined text-indigo-500">history</span>
@@ -309,6 +317,54 @@
             </table>
           </div>
         </div>
+        <!-- Clientes Adquiridos (Only for Marketing) -->
+        <div v-if="metrics.investment?.type === 'MARKETING'" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-500">group</span>
+            Clientes Adquiridos pela Campanha
+          </h3>
+
+          <div v-if="!acquiredClients || acquiredClients.length === 0" class="text-center py-6 text-slate-500 dark:text-slate-400 text-sm">
+            Nenhum cliente adquirido por esta campanha até o momento.
+          </div>
+
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-500 dark:text-slate-400">
+              <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700/50">
+                <tr>
+                  <th scope="col" class="px-4 py-3">Cliente</th>
+                  <th scope="col" class="px-4 py-3">Data de Associação</th>
+                  <th scope="col" class="px-4 py-3 text-right">Faturamento no Período</th>
+                  <th scope="col" class="px-4 py-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <tr v-for="client in acquiredClients" :key="client.id" class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">
+                    {{ client.name }}
+                  </td>
+                  <td class="px-4 py-3 text-slate-900 dark:text-white">
+                    {{ formatDateTime(client.associatedAt) }}
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                    {{ formatCurrency(client.revenue) }}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <button
+                      class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 font-semibold p-1.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 inline-flex items-center gap-1"
+                      title="Ver Transações"
+                      :disabled="!client.transactions || client.transactions.length === 0"
+                      @click="viewClientTransactions(client)"
+                    >
+                      <span class="material-symbols-outlined text-sm">list_alt</span>
+                      <span>Detalhes</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       
       <!-- BaseModal to display monthly transactions -->
@@ -317,7 +373,7 @@
         :title="'Receitas de ' + selectedPeriodLabel"
         subtitle="Transações financeiras vinculadas a este investimento no período"
         icon="fa-solid fa-file-invoice-dollar"
-        maxWidth="max-w-3xl"
+        max-width="max-w-3xl"
         @close="showTransactionsModal = false"
       >
         <div v-if="loadingModalTransactions" class="flex flex-col items-center justify-center py-10">
@@ -333,9 +389,9 @@
               <thead class="text-[10px] text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700/50">
                 <tr>
                   <th scope="col" class="px-4 py-2.5">Data de Pagamento</th>
-                  <th scope="col" class="px-4 py-2.5">Descrição</th>
                   <th scope="col" class="px-4 py-2.5">Cliente</th>
-                  <th scope="col" class="px-4 py-2.5">Forma</th>
+                  <th scope="col" class="px-4 py-2.5">Procedimento</th>
+                  <th scope="col" class="px-4 py-2.5">Forma Pgto</th>
                   <th scope="col" class="px-4 py-2.5 text-right">Valor</th>
                 </tr>
               </thead>
@@ -345,14 +401,14 @@
                     {{ formatDateTime(t.paymentDate) }}
                   </td>
                   <td class="px-4 py-2.5 text-slate-900 dark:text-white font-medium">
-                    {{ t.description }}
+                    {{ t.clientName || 'N/A' }}
                   </td>
                   <td class="px-4 py-2.5 text-slate-700 dark:text-slate-300">
-                    {{ t.clientName || 'N/A' }}
+                    {{ t.sale?.items?.[0]?.serviceName || t.description }}
                   </td>
                   <td class="px-4 py-2.5 whitespace-nowrap">
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                      {{ t.paymentMethodName || 'N/A' }}
+                       {{ t.paymentMethodName || 'N/A' }}
                     </span>
                   </td>
                   <td class="px-4 py-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -416,6 +472,9 @@ const history = ref([]);
 const loadingHistory = ref(false);
 const recalculating = ref(false);
 
+const acquiredClients = ref([]);
+const loadingCampaignClients = ref(false);
+
 const showTransactionsModal = ref(false);
 const modalTransactions = ref([]);
 const loadingModalTransactions = ref(false);
@@ -434,6 +493,13 @@ const viewTransactions = async (item) => {
   } finally {
     loadingModalTransactions.value = false;
   }
+};
+
+const viewClientTransactions = (client) => {
+  showTransactionsModal.value = true;
+  selectedPeriodLabel.value = client.name;
+  modalTransactions.value = client.transactions || [];
+  loadingModalTransactions.value = false;
 };
 
 const formatDateTime = (value) => {
@@ -458,11 +524,26 @@ const fetchHistory = async () => {
   }
 };
 
+const fetchCampaignClients = async () => {
+  loadingCampaignClients.value = true;
+  try {
+    const res = await investmentService.getInvestmentCampaignClients(investmentId);
+    acquiredClients.value = res.data;
+  } catch (err) {
+    console.error('Failed to fetch campaign clients:', err);
+  } finally {
+    loadingCampaignClients.value = false;
+  }
+};
+
 const recalculatePeriod = async (year, month) => {
   recalculating.value = true;
   try {
     await investmentService.recalculateInvestmentMetrics(investmentId, year, month);
     await Promise.all([fetchHistory(), fetchMetrics()]);
+    if (metrics.value.investment?.type === 'MARKETING') {
+      await fetchCampaignClients();
+    }
   } catch (err) {
     console.error(err);
   } finally {
@@ -517,6 +598,9 @@ onMounted(async () => {
     const match = fullRes.data.find(inv => String(inv.id) === String(investmentId));
     if (match && match.date) {
       filters.value.startDate = match.date;
+    }
+    if (match && match.type === 'MARKETING') {
+      fetchCampaignClients();
     }
   } catch (err) {
     console.error('Failed to get investment registration date:', err);

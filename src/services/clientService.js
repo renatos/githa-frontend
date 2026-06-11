@@ -7,4 +7,5 @@ export const clientService = {
     createBatch: (clients) => api.post('/clients/batch', clients),
     update: (id, client) => api.put(`/clients/${id}`, client),
     delete: (id) => api.delete(`/clients/${id}`),
+    associateCampaign: (id, campaignId) => api.post(`/clients/${id}/campaigns/${campaignId}`),
 };

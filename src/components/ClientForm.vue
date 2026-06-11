@@ -10,8 +10,9 @@
     <template #header-content>
       <div class="flex items-center gap-4 min-w-0">
         <span
-class="material-symbols-outlined text-[24px] shrink-0"
-              :class="form.personalData?.gender === 'FEMALE' ? 'text-pink-400' : form.personalData?.gender === 'MALE' ? 'text-blue-400' : 'text-slate-900 dark:text-slate-100'">person_edit</span>
+          class="material-symbols-outlined text-[24px] shrink-0"
+          :class="form.personalData?.gender === 'FEMALE' ? 'text-pink-400' : form.personalData?.gender === 'MALE' ? 'text-blue-400' : 'text-slate-900 dark:text-slate-100'"
+        >person_edit</span>
         <div class="min-w-0">
           <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
             {{ form.id ? firstName : 'Novo Cliente' }}
@@ -92,6 +93,54 @@ class="material-symbols-outlined text-[24px] shrink-0"
           </div>
         </div>
 
+        <!-- Tab 6: Campanhas -->
+        <div v-if="form.id" v-show="activeTab === 6" class="pb-10">
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 m-0">
+                <span class="material-symbols-outlined text-[20px]">campaign</span>
+                Histórico de Campanhas de Marketing
+              </h3>
+            </div>
+
+            <!-- List of associated campaigns -->
+            <div class="flex flex-col gap-3">
+              <div v-if="!form.campaigns || form.campaigns.length === 0" class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                Nenhuma campanha associada a este cliente.
+              </div>
+              <div v-else class="flex flex-col gap-2">
+                <div v-for="campaign in form.campaigns" :key="campaign.id" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ campaign.campaignName || 'Campanha #' + campaign.investmentId }}</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Associado em: {{ formatDate(campaign.associatedAt) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add new campaign association -->
+            <div class="bg-indigo-50/50 dark:bg-indigo-950/10 p-5 rounded-xl border border-indigo-100/50 dark:border-indigo-900/30 mt-4">
+              <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 m-0 pb-2">Associar Nova Campanha de Marketing</h4>
+              <div class="flex gap-4 mt-2">
+                <select v-model="selectedCampaignId" class="form-select flex-1 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-colors">
+                  <option :value="null">Selecione uma campanha...</option>
+                  <option v-for="c in marketingCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+                <button
+                  type="button"
+                  class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  :disabled="!selectedCampaignId || associating"
+                  @click="addCampaign"
+                >
+                  <span v-if="associating"><i class="fa-solid fa-spinner animate-spin mr-1"></i>Associando...</span>
+                  <span v-else>Associar</span>
+                </button>
+              </div>
+              <p v-if="associationError" class="text-xs text-rose-500 mt-2 m-0">{{ associationError }}</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </form>
 
@@ -139,8 +188,8 @@ import ClientHealthTab from './clients/ClientHealthTab.vue';
 import ClientHabitsTab from './clients/ClientHabitsTab.vue';
 import { clientService } from '../services/clientService';
 import { enumService } from '../services/enumService';
+import { investmentService } from '../services/investmentService';
 import { useModal } from '../composables/useModal';
-import { useEscapeKey } from '../composables/useEscapeKey';
 
 const activeTab = ref(0);
 
@@ -153,6 +202,7 @@ const tabs = computed(() => {
     { label: 'Hábitos' },
     { label: 'Anamneses', disabled: isNew },
     { label: 'Histórico', disabled: isNew },
+    { label: 'Campanhas', disabled: isNew },
   ];
 });
 
@@ -248,7 +298,13 @@ const form = ref({
     skincareRoutine: false,
     prescribedProducts: false,
   },
+  campaigns: []
 });
+
+const selectedCampaignId = ref(null);
+const marketingCampaigns = ref([]);
+const associating = ref(false);
+const associationError = ref('');
 
 // Auto-complete logic
 const searchQueryResults = ref([]);
@@ -264,6 +320,32 @@ const anamnesisClientData = ref(null);
 
 const genders = ref([]);
 const primaryObjectives = ref([]);
+
+const loadMarketingCampaigns = async () => {
+  try {
+    const res = await investmentService.listInvestments();
+    const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
+    marketingCampaigns.value = data.filter(i => i.type === 'MARKETING');
+  } catch (err) {
+    console.error('Failed to load campaigns:', err);
+  }
+};
+
+const addCampaign = async () => {
+  if (!selectedCampaignId.value) return;
+  associating.value = true;
+  associationError.value = '';
+  try {
+    const res = await clientService.associateCampaign(form.value.id, selectedCampaignId.value);
+    form.value.campaigns = res.data.campaigns;
+    selectedCampaignId.value = null;
+  } catch (err) {
+    console.error(err);
+    associationError.value = err.response?.data?.message || 'Falha ao associar campanha.';
+  } finally {
+    associating.value = false;
+  }
+};
 
 const onNameInput = () => {
   if (form.value.id) return;
@@ -354,6 +436,7 @@ const populateForm = (clientData) => {
       skincareRoutine: false,
       prescribedProducts: false,
     },
+    campaigns: clientData.campaigns || []
   };
 };
 
@@ -367,6 +450,7 @@ onMounted(async () => {
 
   if (props.client.id) {
     populateForm(props.client);
+    loadMarketingCampaigns();
   }
 });
 
@@ -380,6 +464,12 @@ const save = () => {
   delete payload.personalData.primaryObjectiveOtherDetails;
 
   emit('save', payload);
+};
+
+const formatDate = (val) => {
+  if (!val) return '';
+  const date = new Date(val);
+  return date.toLocaleString('pt-BR');
 };
 
 // Anamnesis methods

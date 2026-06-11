@@ -15,15 +15,42 @@
           <span>{{ error }}</span>
         </div>
 
+        <!-- Investment Type Selection -->
+        <div class="flex flex-col">
+          <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
+            Tipo de Investimento <span class="text-red-500">*</span>
+          </span>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer text-slate-800 dark:text-slate-200 text-sm font-medium">
+              <input
+                v-model="form.type"
+                type="radio"
+                value="PROCEDURE"
+                class="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+              />
+              Procedimento
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer text-slate-800 dark:text-slate-200 text-sm font-medium">
+              <input
+                v-model="form.type"
+                type="radio"
+                value="MARKETING"
+                class="text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+              />
+              Campanha de Marketing
+            </label>
+          </div>
+        </div>
+
         <!-- Name -->
         <label class="flex flex-col">
           <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
-            Nome do Investimento <span class="text-red-500">*</span>
+            Nome do Investimento / Campanha <span class="text-red-500">*</span>
           </span>
           <input
             v-model="form.name"
             class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
-            placeholder="Ex: Curso de Toxina Botulínica, Novo Laser de Co2"
+            placeholder="Ex: Curso de Toxina Botulínica, Anúncios do Instagram"
             required
             type="text"
           />
@@ -60,23 +87,45 @@
 
         <!-- Operating Expense (Transaction ID) -->
         <label class="flex flex-col">
-          <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2">
-            ID da Transação / Despesa Associada (Opcional)
+          <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
+            Transação / Despesa Associada (CAPEX) <span class="text-red-500">*</span>
           </span>
-          <input
+          <select
             v-model.number="form.operatingExpenseId"
-            class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
-            placeholder="Ex: 142"
-            type="number"
-            min="1"
-          />
+            class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
+            required
+          >
+            <option :value="null" disabled>Selecione uma despesa CAPEX...</option>
+            <option
+              v-for="tx in capexTransactions"
+              :key="tx.id"
+              :value="tx.id"
+            >
+              #{{ tx.id }} - {{ tx.description }} ({{ formatCurrency(tx.amount) }})
+            </option>
+          </select>
           <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Vincule a uma transação financeira registrada no fluxo de caixa.
+            Vincule a uma despesa do tipo CAPEX (Investimento) registrada no fluxo de caixa.
           </span>
         </label>
 
-        <!-- Services Enabled (Checkboxes) -->
-        <div class="flex flex-col">
+        <!-- Recurrence Configuration (Marketing Only) -->
+        <label v-if="form.type === 'MARKETING'" class="flex flex-col">
+          <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
+            Recorrência da Campanha <span class="text-red-500">*</span>
+          </span>
+          <select
+            v-model="form.recurrence"
+            class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
+          >
+            <option value="NONE">Nenhuma</option>
+            <option value="WEEKLY">Semanal</option>
+            <option value="MONTHLY">Mensal</option>
+          </select>
+        </label>
+
+        <!-- Services Enabled (Checkboxes - Procedure Only) -->
+        <div v-if="form.type === 'PROCEDURE'" class="flex flex-col">
           <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
             Procedimentos Habilitados (Selecione pelo menos um) <span class="text-red-500">*</span>
           </span>
@@ -140,7 +189,7 @@
         form="investmentForm"
         class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         type="submit"
-        :disabled="saving || form.serviceIds.length === 0"
+        :disabled="saving || (form.type === 'PROCEDURE' && form.serviceIds.length === 0)"
       >
         <span v-if="saving"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Salvando...</span>
         <span v-else>Salvar</span>
@@ -155,6 +204,7 @@ import BaseModal from '../common/BaseModal.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
 import { serviceService } from '../../services/serviceService';
 import { investmentService } from '../../services/investmentService';
+import financialService from '../../services/financialService';
 
 const props = defineProps({
   investment: { type: Object, default: null },
@@ -164,14 +214,17 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save']);
 
 const form = ref({
+  type: 'PROCEDURE',
   name: '',
   cost: 0,
   date: new Date().toISOString().substring(0, 10),
   operatingExpenseId: null,
-  serviceIds: []
+  serviceIds: [],
+  recurrence: 'NONE'
 });
 
 const services = ref([]);
+const capexTransactions = ref([]);
 const serviceSearch = ref('');
 const loadingServices = ref(false);
 const saving = ref(false);
@@ -189,12 +242,38 @@ const filteredServices = computed(() => {
 onMounted(async () => {
   if (props.investment) {
     form.value = {
+      type: props.investment.type || 'PROCEDURE',
       name: props.investment.name || '',
       cost: props.investment.cost || 0,
       date: props.investment.date || new Date().toISOString().substring(0, 10),
       operatingExpenseId: props.investment.operatingExpenseId || null,
-      serviceIds: props.investment.enabledServices ? props.investment.enabledServices.map(s => s.id) : []
+      serviceIds: props.investment.enabledServices ? props.investment.enabledServices.map(s => s.id) : [],
+      recurrence: props.investment.recurrence || 'NONE'
     };
+  }
+
+  // Load CAPEX expenses (Investment account groups) from financials
+  try {
+    const response = await financialService.getTransactions({ page: 0, size: 500, category: 'CAPEX' });
+    let txList = [];
+    if (response.data && Array.isArray(response.data.content)) {
+      txList = response.data.content;
+    } else if (Array.isArray(response.data)) {
+      txList = response.data;
+    }
+    // Filter transactions: must be EXPENSE, status paid or pending
+    capexTransactions.value = txList.filter(t => t.nature === 'EXPENSE');
+
+    // If editing and the associated transaction is not in the list (e.g. archived or out of filter), prepend it to keep selection valid
+    if (form.value.operatingExpenseId && !capexTransactions.value.some(tx => tx.id === form.value.operatingExpenseId)) {
+      capexTransactions.value.unshift({
+        id: form.value.operatingExpenseId,
+        description: 'Transação Atual Vinculada',
+        amount: form.value.cost
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao carregar despesas CAPEX:', err);
   }
 
   loadingServices.value = true;
@@ -222,8 +301,12 @@ const save = async () => {
     error.value = 'O nome do investimento é obrigatório.';
     return;
   }
-  if (form.value.serviceIds.length === 0) {
+  if (form.value.type === 'PROCEDURE' && form.value.serviceIds.length === 0) {
     error.value = 'Selecione pelo menos um procedimento habilitado.';
+    return;
+  }
+  if (!form.value.operatingExpenseId) {
+    error.value = 'A transação / despesa associada é obrigatória.';
     return;
   }
 
@@ -231,11 +314,13 @@ const save = async () => {
   error.value = '';
   try {
     const payload = {
+      type: form.value.type,
       name: form.value.name.trim(),
       cost: form.value.cost,
       date: form.value.date,
       operatingExpenseId: form.value.operatingExpenseId || null,
-      serviceIds: form.value.serviceIds
+      serviceIds: form.value.type === 'PROCEDURE' ? form.value.serviceIds : [],
+      recurrence: form.value.type === 'MARKETING' ? form.value.recurrence : 'NONE'
     };
     
     let response;
