@@ -56,27 +56,27 @@
           />
         </label>
 
-        <!-- Operating Expense (Transaction ID) -->
+        <!-- Operating Expense or Credit Card Expense (CAPEX) -->
         <label class="flex flex-col">
           <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
             Transação / Despesa Associada (CAPEX) <span class="text-red-500">*</span>
           </span>
           <select
-            v-model.number="form.operatingExpenseId"
+            v-model="selectedExpenseUnifiedId"
             class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
             required
           >
             <option :value="null" disabled>Selecione uma despesa CAPEX...</option>
             <option
-              v-for="tx in capexTransactions"
-              :key="tx.id"
-              :value="tx.id"
+              v-for="opt in capexOptions"
+              :key="opt.unifiedId"
+              :value="opt.unifiedId"
             >
-              #{{ tx.id }} - {{ tx.description }} ({{ formatCurrency(tx.amount) }})
+              {{ opt.description }} ({{ formatCurrency(opt.amount) }})
             </option>
           </select>
           <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Vincule a uma despesa do tipo CAPEX (Investimento) registrada no fluxo de caixa.
+            Vincule a uma despesa ou gasto de cartão do tipo CAPEX (Investimento).
           </span>
         </label>
 
@@ -221,12 +221,14 @@ const form = ref({
   cost: 0,
   date: new Date().toISOString().substring(0, 10),
   operatingExpenseId: null,
+  creditCardExpenseId: null,
   serviceIds: [],
   recurrence: 'NONE'
 });
 
 const services = ref([]);
-const capexTransactions = ref([]);
+const capexOptions = ref([]);
+const selectedExpenseUnifiedId = ref(null);
 const serviceSearch = ref('');
 const loadingServices = ref(false);
 const saving = ref(false);
@@ -249,30 +251,32 @@ onMounted(async () => {
       cost: props.investment.cost || 0,
       date: props.investment.date || new Date().toISOString().substring(0, 10),
       operatingExpenseId: props.investment.operatingExpenseId || null,
+      creditCardExpenseId: props.investment.creditCardExpenseId || null,
       serviceIds: props.investment.enabledServices ? props.investment.enabledServices.map(s => s.id) : [],
       recurrence: props.investment.recurrence || 'NONE'
     };
+
+    if (form.value.operatingExpenseId) {
+      selectedExpenseUnifiedId.value = `TX-${form.value.operatingExpenseId}`;
+    } else if (form.value.creditCardExpenseId) {
+      selectedExpenseUnifiedId.value = `CC-${form.value.creditCardExpenseId}`;
+    }
   }
 
-  // Load CAPEX expenses (Investment account groups) from financials
+  // Load CAPEX expenses from backend
   try {
-    const response = await financialService.getTransactions({ page: 0, size: 500, category: 'CAPEX' });
-    let txList = [];
-    if (response.data && Array.isArray(response.data.content)) {
-      txList = response.data.content;
-    } else if (Array.isArray(response.data)) {
-      txList = response.data;
-    }
-    // Filter transactions: must be EXPENSE, status paid or pending
-    capexTransactions.value = txList.filter(t => t.nature === 'EXPENSE');
+    const response = await financialService.getCapexOptions();
+    capexOptions.value = response.data || [];
 
-    // If editing and the associated transaction is not in the list (e.g. archived or out of filter), prepend it to keep selection valid
-    if (form.value.operatingExpenseId && !capexTransactions.value.some(tx => tx.id === form.value.operatingExpenseId)) {
-      capexTransactions.value.unshift({
-        id: form.value.operatingExpenseId,
-        description: 'Transação Atual Vinculada',
+    // Prepend active selection if missing from fetched options
+    if (selectedExpenseUnifiedId.value && !capexOptions.value.some(opt => opt.unifiedId === selectedExpenseUnifiedId.value)) {
+      capexOptions.value.unshift({
+        unifiedId: selectedExpenseUnifiedId.value,
+        id: form.value.operatingExpenseId || form.value.creditCardExpenseId,
+        type: form.value.operatingExpenseId ? 'TRANSACTION' : 'CREDIT_CARD_EXPENSE',
+        description: 'Despesa Atual Vinculada',
         amount: form.value.cost,
-        paymentDate: form.value.date
+        date: form.value.date
       });
     }
 
@@ -298,18 +302,31 @@ onMounted(async () => {
 });
 
 const updateCostAndDate = () => {
-  if (form.value.operatingExpenseId) {
-    const selectedTx = capexTransactions.value.find(tx => tx.id === form.value.operatingExpenseId);
-    if (selectedTx) {
-      form.value.cost = selectedTx.amount || 0;
-      if (selectedTx.paymentDate) {
-        form.value.date = selectedTx.paymentDate.substring(0, 10);
+  if (selectedExpenseUnifiedId.value) {
+    const selectedOpt = capexOptions.value.find(opt => opt.unifiedId === selectedExpenseUnifiedId.value);
+    if (selectedOpt) {
+      form.value.cost = selectedOpt.amount || 0;
+      if (selectedOpt.date) {
+        form.value.date = typeof selectedOpt.date === 'string' 
+          ? selectedOpt.date.substring(0, 10) 
+          : selectedOpt.date;
+      }
+      if (selectedOpt.type === 'TRANSACTION') {
+        form.value.operatingExpenseId = selectedOpt.id;
+        form.value.creditCardExpenseId = null;
+      } else {
+        form.value.creditCardExpenseId = selectedOpt.id;
+        form.value.operatingExpenseId = null;
       }
     }
+  } else {
+    form.value.cost = 0;
+    form.value.operatingExpenseId = null;
+    form.value.creditCardExpenseId = null;
   }
 };
 
-watch(() => form.value.operatingExpenseId, updateCostAndDate);
+watch(selectedExpenseUnifiedId, updateCostAndDate);
 
 const save = async () => {
   if (form.value.cost < 0) {
@@ -324,8 +341,8 @@ const save = async () => {
     error.value = 'Selecione pelo menos um procedimento habilitado.';
     return;
   }
-  if (!form.value.operatingExpenseId) {
-    error.value = 'A transação / despesa associada é obrigatória.';
+  if (!form.value.operatingExpenseId && !form.value.creditCardExpenseId) {
+    error.value = 'A transação ou gasto de cartão associado é obrigatório.';
     return;
   }
 
@@ -338,6 +355,7 @@ const save = async () => {
       cost: form.value.cost,
       date: form.value.date,
       operatingExpenseId: form.value.operatingExpenseId || null,
+      creditCardExpenseId: form.value.creditCardExpenseId || null,
       serviceIds: form.value.type === 'PROCEDURE' ? form.value.serviceIds : [],
       recurrence: form.value.type === 'MARKETING' ? form.value.recurrence : 'NONE'
     };

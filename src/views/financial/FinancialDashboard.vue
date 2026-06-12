@@ -8,6 +8,7 @@
       <template #actions>
         <!-- Period Navigator (Unified) -->
         <PeriodSelector 
+          v-if="currentTab === 0"
           v-model:view-mode="viewMode"
           v-model:month="selectedMonth"
           v-model:year="selectedYear"
@@ -16,10 +17,16 @@
         />
       </template>
     </PageHeader>
+
+    <TabNavigation 
+      v-model="currentTab"
+      :tabs="dashboardTabs"
+    />
     
-    <!-- Summary Cards (Monthly Context) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Income Card -->
+    <div v-show="currentTab === 0" class="flex flex-col gap-6">
+      <!-- Summary Cards (Monthly Context) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Income Card -->
       <div class="relative group overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 h-[160px] flex flex-col justify-between">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
           <i class="fa-solid fa-arrow-trend-up text-5xl text-emerald-500"></i>
@@ -225,11 +232,21 @@
       @close="closeAppointmentForm"
       @save="saveAppointment"
     />
+    </div>
+
+    <!-- Credit Cards Tab Content -->
+    <div v-show="currentTab === 1" class="flex flex-col gap-6 animate-in fade-in duration-300">
+      <CreditCardList @save="onCardSaved" />
+      <CreditCardBillPanel ref="creditCardBillPanelRef" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
+import TabNavigation from '../../components/common/TabNavigation.vue';
+import CreditCardList from '../../components/financial/CreditCardList.vue';
+import CreditCardBillPanel from '../../components/financial/CreditCardBillPanel.vue';
 import financialService from '../../services/financialService';
 import { appointmentService } from '../../services/appointmentService';
 import TransactionList from './TransactionList.vue';
@@ -239,6 +256,11 @@ import PageHeader from '../../components/common/PageHeader.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
 
+const currentTab = ref(0);
+const dashboardTabs = [
+  { label: 'Fluxo de Caixa', icon: 'payments' },
+  { label: 'Cartões de Crédito', icon: 'credit_card' }
+];
 const viewMode = ref('MONTH'); // 'MONTH' or 'DAY'
 const isFlipped = ref(false);
 const isExpenseFlipped = ref(false);
@@ -264,6 +286,12 @@ const selectedMonth = ref(now.getMonth() + 1); // 1-12
 const selectedYear = ref(now.getFullYear());
 const selectedDay = ref(now.getDate());
 const transactionListRef = ref(null);
+const creditCardBillPanelRef = ref(null);
+
+const onCardSaved = () => {
+  creditCardBillPanelRef.value?.loadCards?.();
+  creditCardBillPanelRef.value?.loadData?.();
+};
 
 // Appointment Form State
 const showAppointmentForm = ref(false);

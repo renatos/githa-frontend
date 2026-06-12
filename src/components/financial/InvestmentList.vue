@@ -183,7 +183,7 @@ const deleteItem = (item) => {
 };
 
 const viewMetrics = (item) => {
-  if (!item.operatingExpenseId) {
+  if (!item.operatingExpenseId && !item.creditCardExpenseId) {
     confirmBridge.confirm({
       title: 'Transação não associada',
       message: `O investimento "${item.name}" não possui uma transação associada. Vincule uma despesa CAPEX antes de visualizar as métricas de ROI.`,

@@ -298,7 +298,7 @@ const productServiceAdapter = {
 const accountGroupServiceAdapter = {
   getAll: async (params) => {
     const response = await financialService.getAccountGroups();
-    let data = response.data.filter(group => group.active);
+    let data = response.data.filter(group => group.active && group.classification !== 'CREDIT_CARD');
     if (params.name) {
       data = data.filter(g => g.name.toLowerCase().includes(params.name.toLowerCase()));
     }
@@ -327,7 +327,7 @@ onMounted(async () => {
   accountNatures.value = await enumService.getOptions('AccountNature');
   
   const groupsResponse = await financialService.getAccountGroups();
-  accountGroups.value = groupsResponse.data.filter(g => g.active);
+  accountGroups.value = groupsResponse.data.filter(g => g.active && g.classification !== 'CREDIT_CARD');
 
   if (props.transaction?.id) {
     form.value = {...props.transaction};
