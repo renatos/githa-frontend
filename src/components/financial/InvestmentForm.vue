@@ -56,35 +56,6 @@
           />
         </label>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Cost -->
-          <label class="flex flex-col">
-            <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
-              Custo <span class="text-red-500">*</span>
-            </span>
-            <div class="h-11 flex w-full">
-              <CurrencyInput
-                v-model="form.cost"
-                class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 text-base transition-colors"
-                required
-              />
-            </div>
-          </label>
-
-          <!-- Date -->
-          <label class="flex flex-col">
-            <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
-              Data do Investimento <span class="text-red-500">*</span>
-            </span>
-            <input
-              v-model="form.date"
-              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
-              required
-              type="date"
-            />
-          </label>
-        </div>
-
         <!-- Operating Expense (Transaction ID) -->
         <label class="flex flex-col">
           <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
@@ -108,6 +79,37 @@
             Vincule a uma despesa do tipo CAPEX (Investimento) registrada no fluxo de caixa.
           </span>
         </label>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Cost -->
+          <label class="flex flex-col">
+            <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
+              Custo <span class="text-red-500">*</span>
+            </span>
+            <div class="h-11 flex w-full">
+              <CurrencyInput
+                v-model="form.cost"
+                class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 text-base transition-colors cursor-not-allowed"
+                required
+                readonly
+              />
+            </div>
+          </label>
+
+          <!-- Date -->
+          <label class="flex flex-col">
+            <span class="text-slate-900 dark:text-slate-100 text-sm font-semibold pb-2 flex items-center gap-1">
+              Data do Investimento <span class="text-red-500">*</span>
+            </span>
+            <input
+              v-model="form.date"
+              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors cursor-not-allowed"
+              required
+              type="date"
+              readonly
+            />
+          </label>
+        </div>
 
         <!-- Recurrence Configuration (Marketing Only) -->
         <label v-if="form.type === 'MARKETING'" class="flex flex-col">
@@ -199,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import BaseModal from '../common/BaseModal.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
 import { serviceService } from '../../services/serviceService';
@@ -269,9 +271,12 @@ onMounted(async () => {
       capexTransactions.value.unshift({
         id: form.value.operatingExpenseId,
         description: 'Transação Atual Vinculada',
-        amount: form.value.cost
+        amount: form.value.cost,
+        paymentDate: form.value.date
       });
     }
+
+    updateCostAndDate();
   } catch (err) {
     console.error('Erro ao carregar despesas CAPEX:', err);
   }
@@ -291,6 +296,20 @@ onMounted(async () => {
     loadingServices.value = false;
   }
 });
+
+const updateCostAndDate = () => {
+  if (form.value.operatingExpenseId) {
+    const selectedTx = capexTransactions.value.find(tx => tx.id === form.value.operatingExpenseId);
+    if (selectedTx) {
+      form.value.cost = selectedTx.amount || 0;
+      if (selectedTx.paymentDate) {
+        form.value.date = selectedTx.paymentDate.substring(0, 10);
+      }
+    }
+  }
+};
+
+watch(() => form.value.operatingExpenseId, updateCostAndDate);
 
 const save = async () => {
   if (form.value.cost < 0) {
