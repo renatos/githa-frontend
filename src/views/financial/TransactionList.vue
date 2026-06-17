@@ -75,7 +75,7 @@
         <template #actions="{ item }">
           <div class="flex items-center gap-2">
             <button 
-              v-if="item.nature === 'INCOME'" 
+              v-if="false" 
               class="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 transition-all duration-200" 
               title="Gerar Agendamento"
               @click="openAppointmentModal(item)"
