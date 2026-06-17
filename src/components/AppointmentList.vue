@@ -323,10 +323,13 @@ const dateRangeLabel = computed(() => {
     end.setDate(end.getDate() + 5);
   }
 
-  const startStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const endStr = end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  const startDay = String(start.getDate()).padStart(2, '0');
+  const startMonth = String(start.getMonth() + 1).padStart(2, '0');
+  const endDay = String(end.getDate()).padStart(2, '0');
+  const endMonth = String(end.getMonth() + 1).padStart(2, '0');
+  const endYear = end.getFullYear();
 
-  return `${startStr} – ${endStr}`;
+  return `${startDay}/${startMonth} – ${endDay}/${endMonth} de ${endYear}`;
 });
 
 const getMonday = (date) => {
@@ -407,7 +410,41 @@ const loadAppointments = async () => {
     }
 
     const response = await appointmentService.getAll(query);
-    appointments.value = response.data?.content || [];
+    const mainAppointments = response.data?.content || [];
+
+    // Also fetch pending appointments before start date if range contains today (status SCHEDULED, CONFIRMED)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const rangeContainsToday = (today >= start && today <= end);
+
+    let pendingAppointments = [];
+    if (rangeContainsToday) {
+      const yesterday = new Date(start);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayIso = yesterday.toISOString().split('T')[0];
+
+      const pendingQuery = {
+        endDate: yesterdayIso,
+        status: 'SCHEDULED,CONFIRMED',
+        size: 100
+      };
+      if (props.clientId) pendingQuery['client.id'] = props.clientId;
+
+      try {
+        const pendingResponse = await appointmentService.getAll(pendingQuery);
+        pendingAppointments = pendingResponse.data?.content || [];
+      } catch (pendingErr) {
+        console.error('Failed to load pending prior appointments', pendingErr);
+      }
+    }
+
+    const combined = [...pendingAppointments, ...mainAppointments];
+    const seen = new Set();
+    appointments.value = combined.filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
     calculateLayout(appointments.value);
   } catch (e) {
     console.error('Failed to load appointments', e);
