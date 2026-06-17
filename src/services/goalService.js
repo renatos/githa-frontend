@@ -23,5 +23,11 @@ export const goalService = {
     const params = { month, year };
     if (professionalId) params.professionalId = professionalId;
     return api.get('/goals/progress', { params });
+  },
+
+  getGoalSuggestions(professionalId, month, year) {
+    const params = { month, year };
+    if (professionalId) params.professionalId = professionalId;
+    return api.get('/goals/suggest', { params });
   }
 };

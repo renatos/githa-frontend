@@ -206,6 +206,7 @@ const fetchDataAdapter = async (params) => {
   if (props.month) query.month = props.month;
   if (props.year) query.year = props.year;
   if (props.day) query.day = props.day;
+  if (params.filters && params.filters.category) query.category = params.filters.category;
   
   Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
 

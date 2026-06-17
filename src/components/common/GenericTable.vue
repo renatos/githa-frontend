@@ -204,6 +204,14 @@ const props = defineProps({
     type: Function,
     default: () => '',
   },
+  initialSortKey: {
+    type: String,
+    default: null,
+  },
+  initialSortOrder: {
+    type: String,
+    default: 'asc',
+  },
 });
 
 const emit = defineEmits(['row-click']);
@@ -217,7 +225,7 @@ const pageSize = ref(10);
 const totalPages = ref(0);
 
 // Sorting
-const currentSort = ref({key: null, order: 'asc'});
+const currentSort = ref({key: props.initialSortKey || null, order: props.initialSortOrder || 'asc'});
 
 const toggleSort = (key) => {
   if (currentSort.value.key === key) {

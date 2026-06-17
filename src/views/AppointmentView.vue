@@ -4,6 +4,7 @@
 
     <AppointmentList
         ref="listRef"
+        :sync-status="connectionStatus"
         @cancel="openCancellationModal"
         @complete="completeItem"
         @confirm="confirmItem"
@@ -34,10 +35,12 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AppointmentList from '../components/AppointmentList.vue';
 import AppointmentForm from '../components/AppointmentForm.vue';
 import AppointmentCancellationModal from '../components/AppointmentCancellationModal.vue';
-import {authService} from '../services/authService';
 import {toastBridge} from '../services/toastBridge';
 import {appointmentService} from '../services/appointmentService';
 import {useCrudView} from '../composables/useCrudView';
+import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
+
+const { connectionStatus } = useNotificationWebSocket();
 
 const {
   listRef, showForm, editingItem,
@@ -45,7 +48,7 @@ const {
 } = useCrudView(appointmentService, {singular: 'Agendamento', plural: 'Agendamentos'});
 
 const handleGlobalNotification = () => {
-  console.log('[AppointmentView] Global notification received, refreshing list...');
+  console.warn('[AppointmentView] Global notification received, refreshing list...');
   refreshList();
 };
 
@@ -139,7 +142,9 @@ const saveAppointment = async (data) => {
     closeForm();
   } catch (error) {
     console.error('Error saving appointment:', error);
-    toastBridge.error('Erro', 'Erro ao salvar agendamento.');
+    if (error.response?.data?.type !== 'warning') {
+      toastBridge.error('Erro', 'Erro ao salvar agendamento.');
+    }
   }
 };
 </script>

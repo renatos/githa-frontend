@@ -86,7 +86,7 @@ class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-2
           <div class="flex items-center gap-2 whitespace-nowrap" :class="isToday(group.date) ? 'text-indigo-600 dark:text-indigo-400 scale-105 transition-transform' : 'text-slate-500 dark:text-slate-400'">
             <span class="material-symbols-outlined" :class="isToday(group.date) ? 'text-[20px]' : 'text-[18px]'">calendar_today</span>
             <span :class="isToday(group.date) ? 'text-sm font-black' : 'text-xs font-bold'" class="uppercase tracking-widest">
-              Dia {{ formatDate(group.date) }} — {{ group.items.length }} 
+              Dia {{ formatDateWithWeekday(group.date) }} — {{ group.items.length }} 
               {{ group.items.length === 1 ? 'Agendamento' : 'Agendamentos' }}
             </span>
           </div>
@@ -311,7 +311,10 @@ const groupedAppointments = computed(() => {
 
 // --- Date Navigation ---
 const dateRangeLabel = computed(() => {
-  const start = getMonday(currentDate.value);
+  const start = viewMode.value === 'list'
+    ? new Date(currentDate.value)
+    : getMonday(currentDate.value);
+  start.setHours(0, 0, 0, 0);
   const end = new Date(start);
 
   if (viewMode.value === 'list') {
@@ -320,10 +323,13 @@ const dateRangeLabel = computed(() => {
     end.setDate(end.getDate() + 5);
   }
 
-  const startStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const endStr = end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  const startDay = String(start.getDate()).padStart(2, '0');
+  const startMonth = String(start.getMonth() + 1).padStart(2, '0');
+  const endDay = String(end.getDate()).padStart(2, '0');
+  const endMonth = String(end.getMonth() + 1).padStart(2, '0');
+  const endYear = end.getFullYear();
 
-  return `${startStr} – ${endStr}`;
+  return `${startDay}/${startMonth} – ${endDay}/${endMonth} de ${endYear}`;
 });
 
 const getMonday = (date) => {
@@ -379,7 +385,10 @@ const loadAppointments = async () => {
   loading.value = true;
   try {
     let query = {};
-    const start = getMonday(currentDate.value);
+    const start = viewMode.value === 'list'
+      ? new Date(currentDate.value)
+      : getMonday(currentDate.value);
+    start.setHours(0, 0, 0, 0);
     let end = new Date(start);
 
     if (viewMode.value === 'list') {
@@ -401,7 +410,41 @@ const loadAppointments = async () => {
     }
 
     const response = await appointmentService.getAll(query);
-    appointments.value = response.data?.content || [];
+    const mainAppointments = response.data?.content || [];
+
+    // Also fetch pending appointments before start date if range contains today (status SCHEDULED, CONFIRMED)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const rangeContainsToday = (today >= start && today <= end);
+
+    let pendingAppointments = [];
+    if (rangeContainsToday) {
+      const yesterday = new Date(start);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayIso = yesterday.toISOString().split('T')[0];
+
+      const pendingQuery = {
+        endDate: yesterdayIso,
+        status: 'SCHEDULED,CONFIRMED',
+        size: 100
+      };
+      if (props.clientId) pendingQuery['client.id'] = props.clientId;
+
+      try {
+        const pendingResponse = await appointmentService.getAll(pendingQuery);
+        pendingAppointments = pendingResponse.data?.content || [];
+      } catch (pendingErr) {
+        console.error('Failed to load pending prior appointments', pendingErr);
+      }
+    }
+
+    const combined = [...pendingAppointments, ...mainAppointments];
+    const seen = new Set();
+    appointments.value = combined.filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
     calculateLayout(appointments.value);
   } catch (e) {
     console.error('Failed to load appointments', e);
@@ -446,6 +489,23 @@ const formatDate = (isoDate) => {
   if (!isoDate) return '';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
+};
+
+const getWeekdayAbbreviation = (isoDate) => {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-');
+  const date = new Date(year, month - 1, day);
+  let weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+  weekday = weekday.replace('.', '');
+  weekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  return weekday;
+};
+
+const formatDateWithWeekday = (isoDate) => {
+  if (!isoDate) return '';
+  const formattedDate = formatDate(isoDate);
+  const weekday = getWeekdayAbbreviation(isoDate);
+  return `${formattedDate} (${weekday})`;
 };
 
 const isToday = (dateStr) => {

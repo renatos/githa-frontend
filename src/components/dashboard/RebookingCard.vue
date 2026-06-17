@@ -4,10 +4,51 @@
       <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
         <span>🔄</span> Smart Rebooking
       </h2>
-      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" @change="fetchReminders">
+      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         <option value="">Todos</option>
         <option v-for="opt in statusFilterOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
       </select>
+    </div>
+
+    <!-- Metrics Summary Section -->
+    <div v-if="!loading && !error" class="grid grid-cols-2 gap-4 mb-6">
+      <!-- Potential Revenue -->
+      <div class="bg-gradient-to-br from-amber-500/10 to-amber-600/5 dark:from-amber-500/15 dark:to-transparent border border-amber-500/20 dark:border-amber-500/30 rounded-lg p-3 flex flex-col justify-between">
+        <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Potencial</span>
+        <span class="text-lg font-bold text-amber-700 dark:text-amber-300 mt-1">
+          {{ formatCurrency(potentialRevenue) }}
+        </span>
+        <span class="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+          {{ newAndNotifiedCount }} {{ newAndNotifiedCount === 1 ? 'pendente' : 'pendentes' }}
+        </span>
+      </div>
+
+      <!-- Scheduled Revenue (Recuperado) -->
+      <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 dark:from-blue-500/15 dark:to-transparent border border-blue-500/20 dark:border-blue-500/30 rounded-lg p-3 flex flex-col justify-between">
+        <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">Retornos Agendados</span>
+        <span class="text-lg font-bold text-blue-700 dark:text-blue-300 mt-1">
+          {{ formatCurrency(scheduledRevenue) }}
+        </span>
+        <span class="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+          {{ scheduledCount }} {{ scheduledCount === 1 ? 'agendado' : 'agendados' }}
+        </span>
+      </div>
+
+      <!-- Converted Revenue (Convertido) -->
+      <div v-if="convertedCount > 0" class="col-span-2 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/15 dark:to-transparent border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg p-3 flex flex-row items-center justify-between animate-bounce-subtle">
+        <div class="flex flex-col">
+          <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
+            <span>Retornos Efetivados</span>
+            <span class="animate-pulse">🎉</span>
+          </span>
+          <span class="text-lg font-bold text-emerald-700 dark:text-emerald-300 mt-0.5">
+            {{ formatCurrency(convertedRevenue) }}
+          </span>
+        </div>
+        <span class="text-[10px] text-gray-500 dark:text-slate-400 font-medium bg-emerald-100/50 dark:bg-emerald-500/10 px-2 py-1 rounded">
+          {{ convertedCount }} {{ convertedCount === 1 ? 'retorno' : 'retornos' }}
+        </span>
+      </div>
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-8">
@@ -42,7 +83,12 @@
                 Último atendimento: {{ new Date(reminder.lastAppointmentDate).toLocaleDateString('pt-BR') }}
             </span>
         </div>
-        <StatusBadge :status="reminder.status" :status-map="rebookingStatusMap" />
+        <div class="flex flex-col items-end gap-1.5">
+            <span class="font-semibold text-gray-700 dark:text-slate-200">
+                {{ formatCurrency(reminder.service?.price) }}
+            </span>
+            <StatusBadge :status="reminder.status" :status-map="rebookingStatusMap" />
+        </div>
       </div>
     </div>
 
@@ -74,6 +120,7 @@ import StatusBadge from '../common/StatusBadge.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { enumService } from '../../services/enumService';
+import { formatCurrency } from '../../utils/formatters';
 
 const props = defineProps({
     serviceId: {
@@ -84,7 +131,7 @@ const props = defineProps({
 
 const loading = ref(true);
 const error = ref(false);
-const reminders = ref([]);
+const allReminders = ref([]);
 const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
 const showAppointmentForm = ref(false);
@@ -96,6 +143,7 @@ const rebookingStyles = {
     NEW: { badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
     NOTIFIED: { badge: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/30', dot: 'bg-yellow-500' },
     SCHEDULED: { badge: 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30', dot: 'bg-blue-500' },
+    CONVERTED: { badge: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30', dot: 'bg-emerald-500' },
     DECLINED: { badge: 'bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30', dot: 'bg-red-500' },
     NO_CONTACT: { badge: 'bg-gray-50 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 border border-gray-200 dark:border-gray-500/30', dot: 'bg-gray-500' }
 };
@@ -115,11 +163,60 @@ const loadStatusOptions = async () => {
     statusFilterOptions.value = await enumService.getOptions('RebookingStatus');
 };
 
+const isWithinLast30Days = (dateStr) => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30;
+};
+
+const reminders = computed(() => {
+    if (!statusFilter.value) {
+        return allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt));
+    }
+    if (statusFilter.value === 'CONVERTED') {
+        return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt));
+    }
+    return allReminders.value.filter(r => r.status === statusFilter.value);
+});
+
+const potentialRevenue = computed(() => {
+    return allReminders.value
+        .filter(r => r.status === 'NEW' || r.status === 'NOTIFIED')
+        .reduce((acc, r) => acc + (r.service?.price || 0), 0);
+});
+
+const scheduledRevenue = computed(() => {
+    return allReminders.value
+        .filter(r => r.status === 'SCHEDULED')
+        .reduce((acc, r) => acc + (r.service?.price || 0), 0);
+});
+
+const convertedRevenue = computed(() => {
+    return allReminders.value
+        .filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt))
+        .reduce((acc, r) => acc + (r.service?.price || 0), 0);
+});
+
+const newAndNotifiedCount = computed(() => {
+    return allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+});
+
+const scheduledCount = computed(() => {
+    return allReminders.value.filter(r => r.status === 'SCHEDULED').length;
+});
+
+const convertedCount = computed(() => {
+    return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt)).length;
+});
+
 const fetchReminders = async () => {
     loading.value = true;
     error.value = false;
     try {
-        reminders.value = await listRebookingReminders(statusFilter.value, props.serviceId);
+        allReminders.value = await listRebookingReminders(null, props.serviceId);
     } catch(e) {
         error.value = true;
         console.error(e);

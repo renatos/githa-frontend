@@ -67,6 +67,10 @@ export default {
     },
 
     // Account Groups
+    getCapexOptions() {
+        return api.get(`${resource}/capex-options`);
+    },
+
     getAccountGroups() {
         return api.get('/account-groups');
     },

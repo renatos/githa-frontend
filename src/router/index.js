@@ -48,21 +48,15 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/admin/parameters',
-            name: 'system-parameters',
-            component: () => import('../views/SystemParametersView.vue'),
-            meta: { requiresAuth: true, roles: ['ADMIN'] }
+            path: '/sys-admin',
+            name: 'sys-admin',
+            component: () => import('../views/sysadmin/SysAdminDashboardView.vue'),
+            meta: { requiresAuth: true, roles: ['SYS_ADMIN'] }
         },
         {
             path: '/clients/:id',
             name: 'client-detail',
             component: () => import('../views/ClientView.vue'),
-            meta: { requiresAuth: true }
-        },
-        {
-            path: '/users',
-            name: 'users',
-            component: () => import('../views/UserView.vue'),
             meta: { requiresAuth: true }
         },
         {
@@ -132,6 +126,18 @@ const router = createRouter({
             path: '/goals',
             name: 'goals',
             component: () => import('../views/GoalsView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/investments',
+            name: 'investments',
+            component: () => import('../components/financial/InvestmentList.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/investments/:id/metrics',
+            name: 'investment-metrics',
+            component: () => import('../views/InvestmentMetricsView.vue'),
             meta: { requiresAuth: true }
         },
         // Future routes: /clients, /professionals, etc.

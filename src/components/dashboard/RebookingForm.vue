@@ -137,7 +137,7 @@ const professionals = ref([]);
 
 const form = ref({
     status: props.reminder.status || 'NEW',
-    contactDate: props.reminder.contactDate || null,
+    contactDate: props.reminder.contactDate || new Date().toISOString().split('T')[0],
     contactResponsibleId: props.reminder.contactResponsible?.id || null,
     notes: props.reminder.notes || '',
     message: props.reminder.message || ''
@@ -148,7 +148,7 @@ const currentStatusLabel = computed(() => {
     return option ? option.description : form.value.status;
 });
 
-const isProfessionalRequired = computed(() => ['NOTIFIED', 'SCHEDULED', 'DECLINED'].includes(form.value.status));
+const isProfessionalRequired = computed(() => ['NOTIFIED', 'SCHEDULED', 'CONVERTED', 'DECLINED'].includes(form.value.status));
 const isValid = computed(() => {
     if (isProfessionalRequired.value && !form.value.contactResponsibleId) {
         return false;

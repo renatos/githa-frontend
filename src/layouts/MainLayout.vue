@@ -75,6 +75,10 @@
           <i class="fa-solid fa-bullseye w-6 text-lg"></i>
           <span class="ml-2">Metas</span>
         </router-link>
+        <router-link to="/investments" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-chart-line w-6 text-lg"></i>
+          <span class="ml-2">Investimentos</span>
+        </router-link>
         <router-link to="/financials" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>
@@ -91,9 +95,9 @@
           <i class="fa-solid fa-id-badge w-6 text-lg"></i>
           <span class="ml-2">Meu Perfil</span>
         </router-link>
-        <router-link v-if="isAdmin" to="/admin/parameters" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-gear w-6 text-lg"></i>
-          <span class="ml-2">Parametrização</span>
+        <router-link v-if="isSysAdmin" to="/sys-admin" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-shield-halved w-6 text-lg"></i>
+          <span class="ml-2">Administração</span>
         </router-link>
         <router-link to="/services" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-list-ul w-6 text-lg"></i>
@@ -106,10 +110,6 @@
         <router-link to="/professionals" class="nav-link" :class="{ 'nav-link-active': isProfessionalsActive }" active-class="" @click="closeSidebar">
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Profissionais</span>
-        </router-link>
-        <router-link to="/users" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
-          <i class="fa-solid fa-user-gear w-6 text-lg"></i>
-          <span class="ml-2">Usuários</span>
         </router-link>
       </nav>
 
@@ -154,7 +154,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
@@ -162,12 +162,12 @@ import BottomNav from '../components/common/BottomNav.vue';
 import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
 import { toastBridge } from '../services/toastBridge';
 
-const router = useRouter();
 const route = useRoute();
 const { isDark, toggleTheme } = useTheme();
 const userEmail = ref('');
 const professionalName = ref('');
 const isAdmin = ref(false);
+const isSysAdmin = ref(false);
 const isSidebarOpen = ref(false);
 
 const token = authService.getToken();
@@ -215,6 +215,7 @@ onMounted(async () => {
     userEmail.value = user.email || user.sub; 
     professionalName.value = user.professionalName || '';
     isAdmin.value = user.roles && user.roles.includes('ADMIN');
+    isSysAdmin.value = user.roles && user.roles.includes('SYS_ADMIN');
 
     // If professional name is missing (old session), fetch it from /me
     if (!professionalName.value && authService.isAuthenticated()) {

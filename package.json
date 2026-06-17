@@ -1,7 +1,7 @@
 {
   "name": "githa-frontend",
   "private": true,
-  "version": "5.18.3",
+  "version": "5.28.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,11 +14,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "axios": "1.13.2",
-    "dompurify": "3.3.3",
+    "axios": "1.18.0",
+    "dompurify": "3.4.11",
     "lucide-vue-next": "0.577.0",
     "marked": "17.0.3",
-    "vue": "3.5.24",
+    "vue": "3.5.38",
     "vue-currency-input": "3.2.2",
     "vue-router": "4.6.4"
   },
@@ -30,11 +30,11 @@
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-vue": "10.7.0",
-    "happy-dom": "20.6.1",
-    "postcss": "8.5.8",
+    "happy-dom": "20.10.5",
+    "postcss": "8.5.15",
     "prettier": "3.8.1",
     "tailwindcss": "3.4.19",
-    "vite": "7.2.4",
-    "vitest": "4.0.18"
+    "vite": "7.3.5",
+    "vitest": "4.1.9"
   }
 }

@@ -17,7 +17,6 @@ describe('authService', () => {
     it('setSession should store professional data in localStorage', async () => {
         const token = 'dummy.eyJncm91cHMiOlsiUk9MRV9BRE1JTiJdfQ.signature';
         const email = 'test@example.com';
-
         authService.setSession(token, email, true, true);
         await authService.fetchProfessionalProfile();
 

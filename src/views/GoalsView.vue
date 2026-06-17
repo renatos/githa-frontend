@@ -70,27 +70,38 @@
               <!-- Progress Fill -->
               <circle 
                 cx="128" cy="128" r="110" 
-                fill="none" :stroke="progressData.onTrack ? '#484cb0' : '#f59e0b'" stroke-width="12" 
+                fill="none" :stroke="strokeColor" stroke-width="12" 
                 stroke-linecap="round"
                 :stroke-dasharray="circumference"
                 :stroke-dashoffset="progressOffset"
                 class="transition-all duration-1000 ease-out"
+                :class="{ 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]': percentage >= 100 }"
               />
             </svg>
             <!-- Center Text -->
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span class="text-5xl font-black text-white">{{ percentage }}%</span>
-              <span class="text-sm font-medium text-gray-400 mt-1 uppercase tracking-widest">Atingido</span>
+              <span 
+                class="text-5xl font-black transition-colors duration-500"
+                :class="percentage >= 100 ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' : 'text-white'"
+              >
+                {{ percentage }}%
+              </span>
+              <span 
+                class="text-xs font-semibold mt-1 uppercase tracking-widest transition-colors duration-500"
+                :class="percentage >= 100 ? 'text-emerald-400' : 'text-gray-400'"
+              >
+                {{ percentage > 100 ? 'Superado' : 'Atingido' }}
+              </span>
             </div>
           </div>
 
           <div class="mt-8 text-center space-y-1 group/goal relative">
             <p class="text-gray-400 text-sm">Meta mensal</p>
-            <div class="flex items-center justify-center gap-2">
+            <div class="relative flex items-center justify-center">
               <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
               <button 
                 v-if="isAdmin" 
-                class="p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                class="absolute -right-8 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
                 title="Editar Meta"
                 @click="handleEditGoal"
               >
@@ -103,10 +114,10 @@
             v-if="progressData.onTrack" 
             class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
-            <CheckCircle :size="14" /> DENTRO DA META 
+            <CheckCircle :size="14" /> {{ percentage > 100 ? 'ACIMA DA META!' : 'DENTRO DA META' }} 
             <div class="group relative cursor-help flex items-center">
               <Info :size="12" class="opacity-50 group-hover:opacity-100 transition-opacity" />
-              <BaseTooltip text="O ritmo de faturamento está adequado para atingir o objetivo mensal." />
+              <BaseTooltip :text="percentage > 100 ? 'A meta de faturamento mensal foi superada com sucesso!' : 'O ritmo de faturamento está adequado para atingir o objetivo mensal.'" />
             </div>
           </div>
           <div 
@@ -329,7 +340,115 @@
 
         <div class="space-y-2">
           <label class="text-sm font-medium text-gray-400">Valor Alvo (R$)</label>
-          <CurrencyInput v-model="newGoal.targetAmount" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white" />
+          <div class="flex gap-2">
+            <CurrencyInput v-model="newGoal.targetAmount" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-primary outline-none" />
+            <button 
+              type="button"
+              class="px-4 bg-gray-800 border border-gray-700 hover:border-primary/50 hover:bg-gray-850 text-primary rounded-xl flex items-center justify-center gap-1.5 transition-all text-sm font-bold shrink-0"
+              @click="fetchGoalSuggestions"
+            >
+              <Sparkles :size="16" />
+              <span>Sugerir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Suggestion Panel -->
+        <div v-if="loadingSuggestions" class="flex flex-col items-center justify-center py-6 bg-gray-900/50 rounded-xl border border-gray-700">
+          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-primary border-r-2 mb-2"></div>
+          <p class="text-gray-400 text-xs">Calculando sugestões inteligentes...</p>
+        </div>
+
+        <div v-else-if="suggestions.length > 0" class="space-y-3 animate-in fade-in duration-300">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sugestões Calculadas</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[510px] overflow-y-auto pr-1">
+            <div 
+              v-for="sug in suggestions" 
+              :key="sug.methodKey"
+              class="flip-card h-[240px] cursor-pointer"
+              @click="sug.available && toggleFlip(sug.methodKey)"
+            >
+              <div 
+                class="flip-card-inner h-full w-full relative transition-transform duration-500 transform-style-3d"
+                :class="{ 'rotate-y-180': flippedSuggestions[sug.methodKey] }"
+              >
+                <!-- Front Face -->
+                <div 
+                  class="flip-card-front absolute inset-0 p-4 rounded-xl border transition-all flex flex-col justify-between text-left w-full backface-hidden"
+                  :class="[
+                    sug.available 
+                      ? 'bg-gray-800/40 border-gray-700 hover:border-primary/50 hover:bg-gray-800' 
+                      : 'bg-gray-900/20 border-gray-800 opacity-50 cursor-not-allowed'
+                  ]"
+                >
+                  <div class="w-full">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-xs font-bold text-gray-300">{{ sug.methodName }}</span>
+                      <div class="flex items-center gap-2">
+                        <span v-if="!sug.available" class="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-medium">Indisponível</span>
+                        <span 
+                          v-else-if="sug.calculationDetails && Object.keys(sug.calculationDetails).length > 0" 
+                          class="text-[10px] text-primary hover:underline font-bold"
+                          @click.stop="toggleFlip(sug.methodKey)"
+                        >
+                          Ver Fórmula
+                        </span>
+                      </div>
+                    </div>
+                    <p class="text-sm font-bold" :class="sug.available ? 'text-white' : 'text-gray-500'">
+                      {{ sug.available ? formatCurrency(sug.suggestedAmount) : '—' }}
+                    </p>
+                    <p class="text-[11px] text-gray-400 mt-1 leading-relaxed">{{ sug.available ? sug.description : sug.fallbackReason }}</p>
+                  </div>
+                  
+                  <div v-if="sug.available" class="mt-2 flex justify-end">
+                    <button 
+                      type="button" 
+                      class="text-[10px] bg-primary/20 text-primary hover:bg-primary hover:text-white px-2.5 py-1 rounded transition-colors font-bold"
+                      @click.stop="selectSuggestion(sug)"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Back Face -->
+                <div 
+                  v-if="sug.available"
+                  class="flip-card-back absolute inset-0 p-4 rounded-xl border border-primary/30 bg-gray-800 flex flex-col justify-between text-left w-full backface-hidden rotate-y-180"
+                >
+                  <div class="w-full">
+                    <div class="flex items-center justify-between mb-2">
+                      <h3 class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Memória de Cálculo</h3>
+                      <span 
+                        class="text-[10px] text-primary hover:underline font-bold"
+                        @click.stop="toggleFlip(sug.methodKey)"
+                      >
+                        Voltar
+                      </span>
+                    </div>
+                    <div class="space-y-1 text-xs text-gray-300">
+                      <div v-for="(val, key) in sug.calculationDetails" :key="key" class="flex justify-between border-b border-gray-700/50 pb-0.5">
+                        <span class="text-gray-400">{{ formatDetailKey(key) }}:</span>
+                        <span class="font-mono font-semibold text-primary">{{ formatDetailValue(key, val) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-auto flex justify-between items-center pt-2 border-t border-gray-700">
+                    <span class="text-[10px] text-gray-400 font-bold">{{ formatCurrency(sug.suggestedAmount) }}</span>
+                    <button 
+                      type="button"
+                      class="text-[10px] bg-primary/20 text-primary hover:bg-primary hover:text-white px-2.5 py-1 rounded transition-colors font-bold"
+                      @click.stop="selectSuggestion(sug)"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-4">
@@ -377,7 +496,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { 
   Plus, Target, DollarSign, Clock, Calendar, 
-  RefreshCw, CheckCircle, AlertCircle, Pencil, Info
+  RefreshCw, CheckCircle, AlertCircle, Pencil, Info, Sparkles
 } from 'lucide-vue-next';
 import MonthYearSelector from '../components/common/MonthYearSelector.vue';
 import BaseLookup from '../components/common/BaseLookup.vue';
@@ -408,6 +527,39 @@ const showRebookingModal = ref(false);
 const selectedRebookingService = ref(null);
 const isAdmin = ref(false);
 const editingClient = ref(null);
+const suggestions = ref([]);
+const loadingSuggestions = ref(false);
+const flippedSuggestions = ref({});
+
+const toggleFlip = (methodKey) => {
+  flippedSuggestions.value[methodKey] = !flippedSuggestions.value[methodKey];
+};
+
+const formatDetailKey = (key) => {
+  const keysMap = {
+    avgExpenses: 'Despesa Média',
+    profitMargin: 'Margem de Lucro',
+    weightedAvgRevenue: 'Média Recente',
+    prevYearRevenue: 'Mesmo Mês Ano Ant.',
+    growthRate: 'Taxa Crescimento',
+    ticketPerHour: 'Ticket/Hora',
+    capacityHours: 'Jornada Mensal',
+    occupancyRate: 'Taxa Ocupação',
+    scheduledRevenue: 'Faturamento Agendado',
+    rebookingPipeline: 'Conversão Lembretes'
+  };
+  return keysMap[key] || key;
+};
+
+const formatDetailValue = (key, val) => {
+  if (['profitMargin', 'growthRate', 'occupancyRate'].includes(key)) return val;
+  if (key === 'capacityHours') return `${val}h`;
+  const parsed = parseFloat(val);
+  if (!isNaN(parsed) && val.indexOf('%') === -1) {
+    return formatCurrency(parsed);
+  }
+  return val;
+};
 
 const newGoal = ref({
   id: null,
@@ -428,11 +580,17 @@ const circumference = 2 * Math.PI * 110;
 // Computed
 const percentage = computed(() => {
   if (!progressData.value || !progressData.value.goal.targetAmount) return 0;
-  return Math.min(100, Math.round((progressData.value.realizedRevenue / progressData.value.goal.targetAmount) * 100));
+  return Math.round((progressData.value.realizedRevenue / progressData.value.goal.targetAmount) * 100);
+});
+
+const strokeColor = computed(() => {
+  if (!progressData.value) return '#484cb0';
+  if (percentage.value >= 100) return '#10b981'; // Vibrant emerald green for >= 100%
+  return progressData.value.onTrack ? '#484cb0' : '#f59e0b';
 });
 
 const progressOffset = computed(() => {
-  const p = percentage.value / 100;
+  const p = Math.min(100, percentage.value) / 100;
   return circumference * (1 - p);
 });
 
@@ -510,6 +668,36 @@ const resetNewGoal = () => {
     year: selectedYear.value,
     targetAmount: 0
   };
+  suggestions.value = [];
+  flippedSuggestions.value = {};
+};
+
+const fetchGoalSuggestions = async () => {
+  loadingSuggestions.value = true;
+  suggestions.value = [];
+  flippedSuggestions.value = {};
+  try {
+    const res = await goalService.getGoalSuggestions(
+      newGoal.value.professionalId,
+      newGoal.value.month,
+      newGoal.value.year
+    );
+    suggestions.value = res.data;
+  } catch (err) {
+    console.error('Error fetching suggestions:', err);
+    toastBridge.getToast().add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível carregar as sugestões de metas.',
+      life: 3000
+    });
+  } finally {
+    loadingSuggestions.value = false;
+  }
+};
+
+const selectSuggestion = (sug) => {
+  newGoal.value.targetAmount = sug.suggestedAmount;
 };
 
 const openClientForm = async (client) => {
@@ -584,5 +772,19 @@ onMounted(() => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.flip-card {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
 }
 </style>
