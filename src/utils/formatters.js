@@ -28,6 +28,9 @@ export const formatCurrency = (value) => {
     }).format(value);
 };
 
+export const round2 = (val) => Math.round((val || 0) * 100) / 100;
+
+
 export const formatPhone = (value) => {
     if (!value) return '';
     const numericValue = value.replace(/\D/g, '');

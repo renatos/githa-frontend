@@ -11,6 +11,10 @@ export default {
         return api.get(`${resource}/transactions`, { params: filters });
     },
 
+    getTransactionsBySaleId(saleId) {
+        return api.get(`${resource}/transactions/sale/${saleId}`);
+    },
+
     /**
      * Create a new transaction
      * @param {Object} transaction 

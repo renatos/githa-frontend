@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCrudView } from '../../src/composables/useCrudView';
-
 import { confirmBridge } from '../../src/services/confirmBridge';
 
 vi.mock('../../src/services/confirmBridge', () => ({
     confirmBridge: {
         confirm: vi.fn(),
-        alert: vi.fn()
+        alert: vi.fn(),
     }
 }));
 
@@ -19,6 +18,7 @@ describe('useCrudView', () => {
             update: vi.fn().mockResolvedValue({ data: { id: 1 } }),
             delete: vi.fn().mockResolvedValue({}),
         };
+        vi.clearAllMocks();
     });
 
     const labels = { singular: 'Serviço', plural: 'Serviços' };
@@ -116,7 +116,7 @@ describe('useCrudView', () => {
     });
 
     it('deleteItem should call service.delete after confirmation', async () => {
-        confirmBridge.confirm.mockImplementationOnce(({ onConfirm }) => onConfirm());
+        vi.mocked(confirmBridge.confirm).mockImplementationOnce(({ onConfirm }) => onConfirm?.());
 
         const { deleteItem } = useCrudView(service, labels);
 
@@ -126,7 +126,7 @@ describe('useCrudView', () => {
     });
 
     it('deleteItem should NOT call service.delete when confirmation is cancelled', async () => {
-        confirmBridge.confirm.mockImplementationOnce(({ onCancel }) => onCancel?.());
+        vi.mocked(confirmBridge.confirm).mockImplementationOnce(({ onCancel }) => onCancel?.());
 
         const { deleteItem } = useCrudView(service, labels);
 

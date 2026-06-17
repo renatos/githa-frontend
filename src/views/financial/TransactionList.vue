@@ -24,10 +24,16 @@
         :row-class="rowClass"
         @row-click="openForm"
       >
-        <template #cell-amount="{ value, item }">
-          <span class="font-bold text-base tracking-tight" :class="item.nature === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-            {{ formatCurrency(value) }}
-          </span>
+        <template #cell-amount="{ item }">
+          <div class="flex items-center justify-end gap-1.5">
+            <span v-if="item.splitCount > 1" class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-0.5" title="Múltiplas formas de pagamento">
+              <i class="fa-solid fa-code-branch text-[8px] rotate-90"></i>
+              {{ item.splitCount }}f
+            </span>
+            <span class="font-bold text-base tracking-tight" :class="item.nature === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+              {{ formatCurrency(item.saleTotal || item.amount) }}
+            </span>
+          </div>
         </template>
         
         <template #cell-nature="{ value }">
@@ -69,7 +75,7 @@
         <template #actions="{ item }">
           <div class="flex items-center gap-2">
             <button 
-              v-if="item.nature === 'INCOME'" 
+              v-if="false" 
               class="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 transition-all duration-200" 
               title="Gerar Agendamento"
               @click="openAppointmentModal(item)"
