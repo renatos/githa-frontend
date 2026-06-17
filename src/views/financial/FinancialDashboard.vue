@@ -237,7 +237,7 @@
     <!-- Credit Cards Tab Content -->
     <div v-show="currentTab === 1" class="flex flex-col gap-6 animate-in fade-in duration-300">
       <CreditCardList ref="creditCardListRef" @save="onCardSaved" />
-      <CreditCardBillPanel ref="creditCardBillPanelRef" @bill-paid="onBillPaid" />
+      <CreditCardBillPanel ref="creditCardBillPanelRef" @bill-paid="onBillPaid" @expense-changed="onExpenseChanged" />
     </div>
   </div>
 </template>
@@ -297,6 +297,11 @@ const onCardSaved = () => {
 
 const onBillPaid = () => {
   transactionListRef.value?.loadData();
+  creditCardListRef.value?.refreshList?.();
+  loadAllData();
+};
+
+const onExpenseChanged = () => {
   creditCardListRef.value?.refreshList?.();
   loadAllData();
 };

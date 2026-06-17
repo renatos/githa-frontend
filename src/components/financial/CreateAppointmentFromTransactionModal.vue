@@ -133,6 +133,7 @@
 
 <script setup>
 import {ref, computed, onMounted, watch} from 'vue';
+import { round2 } from '@/utils/formatters';
 import BaseModal from '../common/BaseModal.vue';
 import BaseLookup from '../common/BaseLookup.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
@@ -210,9 +211,10 @@ watch([() => selectedService.value, () => form.value.discount], () => {
     const price = selectedService.value.price || 0;
     const discount = form.value.discount || 0;
     const calculated = price * (1 - discount / 100);
-    form.value.amount = parseFloat(calculated.toFixed(2));
+    form.value.amount = round2(calculated);
   }
 });
+
 
 watch(() => selectedService.value, (newService) => {
   if (newService) {
