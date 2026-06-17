@@ -100,6 +100,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { round2 } from '@/utils/formatters';
 
 const props = defineProps({
   amount: { type: Number, required: true },
@@ -126,8 +127,8 @@ const discountPreview = computed(() => {
           name: split.paymentMethodName || 'Forma de Pagamento',
           percentage: pct,
           originalAmount: splitAmount,
-          discountAmount: Math.round(discountVal * 100) / 100,
-          finalAmount: Math.round((splitAmount - discountVal) * 100) / 100,
+          discountAmount: round2(discountVal),
+          finalAmount: round2(splitAmount - discountVal),
           hasDiscount: true
         });
       } else {
@@ -149,8 +150,8 @@ const discountPreview = computed(() => {
       isSplit: true,
       items: itemsBreakdown,
       originalAmount: totalOriginalAmount,
-      discountAmount: Math.round(totalDiscountAmount * 100) / 100,
-      finalAmount: Math.round((totalOriginalAmount - totalDiscountAmount) * 100) / 100
+      discountAmount: round2(totalDiscountAmount),
+      finalAmount: round2(totalOriginalAmount - totalDiscountAmount)
     };
   }
 
@@ -164,10 +165,11 @@ const discountPreview = computed(() => {
   return {
     isSplit: false,
     percentage: pct,
-    discountAmount: Math.round(discountAmount * 100) / 100,
-    finalAmount: Math.round((amountVal - discountAmount) * 100) / 100
+    discountAmount: round2(discountAmount),
+    finalAmount: round2(amountVal - discountAmount)
   };
 });
+
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
