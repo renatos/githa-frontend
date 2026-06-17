@@ -53,5 +53,9 @@ export default {
 
     deleteExpense(expenseId) {
         return api.delete(`${RESOURCE}/expenses/${expenseId}`);
+    },
+
+    reactivate(id) {
+        return api.post(`${RESOURCE}/${id}/reactivate`);
     }
 };

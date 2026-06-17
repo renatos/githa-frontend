@@ -152,7 +152,7 @@
                   :key="sum.cardId"
                   class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors"
                   :class="{ 'bg-indigo-50/30 dark:bg-indigo-500/5': selectedBillKey === `${sum.billYear}-${sum.billMonth}-${sum.cardId}` }"
-                  @click="selectBill(sum)"
+                  @click="drillIntoCard(sum)"
                 >
                   <td class="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
                     {{ sum.cardName }}
@@ -413,6 +413,8 @@ import BaseLookup from '../common/BaseLookup.vue';
 import { toastBridge } from '../../services/toastBridge';
 import { confirmBridge } from '../../services/confirmBridge';
 
+const emit = defineEmits(['bill-paid']);
+
 const cards = ref([]);
 const selectedCardId = ref(null);
 const selectedYear = ref(new Date().getFullYear());
@@ -503,6 +505,11 @@ const onCardChange = () => {
   loadData();
 };
 
+const drillIntoCard = (sum) => {
+  selectedCardId.value = sum.cardId;
+  loadBills();
+};
+
 const selectBill = async (bill) => {
   selectedBill.value = bill;
   if (selectedCardId.value) {
@@ -544,6 +551,7 @@ const paySelectedBill = async () => {
           detail: `Fatura de ${mName}/${year} paga com sucesso!`,
           life: 3000
         });
+        emit('bill-paid');
         await loadData();
       } catch (error) {
         console.error('Error paying bill:', error);

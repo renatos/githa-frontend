@@ -236,8 +236,8 @@
 
     <!-- Credit Cards Tab Content -->
     <div v-show="currentTab === 1" class="flex flex-col gap-6 animate-in fade-in duration-300">
-      <CreditCardList @save="onCardSaved" />
-      <CreditCardBillPanel ref="creditCardBillPanelRef" />
+      <CreditCardList ref="creditCardListRef" @save="onCardSaved" />
+      <CreditCardBillPanel ref="creditCardBillPanelRef" @bill-paid="onBillPaid" />
     </div>
   </div>
 </template>
@@ -287,10 +287,18 @@ const selectedYear = ref(now.getFullYear());
 const selectedDay = ref(now.getDate());
 const transactionListRef = ref(null);
 const creditCardBillPanelRef = ref(null);
+const creditCardListRef = ref(null);
 
 const onCardSaved = () => {
   creditCardBillPanelRef.value?.loadCards?.();
   creditCardBillPanelRef.value?.loadData?.();
+  creditCardListRef.value?.refreshList?.();
+};
+
+const onBillPaid = () => {
+  transactionListRef.value?.loadData();
+  creditCardListRef.value?.refreshList?.();
+  loadAllData();
 };
 
 // Appointment Form State
@@ -317,6 +325,9 @@ watch(selectedDay, async () => {
 
 const loadAllData = async () => {
   await Promise.all([loadSummary(), loadDailySummary()]);
+  creditCardBillPanelRef.value?.loadData?.();
+  creditCardBillPanelRef.value?.loadCards?.();
+  creditCardListRef.value?.refreshList?.();
 };
 
 const loadSummary = async () => {

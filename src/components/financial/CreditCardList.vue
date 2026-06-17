@@ -1,9 +1,5 @@
 <template>
   <div class="flex flex-col gap-6">
-    <div v-if="alert.message" :class="alert.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-400'" class="p-4 rounded-lg border text-sm font-medium">
-      {{ alert.message }}
-    </div>
-
     <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10" style="border-top: 3px solid #6366f1">
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
@@ -63,6 +59,14 @@
           >
             <i class="fa-solid fa-trash-can text-[14px]"></i>
           </button>
+          <button 
+            v-else
+            class="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all duration-200 flex items-center justify-center" 
+            title="Reativar" 
+            @click.stop="handleReactivate(item.id)"
+          >
+            <i class="fa-solid fa-rotate-left text-[14px]"></i>
+          </button>
         </div>
       </template>
     </GenericTable>
@@ -83,6 +87,7 @@ import CreditCardForm from './CreditCardForm.vue';
 import creditCardService from '../../services/creditCardService';
 import { useCrudView } from '../../composables/useCrudView';
 import { confirmBridge } from '../../services/confirmBridge';
+import { toastBridge } from '../../services/toastBridge';
 
 const {
   listRef,
@@ -111,14 +116,32 @@ const handleDelete = (id) => {
     onConfirm: async () => {
       try {
         await creditCardService.delete(id);
-        alert.value = { type: 'success', message: 'Cartão de Crédito inativado com sucesso!' };
-        setTimeout(() => (alert.value.message = ''), 3000);
+        toastBridge.getToast().add({ severity: 'success', summary: 'Sucesso', detail: 'Cartão de Crédito inativado com sucesso!', life: 3000 });
         refreshList();
         emit('save');
       } catch (error) {
         console.error('Error deleting card:', error);
-        alert.value = { type: 'error', message: 'Erro ao inativar cartão de crédito.' };
-        setTimeout(() => (alert.value.message = ''), 3000);
+        toastBridge.getToast().add({ severity: 'error', summary: 'Erro', detail: 'Erro ao inativar cartão de crédito.', life: 3000 });
+      }
+    }
+  });
+};
+
+const handleReactivate = (id) => {
+  confirmBridge.confirm({
+    title: 'Reativar Cartão de Crédito',
+    message: 'Tem certeza que deseja reativar este cartão de crédito?',
+    type: 'info',
+    confirmLabel: 'Reativar',
+    onConfirm: async () => {
+      try {
+        await creditCardService.reactivate(id);
+        toastBridge.getToast().add({ severity: 'success', summary: 'Sucesso', detail: 'Cartão de Crédito reativado com sucesso!', life: 3000 });
+        refreshList();
+        emit('save');
+      } catch (error) {
+        console.error('Error reactivating card:', error);
+        toastBridge.getToast().add({ severity: 'error', summary: 'Erro', detail: 'Erro ao reativar cartão de crédito.', life: 3000 });
       }
     }
   });
@@ -145,4 +168,6 @@ const formatCurrency = (value) => {
     currency: 'BRL',
   }).format(value || 0);
 };
+
+defineExpose({ refreshList });
 </script>

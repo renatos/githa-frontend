@@ -46,6 +46,112 @@
             @account-group-select="onAccountGroupSelect"
           />
 
+          <!-- Payment Source Selector (only for new EXPENSE + MANUAL) -->
+          <div
+            v-if="launchMode === 'MANUAL' && form.nature === 'EXPENSE' && !transaction.id"
+            class="space-y-3"
+          >
+            <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">
+              De onde sairá o valor?
+            </label>
+
+            <!-- CAIXA option -->
+            <button
+              type="button"
+              class="w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left"
+              :class="selectedSourceCardId === null
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700'"
+              @click="selectedSourceCardId = null"
+            >
+              <div
+                class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                :class="selectedSourceCardId === null ? 'bg-indigo-500' : 'bg-slate-100 dark:bg-slate-700'"
+              >
+                <i
+                  class="fa-solid fa-building-columns text-base"
+                  :class="selectedSourceCardId === null ? 'text-white' : 'text-slate-500 dark:text-slate-400'"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p
+                  class="font-semibold text-sm"
+                  :class="selectedSourceCardId === null ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-900 dark:text-slate-100'"
+                >
+                  Caixa
+                </p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Fluxo de caixa da clínica</p>
+              </div>
+              <div
+                class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                :class="selectedSourceCardId === null ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 dark:border-slate-600'"
+              >
+                <i v-if="selectedSourceCardId === null" class="fa-solid fa-check text-white text-[10px]" />
+              </div>
+            </button>
+
+            <!-- Active credit card options -->
+            <button
+              v-for="card in activeCards"
+              :key="card.id"
+              type="button"
+              class="w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left"
+              :class="selectedSourceCardId === card.id
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700'"
+              @click="selectedSourceCardId = card.id"
+            >
+              <div
+                class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                :class="selectedSourceCardId === card.id ? 'bg-indigo-500' : 'bg-slate-100 dark:bg-slate-700'"
+              >
+                <i
+                  class="fa-solid fa-credit-card text-base"
+                  :class="selectedSourceCardId === card.id ? 'text-white' : 'text-slate-500 dark:text-slate-400'"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p
+                  class="font-semibold text-sm truncate"
+                  :class="selectedSourceCardId === card.id ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-900 dark:text-slate-100'"
+                >
+                  {{ card.name }}
+                </p>
+                <div class="flex items-center gap-3 mt-0.5">
+                  <span class="text-xs text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-wallet text-[10px] mr-1" />
+                    Disponível: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ formatCardLimit(card.availableLimit) }}</span>
+                  </span>
+                  <span class="text-xs text-slate-400 dark:text-slate-500">·</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-calendar-xmark text-[10px] mr-1" />
+                    Fecha dia {{ card.closingDay }}
+                  </span>
+                </div>
+              </div>
+              <div
+                class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                :class="selectedSourceCardId === card.id ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 dark:border-slate-600'"
+              >
+                <i v-if="selectedSourceCardId === card.id" class="fa-solid fa-check text-white text-[10px]" />
+              </div>
+            </button>
+
+            <!-- Installment count (only when a card is selected) -->
+            <div v-if="selectedSourceCardId !== null" class="space-y-2 pt-1">
+              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1 pb-1">
+                Nº de Parcelas
+              </label>
+              <input
+                v-model.number="cardInstallmentCount"
+                type="number"
+                min="1"
+                max="48"
+                class="form-input flex w-full h-12 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors text-base font-normal"
+              />
+            </div>
+          </div>
+
           <!-- Sale Mode Section -->
           <SaleTransactionSection
             v-if="launchMode === 'SALE'"
@@ -82,10 +188,10 @@
 
           <!-- Financial Details Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             <div v-if="launchMode === 'MANUAL'" class="space-y-2">
+            <div v-if="launchMode === 'MANUAL'" class="space-y-2">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Natureza</label>
               <div class="form-input flex w-full h-12 mt-1 resize-none overflow-hidden rounded-lg text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 font-semibold items-center gap-2 cursor-not-allowed text-base">
-                <i class="fa-solid" :class="form.nature === 'INCOME' ? 'fa-arrow-up text-emerald-600 dark:text-emerald-500' : 'fa-arrow-down text-rose-600 dark:text-rose-500'"></i>
+                <i class="fa-solid" :class="form.nature === 'INCOME' ? 'fa-arrow-up text-emerald-600 dark:text-emerald-500' : 'fa-arrow-down text-rose-600 dark:text-rose-500'" />
                 {{ form.nature === 'INCOME' ? 'Receita' : 'Despesa' }}
               </div>
             </div>
@@ -93,18 +199,19 @@
             <div class="space-y-2">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Valor Total</label>
               <div class="relative group mt-1">
-                <CurrencyInput 
-                  v-model="form.amount" 
-                  :disabled="!canSave" 
+                <CurrencyInput
+                  v-model="form.amount"
+                  :disabled="!canSave"
                   class="font-black"
                 />
               </div>
             </div>
 
-            <div class="space-y-2">
+            <!-- Status: hidden when a credit card source is selected -->
+            <div v-if="selectedSourceCardId === null" class="space-y-2">
               <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-0 ml-1 block">Status</label>
-              <select 
-                v-model="form.status" 
+              <select
+                v-model="form.status"
                 :disabled="!canSave"
                 class="form-select flex w-full h-12 mt-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-colors cursor-pointer text-base font-normal"
               >
@@ -112,6 +219,15 @@
                   {{ status.description }}
                 </option>
               </select>
+            </div>
+
+            <!-- Card badge shown instead of Status when card is selected -->
+            <div v-else class="space-y-2">
+              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal pb-0 ml-1 block">Status</label>
+              <div class="form-input flex w-full h-12 mt-1 rounded-lg border border-amber-300 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 items-center gap-2 text-amber-700 dark:text-amber-400 text-sm font-semibold cursor-default">
+                <i class="fa-solid fa-clock text-amber-500" />
+                Pendente (fatura do cartão)
+              </div>
             </div>
           </div>
 
@@ -223,6 +339,7 @@ import {enumService} from '../../services/enumService';
 import {serviceService} from '../../services/serviceService';
 import {professionalService} from '../../services/professionalService';
 import {saleService} from '../../services/saleService';
+import creditCardService from '../../services/creditCardService';
 
 // Sub-components
 import ManualTransactionSection from './ManualTransactionSection.vue';
@@ -241,6 +358,11 @@ const transactionStatuses = ref([]);
 const saleItemTypes = ref([]);
 const accountNatures = ref([]);
 const saleTransactionRef = ref(null);
+
+// Credit card source selection (null = CAIXA, number = cardId)
+const activeCards = ref([]);
+const selectedSourceCardId = ref(null);
+const cardInstallmentCount = ref(1);
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
@@ -325,9 +447,16 @@ onMounted(async () => {
   transactionStatuses.value = await enumService.getOptions('TransactionStatus');
   saleItemTypes.value = await enumService.getOptions('SaleItemType');
   accountNatures.value = await enumService.getOptions('AccountNature');
-  
+
   const groupsResponse = await financialService.getAccountGroups();
   accountGroups.value = groupsResponse.data.filter(g => g.active && g.classification !== 'CREDIT_CARD');
+
+  try {
+    const cardsRes = await creditCardService.getAll();
+    activeCards.value = (cardsRes.data || []).filter(c => c.active);
+  } catch {
+    activeCards.value = [];
+  }
 
   if (props.transaction?.id) {
     form.value = {...props.transaction};
@@ -347,7 +476,7 @@ onMounted(async () => {
 
     if (form.value.originalAmount) form.value.amount = form.value.originalAmount;
     if (form.value.paymentDate?.length > 16) form.value.paymentDate = form.value.paymentDate.substring(0, 19);
-    
+
     // Recovery of names for lookups
     if (form.value.paymentMethodId) {
        const pmRes = await paymentMethodService.getById(form.value.paymentMethodId);
@@ -437,15 +566,6 @@ const onPaymentMethodSelect = (item) => {
 };
 
 const save = async () => {
-  if (form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId && launchMode.value === 'MANUAL') {
-    confirmBridge.alert({
-      title: 'Grupo de Contas Obrigatório',
-      message: 'Selecione um Grupo de Contas para transações Pagas.',
-      type: 'warning'
-    });
-    return;
-  }
-
   if (launchMode.value === 'MANUAL') {
     if (!form.value.description) {
       confirmBridge.alert({
@@ -455,6 +575,41 @@ const save = async () => {
       });
       return;
     }
+
+    // Route to credit card expense when a card source is selected
+    if (selectedSourceCardId.value !== null && form.value.nature === 'EXPENSE') {
+      try {
+        const purchaseDate = form.value.paymentDate
+          ? form.value.paymentDate.substring(0, 10)
+          : new Date().toISOString().substring(0, 10);
+        await creditCardService.createExpense(selectedSourceCardId.value, {
+          description: form.value.description,
+          totalAmount: form.value.amount,
+          installmentCount: cardInstallmentCount.value || 1,
+          purchaseDate,
+          category: form.value.category || null,
+          accountGroupId: form.value.accountGroupId || null,
+        });
+        emit('save', { refresh: true });
+      } catch (error) {
+        confirmBridge.alert({
+          title: 'Erro ao Lançar no Cartão',
+          message: error.response?.data?.message || 'Não foi possível lançar o gasto no cartão.',
+          type: 'danger'
+        });
+      }
+      return;
+    }
+
+    if (form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId) {
+      confirmBridge.alert({
+        title: 'Grupo de Contas Obrigatório',
+        message: 'Selecione um Grupo de Contas para transações Pagas.',
+        type: 'warning'
+      });
+      return;
+    }
+
     emit('save', form.value);
     return;
   }
@@ -526,16 +681,24 @@ watch(() => form.value.status, (newVal) => {
   }
 });
 
+const formatCardLimit = (value) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+};
+
 watch(launchMode, (newVal) => {
   if (newVal === 'SALE') form.value.nature = 'INCOME';
   else if (!form.value.accountGroupId && !form.value.id) form.value.nature = 'EXPENSE';
+  selectedSourceCardId.value = null;
+  cardInstallmentCount.value = 1;
 });
 
 watch(() => form.value.nature, (newVal) => {
+  selectedSourceCardId.value = null;
+  cardInstallmentCount.value = 1;
   if (newVal === 'INCOME') {
-     form.value.paymentMethodId = undefined;
-     form.value.paymentMethodName = '';
-     selectedPaymentMethod.value = null;
+    form.value.paymentMethodId = undefined;
+    form.value.paymentMethodName = '';
+    selectedPaymentMethod.value = null;
   }
 });
 
