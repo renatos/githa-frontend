@@ -264,17 +264,20 @@
             <!-- Splits Validation Summary -->
             <div
               class="flex items-center gap-3 p-3 rounded-lg border text-xs font-semibold mt-3"
-              :class="isSplitsBalanced
+              :class="isSplitsBalanced && !hasDuplicatePaymentMethods
                 ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                 : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400'"
             >
-              <i class="fa-solid" :class="isSplitsBalanced ? 'fa-circle-check text-emerald-500' : 'fa-triangle-exclamation text-amber-500'"></i>
+              <i class="fa-solid" :class="isSplitsBalanced && !hasDuplicatePaymentMethods ? 'fa-circle-check text-emerald-500' : 'fa-triangle-exclamation text-amber-500'"></i>
               <div class="flex-1 min-w-0">
-                <span v-if="isSplitsBalanced">
+                <span v-if="isSplitsBalanced && !hasDuplicatePaymentMethods">
                   Valores conciliados com sucesso! Total: {{ formatCurrency(form.amount) }}
                 </span>
+                <span v-else-if="hasDuplicatePaymentMethods">
+                  Existem formas de pagamento duplicadas na lista de divisão.
+                </span>
                 <span v-else>
-                  A soma das formas de pagamento ({{ formatCurrency(splitsSum) }}) não corresponde ao total da venda ({{ formatCurrency(form.amount) }}). Diferença: {{ formatCurrency(Math.abs(form.amount - splitsSum)) }}.
+                  A soma das formas de pagamento ({{ formatCurrency(splitsSum) }}) não corresponde ao total da venda ({{ formatCurrency(form.amount) }}). Diferença: {{ formatCurrency(splitsDiff) }}.
                 </span>
               </div>
             </div>
@@ -471,44 +474,86 @@ const paymentSplits = ref([
   { paymentMethodId: undefined, paymentMethodName: '', amount: 0, status: 'PAID' }
 ]);
 
+const round2 = (val) => Math.round((val || 0) * 100) / 100;
+
+let isUpdatingSplits = false;
+let previousAmounts = [];
+
+const updatePreviousAmounts = () => {
+  previousAmounts = paymentSplits.value.map(s => round2(s.amount));
+};
+
+const splitsDiff = computed(() => {
+  return round2(Math.abs(round2(form.value.amount) - round2(splitsSum.value)));
+});
+
 const enableSplitPayment = () => {
+  isUpdatingSplits = true;
   isSplitPayment.value = true;
   if (paymentSplits.value.length === 1) {
     paymentSplits.value[0].paymentMethodId = form.value.paymentMethodId;
     paymentSplits.value[0].paymentMethodName = form.value.paymentMethodName;
-    paymentSplits.value[0].amount = form.value.amount;
-    addPaymentSplit();
+    paymentSplits.value[0].amount = round2(form.value.amount);
+    
+    paymentSplits.value.push({
+      paymentMethodId: undefined,
+      paymentMethodName: '',
+      amount: 0,
+      status: 'PAID'
+    });
   }
+  updatePreviousAmounts();
+  isUpdatingSplits = false;
 };
 
 const splitsSum = computed(() => {
-  return paymentSplits.value.reduce((sum, s) => sum + (s.amount || 0), 0);
+  return round2(paymentSplits.value.reduce((sum, s) => sum + round2(s.amount), 0));
 });
 
 const isSplitsBalanced = computed(() => {
-  return Math.abs(splitsSum.value - (form.value.amount || 0)) <= 0.01;
+  return round2(splitsSum.value) === round2(form.value.amount);
+});
+
+const hasDuplicatePaymentMethods = computed(() => {
+  if (!isSplitPayment.value) return false;
+  const ids = paymentSplits.value
+    .map(s => s.paymentMethodId)
+    .filter(id => id !== undefined && id !== null);
+  return new Set(ids).size !== ids.length;
 });
 
 const addPaymentSplit = () => {
-  const remaining = Math.max(0, form.value.amount - splitsSum.value);
+  isUpdatingSplits = true;
+  const currentSum = splitsSum.value;
+  const remaining = Math.max(0, round2(form.value.amount - currentSum));
   paymentSplits.value.push({
     paymentMethodId: undefined,
     paymentMethodName: '',
     amount: remaining,
     status: 'PAID'
   });
+  updatePreviousAmounts();
+  isUpdatingSplits = false;
 };
 
 const removePaymentSplit = (index) => {
+  isUpdatingSplits = true;
   if (paymentSplits.value.length > 1) {
+    const removedAmount = round2(paymentSplits.value[index].amount || 0);
     paymentSplits.value.splice(index, 1);
+    
+    if (paymentSplits.value.length > 0) {
+      const recipientIndex = index > 0 ? index - 1 : 0;
+      paymentSplits.value[recipientIndex].amount = round2((paymentSplits.value[recipientIndex].amount || 0) + removedAmount);
+    }
   }
+  
   if (paymentSplits.value.length === 1) {
     isSplitPayment.value = false;
     const remaining = paymentSplits.value[0];
     form.value.paymentMethodId = remaining.paymentMethodId;
     form.value.paymentMethodName = remaining.paymentMethodName;
-    remaining.amount = form.value.amount;
+    remaining.amount = round2(form.value.amount);
     
     if (remaining.paymentMethodId) {
       paymentMethodService.getById(remaining.paymentMethodId).then(res => {
@@ -522,6 +567,8 @@ const removePaymentSplit = (index) => {
       selectedPaymentMethod.value = null;
     }
   }
+  updatePreviousAmounts();
+  isUpdatingSplits = false;
 };
 
 const formatCurrency = (value) => {
@@ -599,7 +646,7 @@ const isFormValid = computed(() => {
   if (!canSave.value) return false;
   if (launchMode.value === 'SALE') {
     if (isSplitPayment.value) {
-      if (!isSplitsBalanced.value) return false;
+      if (!isSplitsBalanced.value || hasDuplicatePaymentMethods.value) return false;
       if (paymentSplits.value.some(s => !s.paymentMethodId)) return false;
     } else {
       if (form.value.status === 'PAID' && !form.value.paymentMethodId) return false;
@@ -620,6 +667,9 @@ const saveTooltip = computed(() => {
       if (isSplitPayment.value) {
         if (!isSplitsBalanced.value) {
           return `A soma das formas de pagamento (${formatCurrency(splitsSum.value)}) não corresponde ao total da venda (${formatCurrency(form.value.amount || 0)}).`;
+        }
+        if (hasDuplicatePaymentMethods.value) {
+          return 'Existem formas de pagamento duplicadas.';
         }
         if (paymentSplits.value.some(s => !s.paymentMethodId)) {
           return 'Selecione a forma de pagamento para todas as divisões.';
@@ -697,6 +747,7 @@ onMounted(async () => {
                       }
                   }
                   
+                  isUpdatingSplits = true;
                   paymentSplits.value = splits;
                   
                   if (paymentSplits.value.length > 1) {
@@ -709,6 +760,8 @@ onMounted(async () => {
                           form.value.paymentMethodName = single.paymentMethodName;
                       }
                   }
+                  updatePreviousAmounts();
+                  isUpdatingSplits = false;
               }
           } catch (err) {
               console.error('Error loading payment splits:', err);
@@ -746,7 +799,10 @@ onMounted(async () => {
   }
 
   if (!props.transaction?.id) {
-    paymentSplits.value[0].amount = form.value.amount;
+    isUpdatingSplits = true;
+    paymentSplits.value[0].amount = round2(form.value.amount);
+    updatePreviousAmounts();
+    isUpdatingSplits = false;
   }
 });
 
@@ -943,11 +999,23 @@ const save = async () => {
 };
 
 watch(() => form.value.amount, (newVal) => {
-  if (!props.transaction?.id || form.value.amount !== props.transaction.amount) {
-     form.value.originalAmount = newVal;
+  const roundedNewVal = round2(newVal);
+  if (!props.transaction?.id || roundedNewVal !== round2(props.transaction.amount)) {
+     form.value.originalAmount = roundedNewVal;
   }
   if (paymentSplits.value.length === 1) {
-    paymentSplits.value[0].amount = newVal;
+    isUpdatingSplits = true;
+    paymentSplits.value[0].amount = roundedNewVal;
+    updatePreviousAmounts();
+    isUpdatingSplits = false;
+  } else if (paymentSplits.value.length > 1) {
+    isUpdatingSplits = true;
+    const sumExceptLast = paymentSplits.value.slice(0, -1).reduce((sum, s) => sum + round2(s.amount), 0);
+    const roundedSumExceptLast = round2(sumExceptLast);
+    const remaining = Math.max(0, round2(roundedNewVal - roundedSumExceptLast));
+    paymentSplits.value[paymentSplits.value.length - 1].amount = remaining;
+    updatePreviousAmounts();
+    isUpdatingSplits = false;
   }
 });
 
@@ -971,6 +1039,60 @@ watch(() => form.value.paymentMethodId, (newId) => {
     paymentSplits.value[0].paymentMethodName = form.value.paymentMethodName;
   }
 });
+
+watch(paymentSplits, (newSplits) => {
+  if (isUpdatingSplits) return;
+  if (!isSplitPayment.value || newSplits.length <= 1) {
+    updatePreviousAmounts();
+    return;
+  }
+
+  isUpdatingSplits = true;
+  try {
+    const totalAmount = round2(form.value.amount);
+    
+    let modifiedIndex = -1;
+    for (let i = 0; i < newSplits.length; i++) {
+      const currentVal = round2(newSplits[i]?.amount);
+      const prevVal = previousAmounts[i] !== undefined ? previousAmounts[i] : 0;
+      if (currentVal !== prevVal) {
+        modifiedIndex = i;
+        break;
+      }
+    }
+
+    if (modifiedIndex !== -1) {
+      const lastIndex = newSplits.length - 1;
+      
+      if (modifiedIndex === lastIndex) {
+        const currentLastVal = round2(newSplits[lastIndex].amount);
+        const prevLastVal = previousAmounts[lastIndex] !== undefined ? previousAmounts[lastIndex] : 0;
+        
+        if (currentLastVal < prevLastVal) {
+          const currentSum = round2(newSplits.reduce((sum, s) => sum + round2(s.amount), 0));
+          if (currentSum < totalAmount) {
+            const remaining = round2(totalAmount - currentSum);
+            newSplits.push({
+              paymentMethodId: undefined,
+              paymentMethodName: '',
+              amount: remaining,
+              status: 'PAID'
+            });
+          }
+        }
+      } else {
+        const sumExceptLast = newSplits.slice(0, -1).reduce((sum, s) => sum + round2(s.amount), 0);
+        const roundedSumExceptLast = round2(sumExceptLast);
+        const remaining = Math.max(0, round2(totalAmount - roundedSumExceptLast));
+        
+        newSplits[lastIndex].amount = remaining;
+      }
+    }
+  } finally {
+    updatePreviousAmounts();
+    isUpdatingSplits = false;
+  }
+}, { deep: true });
 
 const formatCardLimit = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
