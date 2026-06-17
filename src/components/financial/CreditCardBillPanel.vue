@@ -98,7 +98,7 @@
                 <tr class="border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
                   <th class="py-3 px-4">Fatura (Competência)</th>
                   <th class="py-3 px-4 text-right">Valor Total</th>
-                  <th class="py-3 px-4 text-center">Nº Parcelas</th>
+                  <th class="py-3 px-4 text-center">Nº Compras</th>
                   <th class="py-3 px-4 text-center">Status</th>
                   <th class="py-3 px-4"></th>
                 </tr>
@@ -413,7 +413,7 @@ import BaseLookup from '../common/BaseLookup.vue';
 import { toastBridge } from '../../services/toastBridge';
 import { confirmBridge } from '../../services/confirmBridge';
 
-const emit = defineEmits(['bill-paid']);
+const emit = defineEmits(['bill-paid', 'expense-changed']);
 
 const cards = ref([]);
 const selectedCardId = ref(null);
@@ -645,6 +645,7 @@ const saveExpenseEdit = async () => {
     });
     closeEditExpense();
     loadData();
+    emit('expense-changed');
     if (selectedBill.value) {
       await selectBill(selectedBill.value);
     }
@@ -674,6 +675,7 @@ const deleteExpense = (inst) => {
           life: 3000
         });
         loadData();
+        emit('expense-changed');
         if (selectedBill.value) {
           await selectBill(selectedBill.value);
         }
@@ -698,6 +700,7 @@ const onExpenseCreated = () => {
     life: 3000
   });
   loadData();
+  emit('expense-changed');
 };
 
 const formatCurrency = (value) => {
