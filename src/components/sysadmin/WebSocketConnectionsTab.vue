@@ -6,7 +6,7 @@
         <p class="text-xs text-slate-500">Monitoramento em tempo real dos clientes conectados no sistema de mensageria.</p>
       </div>
       <button
-          v-if="reports.length > 0"
+          v-if="reports && reports.length > 0"
           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2"
           @click="confirmClearConnections"
       >
@@ -19,7 +19,7 @@
       <span class="animate-spin mr-2">🔄</span> Carregando conexões...
     </div>
 
-    <div v-else-if="reports.length === 0" class="text-center py-12 text-slate-500">
+    <div v-else-if="!reports || reports.length === 0" class="text-center py-12 text-slate-500">
       Nenhuma conexão ativa encontrada no momento.
     </div>
 
@@ -34,7 +34,7 @@
             Grupo de Contas ID: {{ group.accountGroupId }}
           </span>
           <span class="text-xs bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 px-2 py-0.5 rounded font-semibold">
-            {{ group.connections.length }} {{ group.connections.length === 1 ? 'conexão ativa' : 'conexões ativas' }}
+            {{ group.connections?.length || 0 }} {{ (group.connections?.length || 0) === 1 ? 'conexão ativa' : 'conexões ativas' }}
           </span>
         </div>
 
@@ -48,7 +48,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-900">
               <tr
-                  v-for="(conn, idx) in group.connections"
+                  v-for="(conn, idx) in (group.connections || [])"
                   :key="idx"
                   class="text-sm text-slate-600 dark:text-slate-300"
               >
@@ -76,7 +76,7 @@ const loadConnections = async () => {
   loading.value = true;
   try {
     const response = await notificationLogService.getConnections();
-    reports.value = response.data || [];
+    reports.value = Array.isArray(response?.data) ? response.data : [];
   } catch (error) {
     console.error('Failed to fetch connections', error);
   } finally {
