@@ -52,7 +52,118 @@
       <!-- Main Dashboard Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Radial Progress Card -->
-        <div class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center relative group">
+        <div 
+          v-if="progressData.goal.rationaleType && progressData.goal.calculationDetails && Object.keys(progressData.goal.calculationDetails).length > 0"
+          class="flip-card lg:col-span-1 min-h-[420px] cursor-pointer"
+          @click="isGoalFlipped = !isGoalFlipped"
+        >
+          <div 
+            class="flip-card-inner h-full w-full relative transition-transform duration-500 transform-style-3d"
+            :class="{ 'rotate-y-180': isGoalFlipped }"
+          >
+            <!-- Front Face -->
+            <div class="flip-card-front absolute inset-0 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center backface-hidden w-full h-full">
+              <!-- Background decoration with clipping -->
+              <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
+              </div>
+              
+              <div class="relative w-64 h-64">
+                <!-- SVG Radial Chart -->
+                <svg class="w-full h-full transform -rotate-90">
+                  <!-- Background track -->
+                  <circle 
+                    cx="128" cy="128" r="110" 
+                    fill="none" stroke="currentColor" stroke-width="12" 
+                    class="text-gray-700/30"
+                  />
+                  <!-- Progress Fill -->
+                  <circle 
+                    cx="128" cy="128" r="110" 
+                    fill="none" :stroke="strokeColor" stroke-width="12" 
+                    stroke-linecap="round"
+                    :stroke-dasharray="circumference"
+                    :stroke-dashoffset="progressOffset"
+                    class="transition-all duration-1000 ease-out"
+                    :class="{ 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]': percentage >= 100 }"
+                  />
+                </svg>
+                <!-- Center Text -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span 
+                    class="text-5xl font-black transition-colors duration-500"
+                    :class="percentage >= 100 ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' : 'text-white'"
+                  >
+                    {{ percentage }}%
+                  </span>
+                  <span 
+                    class="text-xs font-semibold mt-1 uppercase tracking-widest transition-colors duration-500"
+                    :class="percentage >= 100 ? 'text-emerald-400' : 'text-gray-400'"
+                  >
+                    {{ percentage > 100 ? 'Superado' : 'Atingido' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mt-8 text-center space-y-1 group/goal relative w-full">
+                <div class="flex items-center justify-center gap-1.5">
+                  <p class="text-gray-400 text-sm">Meta mensal</p>
+                  <span class="text-[10px] text-primary hover:underline font-bold">Ver Racional</span>
+                </div>
+                <div class="relative flex items-center justify-center">
+                  <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
+                  <button 
+                    v-if="isAdmin" 
+                    class="absolute -right-8 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                    title="Editar Meta"
+                    @click.stop="handleEditGoal"
+                  >
+                    <Pencil :size="16" />
+                  </button>
+                </div>
+              </div>
+              
+              <div 
+                v-if="progressData.onTrack" 
+                class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+              >
+                <CheckCircle :size="14" /> {{ percentage > 100 ? 'ACIMA DA META!' : 'DENTRO DA META' }} 
+              </div>
+              <div 
+                v-else 
+                class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+              >
+                <AlertCircle :size="14" /> ABAIXO DO PRO-RATA
+              </div>
+            </div>
+
+            <!-- Back Face -->
+            <div class="flip-card-back absolute inset-0 bg-gray-800 border border-primary/30 rounded-[2rem] p-8 flex flex-col justify-between backface-hidden rotate-y-180 text-left w-full h-full">
+              <div class="w-full">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Memória de Cálculo</h3>
+                    <p class="text-xs font-bold text-white mt-0.5">{{ formatMethodName(progressData.goal.rationaleType) }}</p>
+                  </div>
+                  <span class="text-[10px] text-primary hover:underline font-bold">Voltar</span>
+                </div>
+                <div class="space-y-2 text-xs text-gray-300">
+                  <div v-for="(val, key) in progressData.goal.calculationDetails" :key="key" class="flex justify-between border-b border-gray-700/50 pb-1">
+                    <span class="text-gray-400">{{ formatDetailKey(key) }}:</span>
+                    <span class="font-mono font-semibold text-primary">{{ formatDetailValue(key, val) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="border-t border-gray-700 pt-3 flex justify-between items-center text-xs mt-auto">
+                <span class="font-semibold text-gray-400">Faturamento Alvo:</span>
+                <span class="font-mono font-black text-primary text-sm">{{ formatCurrency(progressData.goal.targetAmount) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center relative group">
           <!-- Background decoration with clipping -->
           <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
@@ -95,7 +206,7 @@
             </div>
           </div>
 
-          <div class="mt-8 text-center space-y-1 group/goal relative">
+          <div class="mt-8 text-center space-y-1 group/goal relative w-full">
             <p class="text-gray-400 text-sm">Meta mensal</p>
             <div class="relative flex items-center justify-center">
               <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
@@ -530,9 +641,20 @@ const editingClient = ref(null);
 const suggestions = ref([]);
 const loadingSuggestions = ref(false);
 const flippedSuggestions = ref({});
+const isGoalFlipped = ref(false);
 
 const toggleFlip = (methodKey) => {
   flippedSuggestions.value[methodKey] = !flippedSuggestions.value[methodKey];
+};
+
+const formatMethodName = (methodKey) => {
+  const methodsMap = {
+    BREAK_EVEN: 'Ponto de Equilíbrio',
+    TREND_SEASONALITY: 'Tendência e Sazonalidade',
+    CAPACITY: 'Capacidade Operacional',
+    PREDICTIVE_PIPELINE: 'Funil Preditivo'
+  };
+  return methodsMap[methodKey] || methodKey;
 };
 
 const formatDetailKey = (key) => {
@@ -566,7 +688,9 @@ const newGoal = ref({
   professionalId: null,
   month: new Date().getMonth() + 1,
   year: new Date().getFullYear(),
-  targetAmount: 0
+  targetAmount: 0,
+  rationaleType: null,
+  calculationDetails: null
 });
 
 const monthNames = [
@@ -647,7 +771,9 @@ const handleEditGoal = () => {
     professionalId: goal.professionalId,
     month: goal.month,
     year: goal.year,
-    targetAmount: goal.targetAmount
+    targetAmount: goal.targetAmount,
+    rationaleType: goal.rationaleType,
+    calculationDetails: goal.calculationDetails
   };
   showGoalModal.value = true;
 };
@@ -666,7 +792,9 @@ const resetNewGoal = () => {
     professionalId: null,
     month: selectedMonth.value,
     year: selectedYear.value,
-    targetAmount: 0
+    targetAmount: 0,
+    rationaleType: null,
+    calculationDetails: null
   };
   suggestions.value = [];
   flippedSuggestions.value = {};
@@ -698,6 +826,8 @@ const fetchGoalSuggestions = async () => {
 
 const selectSuggestion = (sug) => {
   newGoal.value.targetAmount = sug.suggestedAmount;
+  newGoal.value.rationaleType = sug.methodKey;
+  newGoal.value.calculationDetails = sug.calculationDetails;
 };
 
 const openClientForm = async (client) => {
