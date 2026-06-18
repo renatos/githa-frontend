@@ -28,6 +28,44 @@
         </select>
       </label>
 
+      <!-- Recurrence Fields for EXPENSE nature -->
+      <div v-if="form.nature === 'EXPENSE'" class="flex flex-col gap-4 border border-slate-200 dark:border-slate-700 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/40">
+        <p class="text-slate-900 dark:text-slate-100 text-sm font-semibold">Configuração de Recorrência</p>
+
+        <label class="flex flex-col">
+          <p class="text-slate-900 dark:text-slate-100 text-xs font-medium pb-1">Recorrência</p>
+          <select v-model="form.recurrenceType" class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-colors">
+            <option :value="null">Nenhuma</option>
+            <option value="NONE">Nenhuma</option>
+            <option value="WEEKLY">Semanal</option>
+            <option value="MONTHLY">Mensal</option>
+          </select>
+        </label>
+
+        <div v-if="form.recurrenceType && form.recurrenceType !== 'NONE'" class="grid grid-cols-2 gap-4">
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-xs font-medium pb-1">
+              {{ form.recurrenceType === 'WEEKLY' ? 'Dia da Semana' : 'Dia do Mês' }}
+            </p>
+            <select v-if="form.recurrenceType === 'WEEKLY'" v-model="form.recurrenceDay" class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-colors" required>
+              <option :value="1">Segunda-feira (1)</option>
+              <option :value="2">Terça-feira (2)</option>
+              <option :value="3">Quarta-feira (3)</option>
+              <option :value="4">Quinta-feira (4)</option>
+              <option :value="5">Sexta-feira (5)</option>
+              <option :value="6">Sábado (6)</option>
+              <option :value="7">Domingo (7)</option>
+            </select>
+            <input v-else v-model.number="form.recurrenceDay" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-colors" type="number" min="1" max="31" required />
+          </label>
+
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-xs font-medium pb-1">Valor</p>
+            <CurrencyInput v-model="form.recurrenceValue" class="h-10 text-sm font-normal" required />
+          </label>
+        </div>
+      </div>
+
       <div
 class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors border"
            :class="form.active ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-100/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
@@ -57,6 +95,7 @@ import { ref, onMounted, watch } from 'vue';
 import financialService from '../../services/financialService';
 import { enumService } from '../../services/enumService';
 import BaseModal from '../common/BaseModal.vue';
+import CurrencyInput from '../common/CurrencyInput.vue';
 
 const props = defineProps({
   accountGroup: {
@@ -72,14 +111,27 @@ const form = ref({
   name: '',
   nature: 'EXPENSE',
   active: true,
-  classification: 'OPEX'
+  classification: 'OPEX',
+  recurrenceType: null,
+  recurrenceDay: null,
+  recurrenceValue: null
 });
 
 watch(() => form.value.nature, (newNature) => {
   if (newNature === 'INCOME') {
     form.value.classification = null;
+    form.value.recurrenceType = null;
+    form.value.recurrenceDay = null;
+    form.value.recurrenceValue = null;
   } else if (!form.value.classification) {
     form.value.classification = 'OPEX';
+  }
+});
+
+watch(() => form.value.recurrenceType, (newType) => {
+  if (!newType || newType === 'NONE') {
+    form.value.recurrenceDay = null;
+    form.value.recurrenceValue = null;
   }
 });
 

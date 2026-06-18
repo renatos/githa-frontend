@@ -298,7 +298,9 @@
             </div>
 
             <div class="space-y-2">
-              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1 pb-1">Data da Transação</label>
+              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1 pb-1">
+                {{ form.nature === 'EXPENSE' && form.paymentDate && new Date(form.paymentDate) > new Date() ? 'Data do Vencimento' : 'Data da Transação' }}
+              </label>
               <input 
                 v-model="form.paymentDate" 
                 :disabled="!canSave" 

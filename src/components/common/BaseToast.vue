@@ -40,13 +40,13 @@ const getIcon = (severity) => {
 const getSeverityClasses = (severity) => {
     switch (severity) {
         case 'success': 
-            return 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800';
+            return 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-slate-900 dark:text-emerald-400 dark:border-emerald-800/60';
         case 'error': 
-            return 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800';
+            return 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-slate-900 dark:text-rose-400 dark:border-rose-800/60';
         case 'warn': 
-            return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800';
+            return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-slate-900 dark:text-amber-400 dark:border-amber-800/60';
         default: 
-            return 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800';
+            return 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-slate-900 dark:text-sky-400 dark:border-sky-800/60';
     }
 };
 
@@ -76,7 +76,7 @@ onUnmounted(() => {
             <div 
                 v-for="toast in toasts" 
                 :key="toast.id"
-                class="pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300"
+                class="pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-lg transition-all duration-300 will-change-[transform,opacity] transform translate-z-0"
                 :class="getSeverityClasses(toast.severity)"
             >
                 <div class="shrink-0 mt-0.5" :class="getIconClasses(toast.severity)">
