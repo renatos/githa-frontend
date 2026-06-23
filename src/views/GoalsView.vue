@@ -54,7 +54,7 @@
         <!-- Radial Progress Card -->
         <div 
           v-if="progressData.goal.rationaleType && progressData.goal.calculationDetails && Object.keys(progressData.goal.calculationDetails).length > 0"
-          class="flip-card lg:col-span-1 min-h-[420px] cursor-pointer"
+          class="flip-card lg:col-span-1 min-h-[390px] md:min-h-[420px] cursor-pointer"
           @click="isGoalFlipped = !isGoalFlipped"
         >
           <div 
@@ -62,15 +62,15 @@
             :class="{ 'rotate-y-180': isGoalFlipped }"
           >
             <!-- Front Face -->
-            <div class="flip-card-front absolute inset-0 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center backface-hidden w-full h-full">
+            <div class="flip-card-front absolute inset-0 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-5 md:p-8 flex flex-col items-center justify-center backface-hidden w-full h-full">
               <!-- Background decoration with clipping -->
               <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
                 <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
               </div>
               
-              <div class="relative w-64 h-64">
+              <div class="relative w-48 h-48 md:w-64 md:h-64">
                 <!-- SVG Radial Chart -->
-                <svg class="w-full h-full transform -rotate-90">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 256 256">
                   <!-- Background track -->
                   <circle 
                     cx="128" cy="128" r="110" 
@@ -105,16 +105,16 @@
                 </div>
               </div>
 
-              <div class="mt-8 text-center space-y-1 group/goal relative w-full">
+              <div class="mt-4 md:mt-8 text-center space-y-1 group/goal relative w-full">
                 <div class="flex items-center justify-center gap-1.5">
                   <p class="text-gray-400 text-sm">Meta mensal</p>
                   <span class="text-[10px] text-primary hover:underline font-bold">Ver Racional</span>
                 </div>
-                <div class="relative flex items-center justify-center">
+                <div class="flex items-center justify-center">
                   <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
                   <button 
                     v-if="isAdmin" 
-                    class="absolute -right-8 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                    class="ml-1.5 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
                     title="Editar Meta"
                     @click.stop="handleEditGoal"
                   >
@@ -125,13 +125,13 @@
               
               <div 
                 v-if="progressData.onTrack" 
-                class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+                class="mt-4 md:mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
               >
                 <CheckCircle :size="14" /> {{ percentage > 100 ? 'ACIMA DA META!' : 'DENTRO DA META' }} 
               </div>
               <div 
                 v-else 
-                class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+                class="mt-4 md:mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
               >
                 <AlertCircle :size="14" /> ABAIXO DO PRO-RATA
               </div>
@@ -163,15 +163,15 @@
           </div>
         </div>
 
-        <div v-else class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center relative group">
+        <div v-else class="lg:col-span-1 bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2rem] p-5 md:p-8 flex flex-col items-center justify-center relative group">
           <!-- Background decoration with clipping -->
           <div class="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
           </div>
           
-          <div class="relative w-64 h-64">
+          <div class="relative w-48 h-48 md:w-64 md:h-64">
             <!-- SVG Radial Chart -->
-            <svg class="w-full h-full transform -rotate-90">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 256 256">
               <!-- Background track -->
               <circle 
                 cx="128" cy="128" r="110" 
@@ -206,13 +206,13 @@
             </div>
           </div>
 
-          <div class="mt-8 text-center space-y-1 group/goal relative w-full">
+          <div class="mt-4 md:mt-8 text-center space-y-1 group/goal relative w-full">
             <p class="text-gray-400 text-sm">Meta mensal</p>
-            <div class="relative flex items-center justify-center">
+            <div class="flex items-center justify-center">
               <p class="text-2xl font-bold text-white">{{ formatCurrency(progressData.goal.targetAmount) }}</p>
               <button 
                 v-if="isAdmin" 
-                class="absolute -right-8 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
+                class="ml-1.5 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/goal:opacity-100"
                 title="Editar Meta"
                 @click="handleEditGoal"
               >
@@ -223,7 +223,7 @@
           
           <div 
             v-if="progressData.onTrack" 
-            class="mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+            class="mt-4 md:mt-6 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
             <CheckCircle :size="14" /> {{ percentage > 100 ? 'ACIMA DA META!' : 'DENTRO DA META' }} 
             <div class="group relative cursor-help flex items-center">
@@ -233,7 +233,7 @@
           </div>
           <div 
             v-else 
-            class="mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+            class="mt-4 md:mt-6 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
           >
             <AlertCircle :size="14" /> ABAIXO DO PRO-RATA
             <div class="group relative cursor-help flex items-center">

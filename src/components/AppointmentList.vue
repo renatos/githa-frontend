@@ -85,7 +85,7 @@ class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-2
           <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700"></div>
           <div class="flex items-center gap-2 whitespace-nowrap" :class="isToday(group.date) ? 'text-indigo-600 dark:text-indigo-400 scale-105 transition-transform' : 'text-slate-500 dark:text-slate-400'">
             <span class="material-symbols-outlined" :class="isToday(group.date) ? 'text-[20px]' : 'text-[18px]'">calendar_today</span>
-            <span :class="isToday(group.date) ? 'text-sm font-black' : 'text-xs font-bold'" class="uppercase tracking-widest">
+            <span :class="isToday(group.date) ? 'text-[11px] sm:text-sm font-black' : 'text-[10px] sm:text-xs font-bold'" class="uppercase tracking-wider sm:tracking-widest">
               Dia {{ formatDateWithWeekday(group.date) }} — {{ group.items.length }} 
               {{ group.items.length === 1 ? 'Agendamento' : 'Agendamentos' }}
             </span>
