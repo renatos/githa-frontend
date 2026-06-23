@@ -56,9 +56,9 @@ onMounted(async () => {
     
     loading.value = false;
 
-    // Redirect to home after 2 seconds
+    // Redirect to home after 2 seconds replacing history state to avoid back-button loop
     setTimeout(() => {
-      router.push('/');
+      router.replace('/');
     }, 2000);
 
   } catch (err) {
