@@ -64,9 +64,9 @@
               </div>
               <div class="text-3xl font-bold text-rose-600 dark:text-rose-400 mb-2">{{ formatCurrency(summary.totalExpense) }}</div>
             </div>
-            <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
+            <div class="flex items-center text-xs text-rose-600 dark:text-rose-400 font-bold bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50 mt-auto">
               <span class="mr-2">Pendente:</span>
-              <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(summary.pendingExpense || 0) }}</span>
+              <span>{{ formatCurrency(summary.pendingExpense || 0) }}</span>
             </div>
           </div>
           

@@ -126,7 +126,8 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
     saleItemTypes.value = await enumService.getOptions('SaleItemType');
 
     const groupsResponse = await financialService.getAccountGroups();
-    accountGroups.value = groupsResponse.data.filter(g => g.active && g.classification !== 'CREDIT_CARD');
+    const rawGroups = groupsResponse.data || [];
+    accountGroups.value = rawGroups.filter(g => g.active && g.classification !== 'CREDIT_CARD');
 
     try {
       const cardsRes = await creditCardService.getAll();
@@ -218,7 +219,7 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
       }
 
       if (form.value.accountGroupId) {
-        const group = accountGroups.value.find(g => g.id === form.value.accountGroupId);
+        const group = rawGroups.find(g => g.id === form.value.accountGroupId);
         if (group) form.value.accountGroupName = group.name;
       }
     } else {
