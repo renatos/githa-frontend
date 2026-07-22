@@ -47,9 +47,13 @@ const {
   openForm, closeForm, refreshList, deleteItem,
 } = useCrudView(appointmentService, {singular: 'Agendamento', plural: 'Agendamentos'});
 
+let debounceTimer = null;
 const handleGlobalNotification = () => {
   console.warn('[AppointmentView] Global notification received, refreshing list...');
-  refreshList();
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    refreshList();
+  }, 300);
 };
 
 onMounted(() => {
@@ -57,8 +61,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (debounceTimer) clearTimeout(debounceTimer);
   window.removeEventListener('githa:notification', handleGlobalNotification);
 });
+
 
 // --- Cancellation modal ---
 const showCancellationModal = ref(false);

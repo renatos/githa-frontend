@@ -7,7 +7,9 @@
       </button>
       <img src="@/assets/githa-logo-main.png" alt="Githa" class="ml-4 h-10 w-auto object-contain dark:invert" />
       <div class="flex-1"></div>
+      <WsStatusIndicator :status="connectionStatus" :compact="true" class="mr-2" />
       <div v-if="professionalName" class="mr-3 text-right">
+
         <p class="text-[9px] uppercase font-bold tracking-widest text-slate-500 leading-none">Profissional</p>
         <p class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 truncate max-w-[100px]">{{ professionalName }}</p>
       </div>
@@ -125,10 +127,13 @@
           </div>
         </div>
         <div class="flex items-center justify-between">
-          <!-- Theme Toggle -->
-          <button class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" :title="isDark ? 'Tema Claro' : 'Tema Escuro'" @click="toggleTheme">
-            <i :class="isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-indigo-400'" class="text-lg"></i>
-          </button>
+          <!-- Theme Toggle & WS Status Indicator -->
+          <div class="flex items-center gap-2">
+            <button class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" :title="isDark ? 'Tema Claro' : 'Tema Escuro'" @click="toggleTheme">
+              <i :class="isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-indigo-400'" class="text-lg"></i>
+            </button>
+            <WsStatusIndicator :status="connectionStatus" :compact="true" />
+          </div>
           <!-- Logout -->
           <button class="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors" title="Sair" @click="handleLogout">
             <i class="fa-solid fa-right-from-bracket text-[20px]"></i>
@@ -159,6 +164,7 @@ import { useTheme } from '../composables/useTheme';
 import { authService } from '../services/authService';
 import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
+import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
 import { toastBridge } from '../services/toastBridge';
 
@@ -171,7 +177,8 @@ const isSysAdmin = ref(false);
 const isSidebarOpen = ref(false);
 
 const token = authService.getToken();
-const { connect, disconnect, onMessage } = useNotificationWebSocket(token);
+const { connect, disconnect, onMessage, connectionStatus } = useNotificationWebSocket(token);
+
 
 onMessage((data) => {
   if (data.type === 'WHATSAPP_NOTIFICATION') {

@@ -22,6 +22,8 @@ export function useNotificationWebSocket(initialToken) {
   const connect = (newToken) => {
     if (newToken) {
       currentToken = newToken;
+    } else if (!currentToken) {
+      currentToken = localStorage.getItem('token');
     }
 
     if (!currentToken) {
@@ -70,6 +72,12 @@ export function useNotificationWebSocket(initialToken) {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data && data.type === 'PING') {
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'PONG', timestamp: Date.now() }));
+          }
+          return;
+        }
         onMessageCallbacks.forEach(callback => callback(data));
       } catch (e) {
         console.error('Failed to parse WebSocket message:', e);
@@ -82,6 +90,12 @@ export function useNotificationWebSocket(initialToken) {
       // If we disconnected intentionally, do not try to reconnect
       if (connectionStatus.value === 'disconnected') {
         return;
+      }
+
+      // Refresh token from storage for reconnection attempt
+      const freshToken = localStorage.getItem('token');
+      if (freshToken) {
+        currentToken = freshToken;
       }
 
       if (reconnectAttempts < maxReconnectAttempts) {
@@ -97,6 +111,7 @@ export function useNotificationWebSocket(initialToken) {
         connectionStatus.value = 'failed';
       }
     };
+
 
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
