@@ -92,7 +92,7 @@
       </div>
     </div>
 
-    <RebookingForm 
+    <ReminderForm 
       v-if="selectedReminder" 
       :reminder="selectedReminder" 
       @close="selectedReminder = null" 
@@ -114,8 +114,8 @@
 import { ref, onMounted, onUnmounted, defineEmits, computed } from 'vue';
 
 const emit = defineEmits(['select-client']);
-import { listRebookingReminders } from '../../services/rebookingService';
-import RebookingForm from './RebookingForm.vue';
+import { listReminders } from '../../services/reminderService';
+import ReminderForm from './ReminderForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
@@ -160,7 +160,7 @@ const rebookingStatusMap = computed(() => {
 });
 
 const loadStatusOptions = async () => {
-    statusFilterOptions.value = await enumService.getOptions('RebookingStatus');
+    statusFilterOptions.value = await enumService.getOptions('ReminderStatus');
 };
 
 const isWithinLast30Days = (dateStr) => {
@@ -216,7 +216,7 @@ const fetchReminders = async () => {
     loading.value = true;
     error.value = false;
     try {
-        allReminders.value = await listRebookingReminders(null, props.serviceId);
+        allReminders.value = await listReminders(null, props.serviceId);
     } catch(e) {
         error.value = true;
         console.error(e);
@@ -225,12 +225,8 @@ const fetchReminders = async () => {
     }
 };
 
-const handleClientUpdate = async (event) => {
-    // Optionally we could check event.detail to verify if the client id matches any in our list
-    // But refetching ensures data consistency 
+const handleClientUpdate = async () => {
     await fetchReminders();
-    
-    // If RebookingForm is open for the updated client, update the ref so the UI reacts instantly
     if (selectedReminder.value) {
         const updatedMatchingReminder = reminders.value.find(r => r.id === selectedReminder.value.id);
         if (updatedMatchingReminder) {
@@ -280,7 +276,6 @@ const onSaved = (updatedData) => {
 
 const onAppointmentSaved = () => {
     showAppointmentForm.value = false;
-    // Potentially refresh dashboard if needed
 };
 
 onMounted(() => {

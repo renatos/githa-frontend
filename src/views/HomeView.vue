@@ -15,10 +15,11 @@
         <AiInsightsCard />
       </div>
 
-      <!-- COLUMN 2: Appointments + Rebooking + Top Clients -->
+      <!-- COLUMN 2: Appointments + FollowUp + Reminder + Top Clients -->
       <div class="space-y-6">
         <TodayAppointmentsCard />
-        <RebookingCard @select-client="openClientForm" />
+        <FollowUpCard @select-client="openClientForm" />
+        <ReminderCard @select-client="openClientForm" />
         <TopStrategicClientsCard @select-client="openClientForm" />
       </div>
 
@@ -44,7 +45,8 @@
 import { ref, onMounted } from 'vue';
 import FinancialSummaryCard from '../components/dashboard/FinancialSummaryCard.vue';
 import TodayAppointmentsCard from '../components/dashboard/TodayAppointmentsCard.vue';
-import RebookingCard from '../components/dashboard/RebookingCard.vue';
+import ReminderCard from '../components/dashboard/ReminderCard.vue';
+import FollowUpCard from '../components/dashboard/FollowUpCard.vue';
 import TopStrategicClientsCard from '../components/dashboard/TopStrategicClientsCard.vue';
 import AiInsightsCard from '../components/dashboard/AiInsightsCard.vue';
 import TodayBirthdaysCard from '../components/dashboard/TodayBirthdaysCard.vue';

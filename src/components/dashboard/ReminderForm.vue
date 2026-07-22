@@ -1,9 +1,9 @@
 <template>
   <BaseModal
     :show="true"
-    title="Detalhes do Rebooking"
-    :subtitle="reminder.type === 'CHURN' ? 'Protocolo de Recuperação de Abandono' : 'Protocolo de Retorno Inteligente'"
-    :icon="reminder.type === 'CHURN' ? 'fa-solid fa-heart-pulse' : 'fa-solid fa-arrows-rotate'"
+    title="Detalhes do Lembrete"
+    :subtitle="reminder.type === 'CHURN' ? 'Protocolo de Recuperação de Abandono' : (reminder.type === 'FOLLOW_UP' ? 'Acompanhamento Pós-Procedimento' : 'Protocolo de Retorno Inteligente')"
+    :icon="reminder.type === 'CHURN' ? 'fa-solid fa-heart-pulse' : (reminder.type === 'FOLLOW_UP' ? 'fa-solid fa-clipboard-check' : 'fa-solid fa-arrows-rotate')"
     :z-index="zIndex"
     @close="$emit('close')"
   >
@@ -38,7 +38,12 @@
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Serviço</label>
               <div class="text-sm text-gray-900 dark:text-white font-medium">{{ reminder.service?.name }}</div>
               <div class="text-xs text-gray-500 dark:text-slate-400 mt-1">
-                  Ciclo: {{ reminder.service?.idealReturnDays }} dias 
+                  <template v-if="reminder.type === 'FOLLOW_UP'">
+                    Prazo: {{ reminder.service?.followUpDays }} dias
+                  </template>
+                  <template v-else>
+                    Ciclo: {{ reminder.service?.idealReturnDays }} dias 
+                  </template>
                   <span v-if="reminder.lastAppointmentDate" class="ml-2" title="Data do último atendimento">
                     | Último: {{ new Date(reminder.lastAppointmentDate).toLocaleDateString('pt-BR') }}
                   </span>
@@ -60,7 +65,7 @@
           <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
               <select v-model="form.status" class="w-full text-sm border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
-                  <option v-for="opt in statusOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
+                  <option v-for="opt in filteredStatusOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
               </select>
           </div>
           <div>
@@ -117,7 +122,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { updateRebookingReminder } from '../../services/rebookingService';
+import { updateReminder } from '../../services/reminderService';
 import { professionalService } from '../../services/professionalService';
 import BaseModal from '../common/BaseModal.vue';
 import BaseWhatsAppButton from '../common/BaseWhatsAppButton.vue';
@@ -158,8 +163,15 @@ const isValid = computed(() => {
 
 const statusOptions = ref([]);
 
+const filteredStatusOptions = computed(() => {
+    if (props.reminder.type === 'FOLLOW_UP') {
+        return statusOptions.value.filter(opt => opt.name !== 'SCHEDULED' && opt.name !== 'CONVERTED');
+    }
+    return statusOptions.value;
+});
+
 const loadStatusOptions = async () => {
-    statusOptions.value = await enumService.getOptions('RebookingStatus');
+    statusOptions.value = await enumService.getOptions('ReminderStatus');
 };
 
 watch(() => form.value.status, (newStatus) => {
@@ -186,7 +198,7 @@ const whatsappUrl = computed(() => {
 const save = async () => {
     saving.value = true;
     try {
-        await updateRebookingReminder(props.reminder.id, form.value);
+        await updateReminder(props.reminder.id, form.value);
         const selectedProf = professionals.value.find(p => p.id === form.value.contactResponsibleId);
         emit('save', { 
             ...props.reminder, 
@@ -213,4 +225,3 @@ onMounted(() => {
     }
 });
 </script>
-

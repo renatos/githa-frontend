@@ -86,12 +86,13 @@
       </template>
     </GenericTable>
 
-    <!-- Rebooking Form Modal (Unified Retention) -->
-    <RebookingForm
+    <!-- Reminder Form Modal (Unified Retention) -->
+    <ReminderForm
       v-if="showRebookingForm && activeReminder"
       :reminder="activeReminder"
       @close="showRebookingForm = false"
       @save="onRebookingSaved"
+      @open-client="openClientDetail"
     />
 
     <!-- Client Edit Modal -->
@@ -110,12 +111,12 @@ import { ref, computed } from 'vue';
 import PageHeader from '../components/common/PageHeader.vue';
 import GenericTable from '../components/common/GenericTable.vue';
 import ClientForm from '../components/ClientForm.vue';
-import RebookingForm from '../components/dashboard/RebookingForm.vue';
+import ReminderForm from '../components/dashboard/ReminderForm.vue';
 import BaseWhatsAppButton from '../components/common/BaseWhatsAppButton.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import { churnService } from '../services/churnService';
 import { clientService } from '../services/clientService';
-import { getActiveChurnByClient } from '../services/rebookingService';
+import { getActiveChurnByClient } from '../services/reminderService';
 import { toastBridge } from '../services/toastBridge';
 import { confirmBridge } from '../services/confirmBridge';
 import { systemParameterService } from '../services/systemParameterService';

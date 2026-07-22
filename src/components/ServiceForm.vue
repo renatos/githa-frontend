@@ -72,9 +72,21 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
           </label>
 
           <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Template da Mensagem</p>
-            <textarea v-model="form.rebookingTemplate" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors font-mono" rows="5" placeholder="Olá ${clientName}! ..."></textarea>
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Template da Mensagem de Retorno</p>
+            <textarea v-model="form.rebookingTemplate" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors font-mono" rows="4" placeholder="Olá ${clientName}! ..."></textarea>
             <p class="text-slate-500 text-xs mt-1">Use <code>${clientName}</code> para inserir o nome do cliente automaticamente.</p>
+          </label>
+
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Acompanhamento Pós-Procedimento (dias)</p>
+            <input v-model="form.followUpDays" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="0" placeholder="Ex: 5" type="number"/>
+            <p class="text-slate-500 text-xs mt-1">Número de dias após o procedimento para gerar lembrete de acompanhamento.</p>
+          </label>
+
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Template da Mensagem de Acompanhamento</p>
+            <textarea v-model="form.followUpTemplate" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors font-mono" rows="4" placeholder="Olá ${clientName}! Já se passaram X dias desde o seu procedimento..."></textarea>
+            <p class="text-slate-500 text-xs mt-1">Use <code>${clientName}</code> e <code>${serviceName}</code> para personalização.</p>
           </label>
         </div>
       </div>
@@ -119,6 +131,8 @@ const form = ref({
   durationMinutes: 30,
   idealReturnDays: null,
   rebookingTemplate: '',
+  followUpDays: null,
+  followUpTemplate: '',
   price: 0,
   active: true,
   group: 'Serviços básicos', // Default
@@ -129,7 +143,9 @@ onMounted(() => {
     form.value = {
         ...props.service,
         idealReturnDays: props.service.idealReturnDays ?? null,
-        rebookingTemplate: props.service.rebookingTemplate ?? ''
+        rebookingTemplate: props.service.rebookingTemplate ?? '',
+        followUpDays: props.service.followUpDays ?? null,
+        followUpTemplate: props.service.followUpTemplate ?? ''
     };
   }
 });

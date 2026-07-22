@@ -585,7 +585,7 @@
       @close="showRebookingModal = false"
     >
       <div class="p-2">
-        <RebookingCard 
+        <ReminderCard 
           :service-id="selectedRebookingService?.id" 
           @select-client="(client) => { openClientForm(client); }"
         />
@@ -616,7 +616,7 @@ import CurrencyInput from '../components/common/CurrencyInput.vue';
 import PageHeader from '../components/common/PageHeader.vue';
 import BaseTooltip from '../components/common/BaseTooltip.vue';
 import VariationBadge from '../components/common/VariationBadge.vue';
-import RebookingCard from '../components/dashboard/RebookingCard.vue';
+import ReminderCard from '../components/dashboard/ReminderCard.vue';
 import { goalService } from '../services/goalService';
 import { authService } from '../services/authService';
 import { professionalService } from '../services/professionalService';

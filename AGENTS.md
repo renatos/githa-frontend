@@ -254,3 +254,7 @@ O uso do servidor MCP `th0th-brain` é **obrigatório** para todas as interaçõ
 - **Reindexação Periódica**: Execute `th0th_index` (com `forceReindex: true` se necessário) de tempos em tempos para garantir que a base de conhecimento reflita as mudanças mais recentes do código.
 - **Memória Hierárquica**: Utilize `th0th_remember` para registrar decisões arquiteturais importantes tomadas durante a conversa e `th0th_recall` para recuperar contexto de conversas passadas.
 - **Eficiência de Tokens**: Prefira ferramentas do `th0th` para busca em vez de ler arquivos inteiros repetidamente.
+
+## Execução de Comandos SQL
+
+- **Comandos SQL Destrutivos**: Antes de executar qualquer comando SQL destrutivo (DELETE, DROP, TRUNCATE, etc.) no banco de dados, o agente DEVE obrigatoriamente exibir o SQL exato a ser executado e solicitar autorização prévia e explícita do usuário.
