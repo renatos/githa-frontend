@@ -56,9 +56,12 @@ onMounted(async () => {
     
     loading.value = false;
 
-    // Redirect to home after 2 seconds replacing history state to avoid back-button loop
+    // Redirect to target or home after 2 seconds replacing history state to avoid back-button loop
     setTimeout(() => {
-      router.replace('/');
+      const sessionRedirect = sessionStorage.getItem('redirect_after_login');
+      sessionStorage.removeItem('redirect_after_login');
+      const target = route.query.redirect || sessionRedirect || '/';
+      router.replace(target);
     }, 2000);
 
   } catch (err) {

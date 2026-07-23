@@ -54,6 +54,8 @@ onMounted(() => {
   }
 });
 
+import GlobalModalHost from './components/common/GlobalModalHost.vue';
+
 const layout = computed(() => {
   return route.meta.layout === 'auth' ? AuthLayout : MainLayout;
 });
@@ -63,6 +65,7 @@ const layout = computed(() => {
   <component :is="layout">
     <RouterView />
   </component>
+  <GlobalModalHost />
   <LoadingOverlay />
   <BaseToast />
   <ConfirmModal />

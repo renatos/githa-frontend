@@ -217,7 +217,22 @@ npm run test:watch
 4. [ ] **View**: criar `src/views/{Entity}View.vue` usando `useCrudView(service, labels)`
 5. [ ] **Router**: adicionar rota em `src/router/index.js` com `meta: { requiresAuth: true }`
 6. [ ] **Navegação**: adicionar item no menu em `MainLayout.vue`
-7. [ ] **Testes**: criar testes em `tests/` para o novo service e composables
+7. [ ] **Deep Link / Form Modal**: se o formulário deve ser aberto via link curto (`/link/:code`), garanta que o componente chama-se `{Entity}Form.vue` e o serviço exporta objeto `{Entity}Service` com `getById(id)`.
+8. [ ] **Testes**: criar testes em `tests/` para o novo service e composables
+
+## Deep Links e Convenções de Formulários/Modais (CoC)
+
+O sistema de deep linking (`/link/:code` e `?modal=TYPE&modalId=ID`) utiliza **Convenção sobre Configuração (CoC)** via `useDeepLinkModal.js`.
+
+### Regras de Convenção
+Para qualquer novo tipo de recurso (ex: `targetType = "PROFESSIONAL"`):
+1. **Componente Form Modal**: Deve ser criado em `src/components/` com nome `{Entity}Form.vue` (ex: `ProfessionalForm.vue`). O motor o descobre automaticamente via `import.meta.glob`.
+2. **Prop do Componente**: Recebe o dado na prop em `camelCase` (ex: `:professional="data"`).
+3. **Serviço de Dados**: Deve estar em `src/services/{entity}Service.js` contendo o método `getById(id)`.
+4. **Rota Padrão**: Plural em minúsculo (ex: `/professionals`).
+
+### Quando usar `OVERRIDES` em `useDeepLinkModal.js`
+Apenas quando um formulário foge da convenção (ex: `REMINDER` abre na rota `/` do Dashboard, `TRANSACTION` abre na rota `/financials`). Se a nova tela seguir as convenções acima, NENHUMA alteração é necessária em `useDeepLinkModal.js` ou no backend.
 
 ## Componentes Genéricos Reutilizáveis
 

@@ -11,6 +11,10 @@ export default {
         return api.get(`${resource}/transactions`, { params: filters });
     },
 
+    getTransactionById(id) {
+        return api.get(`${resource}/transactions/${id}`);
+    },
+
     getTransactionsBySaleId(saleId) {
         return api.get(`${resource}/transactions/sale/${saleId}`);
     },

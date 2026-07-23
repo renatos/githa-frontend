@@ -24,15 +24,15 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
-import {useRouter} from 'vue-router';
-import {authService} from '../services/authService';
+import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { authService } from '../services/authService';
 import AlertMessage from '../components/common/AlertMessage.vue';
 
 import GoogleLoginButton from '../components/common/GoogleLoginButton.vue';
 
-
 const router = useRouter();
+const route = useRoute();
 const email = ref('');
 const password = ref('');
 const error = ref('');
@@ -40,13 +40,21 @@ const loading = ref(false);
 
 const isMockLoginEnabled = import.meta.env.VITE_MOCK_LOGIN_ENABLED === 'true';
 
+const navigateAfterLogin = () => {
+  const queryRedirect = route.query.redirect;
+  const sessionRedirect = sessionStorage.getItem('redirect_after_login');
+  sessionStorage.removeItem('redirect_after_login');
+  const target = queryRedirect || sessionRedirect || '/';
+  router.push(target);
+};
+
 const handleMockLogin = async () => {
   loading.value = true;
   error.value = '';
 
   try {
     await authService.mockLogin();
-    router.push('/');
+    navigateAfterLogin();
   } catch (err) {
     if (err.response && err.response.status === 403) {
       error.value = 'Mock login está desativado no servidor.';
@@ -65,7 +73,7 @@ const handleLogin = async () => {
 
   try {
     await authService.login(email.value, password.value);
-    router.push('/');
+    navigateAfterLogin();
   } catch (err) {
     if (err.response && err.response.status === 401) {
       error.value = 'Credenciais inválidas. Verifique seu email e senha.';

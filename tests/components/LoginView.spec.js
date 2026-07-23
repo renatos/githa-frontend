@@ -4,7 +4,8 @@ import LoginView from '../../src/views/LoginView.vue';
 import GoogleLoginButton from '../../src/components/common/GoogleLoginButton.vue';
 
 vi.mock('vue-router', () => ({
-  useRouter: vi.fn(() => ({ push: vi.fn() }))
+  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  useRoute: vi.fn(() => ({ query: {} }))
 }));
 
 vi.mock('../../src/services/authService', () => ({

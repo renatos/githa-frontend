@@ -140,6 +140,12 @@ const router = createRouter({
             component: () => import('../views/InvestmentMetricsView.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/link/:code',
+            name: 'link-resolver',
+            component: () => import('../views/LinkResolverView.vue'),
+            meta: { requiresAuth: true }
+        },
         // Future routes: /clients, /professionals, etc.
     ]
 })
@@ -160,7 +166,8 @@ router.beforeEach((to, from, next) => {
     // Protected routes — require token
     const token = localStorage.getItem('token');
     if (to.meta.requiresAuth && !token) {
-        next('/login');
+        sessionStorage.setItem('redirect_after_login', to.fullPath);
+        next({ path: '/login', query: { redirect: to.fullPath } });
         return;
     }
 

@@ -1,6 +1,10 @@
 import api from './api';
 
 export const goalService = {
+  getById(id) {
+    return api.get(`/goals/${id}`);
+  },
+
   createGoal(goal) {
     return api.post('/goals', goal);
   },
