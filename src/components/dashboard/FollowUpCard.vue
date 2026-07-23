@@ -1,12 +1,26 @@
 <template>
   <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
-    <div class="flex items-center justify-between mb-6">
+    <!-- Header Title & Status Select -->
+    <div class="flex items-center justify-between mb-4 gap-2">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
         <span>📋</span> Acompanhamento Pós-Procedimento
       </h2>
-      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shrink-0">
         <option value="">Todos</option>
         <option v-for="opt in filteredStatusOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
+      </select>
+    </div>
+
+    <!-- Select Profissional (Acima de Acompanhamentos Pendentes) -->
+    <div class="mb-4">
+      <select
+        v-model="selectedProfessionalId"
+        class="w-full text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2 dark:bg-slate-700/60 dark:border-slate-600 dark:text-white font-medium"
+      >
+        <option :value="null">Todos os Profissionais</option>
+        <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
+          {{ prof.name }}
+        </option>
       </select>
     </div>
 
@@ -77,6 +91,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, computed } from 'vue';
 import { listReminders } from '../../services/reminderService';
+import { professionalService } from '../../services/professionalService';
+import { authService } from '../../services/authService';
 import ReminderForm from './ReminderForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
 import { enumService } from '../../services/enumService';
@@ -93,6 +109,8 @@ const props = defineProps({
 const loading = ref(true);
 const error = ref(false);
 const allFollowUps = ref([]);
+const professionals = ref([]);
+const selectedProfessionalId = ref(null);
 const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
 const statusFilterOptions = ref([]);
@@ -119,15 +137,23 @@ const followUpStatusMap = computed(() => {
     return map;
 });
 
-const reminders = computed(() => {
-    if (!statusFilter.value) {
+const filteredByProfessional = computed(() => {
+    if (!selectedProfessionalId.value) {
         return allFollowUps.value;
     }
-    return allFollowUps.value.filter(r => r.status === statusFilter.value);
+    return allFollowUps.value.filter(r => r.contactResponsible?.id === selectedProfessionalId.value);
+});
+
+const reminders = computed(() => {
+    let list = filteredByProfessional.value;
+    if (statusFilter.value) {
+        list = list.filter(r => r.status === statusFilter.value);
+    }
+    return list;
 });
 
 const pendingCount = computed(() => {
-    return allFollowUps.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+    return filteredByProfessional.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
 });
 
 const getDaysAgo = (dateStr) => {
@@ -136,6 +162,31 @@ const getDaysAgo = (dateStr) => {
     const now = new Date();
     const diffTime = Math.abs(now - date);
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+};
+
+const initLoggedUserProfessional = async () => {
+    let currentUser = authService.getCurrentUser();
+    if (currentUser && currentUser.professionalId) {
+        selectedProfessionalId.value = currentUser.professionalId;
+    } else {
+        try {
+            const profile = await authService.fetchProfessionalProfile();
+            if (profile && profile.id) {
+                selectedProfessionalId.value = profile.id;
+            }
+        } catch (e) {
+            console.error('Failed to get logged user professional profile', e);
+        }
+    }
+};
+
+const loadProfessionals = async () => {
+    try {
+        const resp = await professionalService.getAll({ page: 0, size: 100 });
+        professionals.value = resp.data?.content || resp.data || [];
+    } catch (e) {
+        console.error('Failed to load professionals', e);
+    }
 };
 
 const loadStatusOptions = async () => {
@@ -165,9 +216,11 @@ const onSaved = () => {
     fetchFollowUps();
 };
 
-onMounted(() => {
-    loadStatusOptions();
-    fetchFollowUps();
+onMounted(async () => {
+    await initLoggedUserProfessional();
+    await loadProfessionals();
+    await loadStatusOptions();
+    await fetchFollowUps();
     window.addEventListener('client-updated', fetchFollowUps);
 });
 
