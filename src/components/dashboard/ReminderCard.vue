@@ -216,7 +216,7 @@ const fetchReminders = async () => {
     loading.value = true;
     error.value = false;
     try {
-        allReminders.value = await listReminders(null, props.serviceId);
+        allReminders.value = await listReminders(null, props.serviceId, ['REBOOKING', 'REMINDER', 'CHURN']);
     } catch(e) {
         error.value = true;
         console.error(e);

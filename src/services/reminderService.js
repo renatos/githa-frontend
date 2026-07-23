@@ -4,7 +4,9 @@ export const listReminders = async (status = null, serviceId = null, type = null
     const params = {};
     if (status) params.status = status;
     if (serviceId) params.serviceId = serviceId;
-    if (type) params.type = type;
+    if (type) {
+        params.type = Array.isArray(type) ? type.join(',') : type;
+    }
     const response = await api.get('/reminders', { params });
     return response.data;
 };
