@@ -267,11 +267,11 @@ onMounted(async () => {
   // Load CAPEX expenses from backend
   try {
     const response = await financialService.getCapexOptions();
-    capexOptions.value = response.data || [];
+    const loadedOptions = response.data || [];
 
     // Prepend active selection if missing from fetched options
-    if (selectedExpenseUnifiedId.value && !capexOptions.value.some(opt => opt.unifiedId === selectedExpenseUnifiedId.value)) {
-      capexOptions.value.unshift({
+    if (selectedExpenseUnifiedId.value && !loadedOptions.some(opt => opt.unifiedId === selectedExpenseUnifiedId.value)) {
+      loadedOptions.unshift({
         unifiedId: selectedExpenseUnifiedId.value,
         id: form.value.operatingExpenseId || form.value.creditCardExpenseId,
         type: form.value.operatingExpenseId ? 'TRANSACTION' : 'CREDIT_CARD_EXPENSE',
@@ -280,6 +280,16 @@ onMounted(async () => {
         date: form.value.date
       });
     }
+
+    capexOptions.value = loadedOptions.sort((a, b) => {
+      const descCompare = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
+      if (descCompare !== 0) {
+        return descCompare;
+      }
+      const dateA = a.date || '';
+      const dateB = b.date || '';
+      return dateB.localeCompare(dateA);
+    });
 
     updateCostAndDate();
   } catch (err) {
