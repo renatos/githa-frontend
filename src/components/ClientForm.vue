@@ -111,7 +111,9 @@
               <div v-else class="flex flex-col gap-2">
                 <div v-for="campaign in sortedClientCampaigns" :key="campaign.id" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
                   <div class="flex flex-col">
-                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ campaign.campaignName || 'Campanha #' + campaign.investmentId }}</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {{ campaign.campaignName || 'Campanha #' + campaign.investmentId }}{{ campaign.campaignDate ? ` (${formatDate(campaign.campaignDate)})` : '' }}
+                    </span>
                     <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Associado em: {{ formatDateTime(campaign.associatedAt) }}</span>
                   </div>
                 </div>
