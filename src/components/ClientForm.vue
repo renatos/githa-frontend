@@ -124,7 +124,7 @@
               <div class="flex gap-4 mt-2">
                 <select v-model="selectedCampaignId" class="form-select flex-1 rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-10 px-3 text-sm transition-colors">
                   <option :value="null">Selecione uma campanha...</option>
-                  <option v-for="c in marketingCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
+                  <option v-for="c in marketingCampaigns" :key="c.id" :value="c.id">{{ c.name }}{{ c.date ? ` (${formatDate(c.date)})` : '' }}</option>
                 </select>
                 <button
                   type="button"
@@ -190,6 +190,7 @@ import { clientService } from '../services/clientService';
 import { enumService } from '../services/enumService';
 import { investmentService } from '../services/investmentService';
 import { useModal } from '../composables/useModal';
+import { formatDate, formatDateTime } from '../utils/formatters';
 
 const activeTab = ref(0);
 
@@ -466,11 +467,7 @@ const save = () => {
   emit('save', payload);
 };
 
-const formatDate = (val) => {
-  if (!val) return '';
-  const date = new Date(val);
-  return date.toLocaleString('pt-BR');
-};
+
 
 // Anamnesis methods
 const openAnamnesisModal = (entity = null, readonly = false, clientDataArg = null) => {

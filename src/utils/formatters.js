@@ -1,8 +1,14 @@
 export const formatDate = (dateString) => {
     if (!dateString) return '';
+    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
+        const [year, month, day] = dateString.trim().split('-');
+        return `${day}/${month}/${year}`;
+    }
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR').format(date);
+    return isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('pt-BR').format(date);
 };
+
+export const formatDateOnly = formatDate;
 
 export const formatShortName = (fullName) => {
     if (!fullName) return '';
