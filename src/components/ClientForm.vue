@@ -109,10 +109,10 @@
                 Nenhuma campanha associada a este cliente.
               </div>
               <div v-else class="flex flex-col gap-2">
-                <div v-for="campaign in form.campaigns" :key="campaign.id" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div v-for="campaign in sortedClientCampaigns" :key="campaign.id" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
                   <div class="flex flex-col">
                     <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ campaign.campaignName || 'Campanha #' + campaign.investmentId }}</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Associado em: {{ formatDate(campaign.associatedAt) }}</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Associado em: {{ formatDateTime(campaign.associatedAt) }}</span>
                   </div>
                 </div>
               </div>
@@ -322,11 +322,32 @@ const anamnesisClientData = ref(null);
 const genders = ref([]);
 const primaryObjectives = ref([]);
 
+const sortedClientCampaigns = computed(() => {
+  if (!form.value.campaigns || form.value.campaigns.length === 0) return [];
+  return [...form.value.campaigns].sort((a, b) => {
+    const dateA = a.associatedAt || '';
+    const dateB = b.associatedAt || '';
+    if (dateA !== dateB) {
+      return dateB.localeCompare(dateA);
+    }
+    return (b.id || 0) - (a.id || 0);
+  });
+});
+
 const loadMarketingCampaigns = async () => {
   try {
     const res = await investmentService.listInvestments();
     const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
-    marketingCampaigns.value = data.filter(i => i.type === 'MARKETING');
+    marketingCampaigns.value = data
+      .filter(i => i.type === 'MARKETING')
+      .sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateA !== dateB) {
+          return dateB.localeCompare(dateA);
+        }
+        return (b.id || 0) - (a.id || 0);
+      });
   } catch (err) {
     console.error('Failed to load campaigns:', err);
   }
