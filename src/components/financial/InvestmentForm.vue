@@ -72,7 +72,7 @@
               :key="opt.unifiedId"
               :value="opt.unifiedId"
             >
-              {{ opt.description }} ({{ formatCurrency(opt.amount) }})
+              {{ opt.description }}{{ opt.date ? ` (${formatDate(opt.date)})` : '' }} ({{ formatCurrency(opt.amount) }})
             </option>
           </select>
           <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -207,6 +207,7 @@ import CurrencyInput from '../common/CurrencyInput.vue';
 import { serviceService } from '../../services/serviceService';
 import { investmentService } from '../../services/investmentService';
 import financialService from '../../services/financialService';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 
 const props = defineProps({
   investment: { type: Object, default: null },
@@ -374,12 +375,5 @@ const save = async () => {
   } finally {
     saving.value = false;
   }
-};
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value || 0);
 };
 </script>
