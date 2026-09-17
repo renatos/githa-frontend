@@ -71,8 +71,9 @@ export default {
     },
 
     // Account Groups
-    getCapexOptions() {
-        return api.get(`${resource}/capex-options`);
+    getCapexOptions(investmentId = null) {
+        const params = investmentId ? { investmentId } : {};
+        return api.get(`${resource}/capex-options`, { params });
     },
 
     getAccountGroups() {

@@ -266,7 +266,8 @@ onMounted(async () => {
 
   // Load CAPEX expenses from backend
   try {
-    const response = await financialService.getCapexOptions();
+    const investmentId = props.investment?.id || null;
+    const response = await financialService.getCapexOptions(investmentId);
     const loadedOptions = response.data || [];
 
     // Prepend active selection if missing from fetched options
