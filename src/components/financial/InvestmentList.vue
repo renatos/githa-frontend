@@ -22,6 +22,8 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      initial-sort-key="id"
+      initial-sort-order="asc"
       @row-click="openEditForm"
     >
       <!-- Type Column -->
@@ -121,17 +123,59 @@ const columns = [
 ];
 
 const fetchDataAdapter = async (params) => {
-  const query = {
-    page: params.page,
-    size: params.size,
-    sort: params.sort,
-    ...params.filters
-  };
-
-  Object.keys(query).forEach(key => (query[key] === null || query[key] === '') && delete query[key]);
-
   const response = await investmentService.listInvestments();
-  return Array.isArray(response.data) ? { content: response.data, totalElements: response.data.length } : response.data;
+  let data = Array.isArray(response.data) ? response.data : (response.data?.content || []);
+
+  // Filtering
+  if (params?.filters) {
+    Object.keys(params.filters).forEach(key => {
+      const filterValue = params.filters[key]?.toLowerCase();
+      if (filterValue) {
+        data = data.filter(item => {
+          const itemValue = String(item[key] || '').toLowerCase();
+          return itemValue.includes(filterValue);
+        });
+      }
+    });
+  }
+
+  // Sorting
+  const sortParam = params?.sort || 'id,asc';
+  const [sortKey, sortOrder] = sortParam.split(',');
+  const isAsc = sortOrder !== 'desc';
+
+  data = [...data].sort((a, b) => {
+    let valA = a[sortKey];
+    let valB = b[sortKey];
+
+    if (valA === null || valA === undefined) return 1;
+    if (valB === null || valB === undefined) return -1;
+
+    if (typeof valA === 'number' && typeof valB === 'number') {
+      return isAsc ? valA - valB : valB - valA;
+    }
+
+    if (sortKey === 'date' || (typeof valA === 'string' && /^\d{4}-\d{2}-\d{2}/.test(valA))) {
+      return isAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+    }
+
+    valA = String(valA);
+    valB = String(valB);
+    return isAsc
+      ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' })
+      : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base' });
+  });
+
+  const totalElements = data.length;
+  const page = params?.page || 0;
+  const size = params?.size || 10;
+  const content = data.slice(page * size, (page + 1) * size);
+
+  return {
+    content,
+    totalElements,
+    totalPages: Math.ceil(totalElements / size)
+  };
 };
 
 const refresh = () => {
