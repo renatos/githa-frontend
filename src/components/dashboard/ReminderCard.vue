@@ -65,7 +65,7 @@
     </div>
 
     <div v-else-if="reminders.length === 0" class="flex items-center justify-center py-8 text-gray-400 dark:text-slate-500 italic text-sm">
-      Nenhum lembrete pendente.
+      {{ emptyMessage }}
     </div>
 
     <div v-else class="space-y-4 overflow-y-auto pr-2" style="max-height: 20rem;">
@@ -111,9 +111,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 
-const emit = defineEmits(['select-client']);
+defineEmits(['select-client']);
 import { listReminders } from '../../services/reminderService';
 import ReminderForm from './ReminderForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
@@ -180,6 +180,17 @@ const reminders = computed(() => {
         return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt));
     }
     return allReminders.value.filter(r => r.status === statusFilter.value);
+});
+
+const emptyMessage = computed(() => {
+    if (!statusFilter.value) {
+        return 'Nenhum lembrete encontrado.';
+    }
+    const selectedOption = statusFilterOptions.value.find(opt => opt.name === statusFilter.value);
+    if (selectedOption?.description) {
+        return `Nenhum lembrete ${selectedOption.description.toLowerCase()} encontrado.`;
+    }
+    return 'Nenhum lembrete encontrado.';
 });
 
 const potentialRevenue = computed(() => {
