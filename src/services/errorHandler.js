@@ -5,6 +5,8 @@ const ERROR_MESSAGES = {
     401: 'Sessão expirada. Por favor, faça login novamente.',
     403: 'Você não tem permissão para realizar esta ação.',
     404: 'Recurso não encontrado.',
+    409: 'Conflito de dados. Já existe um registro ou operação conflitante.',
+    422: 'Regra de negócio ou validação não atendida.',
     500: 'Erro interno do servidor. Tente novamente mais tarde.',
     default: 'Ocorreu um erro inesperado.'
 };
@@ -23,23 +25,41 @@ export const errorHandler = {
         if (error.response) {
             const status = error.response.status;
             message = ERROR_MESSAGES[status] || message;
+            const data = error.response.data;
 
-            // If backend sends a specific error message, use it
-            if (error.response.data && error.response.data.message) {
-                message = error.response.data.message;
-            } else if (error.response.data && error.response.data.error) {
-                message = error.response.data.error;
-            }
+            if (data) {
+                // 1. Prioritize RFC 9457 detail field, then legacy message/error/string
+                if (data.detail) {
+                    message = data.detail;
+                } else if (data.message) {
+                    message = data.message;
+                } else if (data.error) {
+                    message = data.error;
+                } else if (typeof data === 'string' && data.trim()) {
+                    message = data;
+                }
 
-            // Check if it is a warning type validation/business error
-            if (error.response.data && error.response.data.type === 'warning') {
-                const title = error.response.data.title || 'Aviso';
-                confirmBridge.alert({
-                    title: title,
-                    message: message,
-                    type: 'warning'
-                });
-                return message;
+                // 2. Append validation violations if present
+                if (Array.isArray(data.violations) && data.violations.length > 0) {
+                    const violationLines = data.violations
+                        .map(v => (v.field ? `${v.field}: ${v.message}` : v.message))
+                        .filter(Boolean);
+                    if (violationLines.length > 0) {
+                        message = `${message}\n${violationLines.join('\n')}`;
+                    }
+                }
+
+                // 3. Check for business/warning severity (RFC 9457 Githa extension or legacy warning type)
+                const isWarning = (data.severity && String(data.severity).toLowerCase() === 'warning') || data.type === 'warning';
+                if (isWarning) {
+                    const title = data.title || 'Aviso';
+                    confirmBridge.alert({
+                        title: title,
+                        message: message,
+                        type: 'warning'
+                    });
+                    return message;
+                }
             }
         } else if (error.request) {
             message = 'Servidor indisponível. Verifique se o backend está rodando.';
@@ -54,17 +74,19 @@ export const errorHandler = {
         lastError = message;
         lastErrorTime = now;
 
+        const summary = (error.response?.data?.title) || 'Erro';
+
         if (toast) {
             toast.add({
                 severity: severity,
-                summary: 'Erro',
+                summary: summary,
                 detail: message,
                 life: 5000
             });
         } else {
             // Fallback if toast is not available (e.g. during boot)
             confirmBridge.alert({
-                title: 'Erro',
+                title: summary,
                 message: message,
                 type: 'danger'
             });

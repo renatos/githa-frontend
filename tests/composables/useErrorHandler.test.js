@@ -96,6 +96,55 @@ describe('useErrorHandler', () => {
         expect(errorState.value.message).toBe('Something broke');
     });
 
+    it('should show error with RFC 9457 detail and title', () => {
+        const { showError, errorState } = useErrorHandler();
+
+        const error = {
+            response: {
+                status: 409,
+                data: {
+                    type: 'about:blank',
+                    title: 'Conflito de Horário',
+                    status: 409,
+                    detail: 'Já existe um agendamento para este profissional no mesmo horário.',
+                    severity: 'warning'
+                },
+            },
+        };
+
+        showError(error);
+
+        expect(errorState.value.show).toBe(true);
+        expect(errorState.value.title).toBe('Conflito de Horário');
+        expect(errorState.value.message).toBe('Já existe um agendamento para este profissional no mesmo horário.');
+    });
+
+    it('should format RFC 9457 validation violations into details', () => {
+        const { showError, errorState } = useErrorHandler();
+
+        const error = {
+            response: {
+                status: 422,
+                data: {
+                    title: 'Violação de Validação',
+                    detail: 'Um ou mais campos contêm valores inválidos.',
+                    violations: [
+                        { field: 'name', message: 'O nome é obrigatório' },
+                        { field: 'phone', message: 'Telefone inválido' }
+                    ]
+                },
+            },
+        };
+
+        showError(error);
+
+        expect(errorState.value.show).toBe(true);
+        expect(errorState.value.title).toBe('Violação de Validação');
+        expect(errorState.value.message).toBe('Um ou mais campos contêm valores inválidos.');
+        expect(errorState.value.details).toContain('name: O nome é obrigatório');
+        expect(errorState.value.details).toContain('phone: Telefone inválido');
+    });
+
     it('closeError should hide the error', () => {
         const { showError, closeError, errorState } = useErrorHandler();
 
