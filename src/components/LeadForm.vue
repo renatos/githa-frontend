@@ -1,5 +1,6 @@
 <template>
   <BaseModal
+    :show="true"
     :title="isNew ? 'Novo Lead' : `Detalhes do Lead - ${formData.name || formData.phone}`"
     :z-index="zIndex"
     @close="$emit('close')"

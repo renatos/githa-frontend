@@ -1,5 +1,6 @@
 <template>
   <BaseModal
+    :show="true"
     title="Disparo de Notificações em Massa"
     max-width="max-w-4xl"
     :z-index="zIndex"

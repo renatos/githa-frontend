@@ -1,5 +1,6 @@
 <template>
   <BaseModal
+    :show="true"
     title="Histórico de Processos de Disparo em Massa"
     max-width="max-w-5xl"
     :z-index="zIndex"

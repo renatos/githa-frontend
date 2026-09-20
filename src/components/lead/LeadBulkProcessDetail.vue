@@ -1,5 +1,6 @@
 <template>
   <BaseModal
+    :show="true"
     :title="`Processo em Massa #${processId}`"
     max-width="max-w-4xl"
     :z-index="zIndex"
