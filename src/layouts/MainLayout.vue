@@ -53,6 +53,10 @@
           <i class="fa-regular fa-user w-6 text-lg"></i>
           <span class="ml-2">Clientes</span>
         </router-link>
+        <router-link to="/leads" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-filter w-6 text-lg"></i>
+          <span class="ml-2">Leads</span>
+        </router-link>
         <router-link to="/strategic-clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>

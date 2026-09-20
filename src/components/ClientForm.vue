@@ -17,7 +17,7 @@
           <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
             {{ form.id ? firstName : 'Novo Cliente' }}
           </h2>
-          <div v-if="form.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+          <div v-if="form.id || form.originLeadId" class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
             <span v-if="clientAge" class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
               <span class="material-symbols-outlined text-[14px]">cake</span>
               {{ clientAge }} anos
@@ -27,6 +27,14 @@
               Cliente desde {{ clientSince }}
             </span>
             <StatusBadge v-if="form.status" :status="form.status" :status-map="clientStatusMap" />
+            <span
+              v-if="form.originLeadId"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
+              title="Cliente originado de Lead capturado"
+            >
+              <span class="material-symbols-outlined text-[14px]">filter_alt</span>
+              Originado do Lead #{{ form.originLeadId }}
+            </span>
           </div>
         </div>
       </div>
@@ -269,6 +277,7 @@ const clientSince = computed(() => {
 
 const form = ref({
   id: null,
+  originLeadId: null,
   name: '',
   email: '',
   phone: '',
@@ -433,6 +442,7 @@ const populateForm = (clientData) => {
 
   form.value = {
     ...clientData,
+    originLeadId: clientData.originLeadId || null,
     birthday: clientData.birthday || '',
     personalData: {
       address: clientData.personalData?.address || '',
@@ -472,9 +482,11 @@ onMounted(async () => {
     console.error('Failed to load enum options', error);
   }
 
-  if (props.client.id) {
+  if (props.client && Object.keys(props.client).length > 0) {
     populateForm(props.client);
-    loadMarketingCampaigns();
+    if (props.client.id) {
+      loadMarketingCampaigns();
+    }
   }
 });
 
