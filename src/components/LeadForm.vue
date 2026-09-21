@@ -104,6 +104,8 @@
             <option value="GOOGLE">Google Ads / Pesquisa</option>
             <option value="FACEBOOK">Facebook Ads</option>
             <option value="INSTAGRAM">Instagram Ads / Direct</option>
+            <option value="MANUAL">Cadastro Manual</option>
+            <option value="WHATSAPP_INCOMING">WhatsApp Recebido</option>
           </select>
         </div>
 
