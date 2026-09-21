@@ -138,6 +138,31 @@
       </template>
 
       <!-- Custom Cell: Source -->
+      <template #cell-source="{ value }">
+        <span
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+          :class="sourceBadgeClass(value)"
+        >
+          <i :class="sourceIconClass(value)"></i>
+          {{ sourceLabel(value) }}
+        </span>
+      </template>
+
+      <!-- Custom Cell: Inferred Service -->
+      <template #cell-inferredService="{ value }">
+        <span v-if="value" class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-medium">
+          {{ value }}
+        </span>
+        <span v-else class="text-slate-400">-</span>
+      </template>
+
+      <!-- Custom Cell: Message Count -->
+      <template #cell-messageCount="{ item }">
+        <span class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+          <i class="fa-regular fa-comment-dots text-slate-400"></i>
+          {{ item.conversationHistory?.length || 0 }}
+        </span>
+      </template>
 
       <!-- Custom Cell: Status -->
       <template #cell-status="{ item }">
