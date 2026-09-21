@@ -561,7 +561,10 @@ const statusLabelText = (status) => {
 
 const formatPhone = (phone) => {
   if (!phone) return '-';
-  const cleaned = ('' + phone).replace(/\D/g, '');
+  let cleaned = ('' + phone).replace(/\D/g, '');
+  if (cleaned.startsWith('55') && (cleaned.length === 12 || cleaned.length === 13)) {
+    cleaned = cleaned.substring(2);
+  }
   if (cleaned.length === 11) {
     return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   } else if (cleaned.length === 10) {

@@ -39,20 +39,21 @@ export const round2 = (val) => Math.round((val || 0) * 100) / 100;
 
 export const formatPhone = (value) => {
     if (!value) return '';
-    const numericValue = value.replace(/\D/g, '');
+    let numericValue = value.replace(/\D/g, '');
 
-    // (DD) 99999-9999
-    const truncated = numericValue.substring(0, 11);
+    // Se vier com o DDI 55 (Brasil) e tiver 12 ou 13 dígitos, remove o 55 para formatar (DDD) Número
+    if (numericValue.startsWith('55') && (numericValue.length === 12 || numericValue.length === 13)) {
+        numericValue = numericValue.substring(2);
+    }
 
-    let formatted = '';
-    if (truncated.length > 0) {
-        formatted += '(' + truncated.substring(0, 2);
+    if (numericValue.length === 11) {
+        return `(${numericValue.substring(0, 2)}) ${numericValue.substring(2, 7)}-${numericValue.substring(7)}`;
     }
-    if (truncated.length > 2) {
-        formatted += ') ' + truncated.substring(2, 7);
+    if (numericValue.length === 10) {
+        return `(${numericValue.substring(0, 2)}) ${numericValue.substring(2, 6)}-${numericValue.substring(6)}`;
     }
-    if (truncated.length > 7) {
-        formatted += '-' + truncated.substring(7, 11);
+    if (numericValue.length > 2 && numericValue.length < 10) {
+        return `(${numericValue.substring(0, 2)}) ${numericValue.substring(2)}`;
     }
-    return formatted;
+    return numericValue;
 };
