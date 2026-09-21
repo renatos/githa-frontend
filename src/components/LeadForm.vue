@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     :show="true"
-    :title="isNew ? 'Novo Lead' : `Detalhes do Lead - ${formData.name || formData.phone}`"
+    :title="isNew ? 'Novo Lead' : `Detalhes do Lead - ${formData.name || formatPhone(formData.phone) || 'Sem Nome'}`"
     :z-index="zIndex"
     @close="$emit('close')"
   >
@@ -85,11 +85,9 @@
 
         <!-- Phone -->
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Telefone *</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Telefone</label>
           <PhoneInput
             v-model="formData.phone"
-            :disabled="!isNew"
-            required
           />
         </div>
 
@@ -301,6 +299,7 @@ import PhoneInput from './common/PhoneInput.vue';
 import BaseWhatsAppButton from './common/BaseWhatsAppButton.vue';
 import { leadService } from '../services/leadService';
 import { toastBridge } from '../services/toastBridge';
+import { formatPhone } from '../utils/formatters';
 
 const props = defineProps({
   lead: {
@@ -455,7 +454,7 @@ const handleConvert = () => {
 };
 
 const handleSubmit = async () => {
-  if (!formData.value.phone?.trim()) {
+  if (!formData.value.phone?.trim() && !formData.value.whatsAppLid?.trim()) {
     toastBridge.getToast().add({
       severity: 'warn',
       summary: 'Campo Obrigatório',
