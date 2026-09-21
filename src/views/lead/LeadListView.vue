@@ -133,13 +133,13 @@
               ~{{ item.profileName }}
             </span>
           </div>
-          <div class="text-xs text-slate-400">{{ formatPhone(item.phone) }}</div>
+          <div class="text-xs text-slate-400">{{ formatPhone(item.phone) || '-' }}</div>
         </div>
       </template>
 
       <!-- Custom Cell: Phone -->
       <template #cell-phone="{ value }">
-        <span class="font-mono text-xs">{{ formatPhone(value) }}</span>
+        <span class="font-mono text-xs">{{ formatPhone(value) || '-' }}</span>
       </template>
 
       <!-- Custom Cell: Source -->
