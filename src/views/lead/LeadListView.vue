@@ -265,6 +265,7 @@ import LeadBulkProcessList from '@/components/lead/LeadBulkProcessList.vue';
 import { leadService } from '@/services/leadService';
 import { clientService } from '@/services/clientService';
 import { toastBridge } from '@/services/toastBridge';
+import { formatPhone as formatPhoneUtil } from '@/utils/formatters';
 
 const tableRef = ref(null);
 
@@ -538,17 +539,7 @@ const statusLabelText = (status) => {
 };
 
 const formatPhone = (phone) => {
-  if (!phone) return '-';
-  let cleaned = ('' + phone).replace(/\D/g, '');
-  if (cleaned.startsWith('55') && (cleaned.length === 12 || cleaned.length === 13)) {
-    cleaned = cleaned.substring(2);
-  }
-  if (cleaned.length === 11) {
-    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } else if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  }
-  return phone;
+  return formatPhoneUtil(phone) || '-';
 };
 
 const formatDateTime = (isoStr) => {

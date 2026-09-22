@@ -349,6 +349,7 @@ import BaseModal from '../common/BaseModal.vue';
 import { leadService } from '../../services/leadService';
 import { serviceService } from '../../services/serviceService';
 import { toastBridge } from '../../services/toastBridge';
+import { formatPhone as formatPhoneUtil } from '../../utils/formatters';
 
 const props = defineProps({
   initialData: {
@@ -514,14 +515,7 @@ const insertTag = (tag) => {
 };
 
 const formatPhone = (phone) => {
-  if (!phone) return '-';
-  const cleaned = ('' + phone).replace(/\D/g, '');
-  if (cleaned.length === 11) {
-    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } else if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  }
-  return phone;
+  return formatPhoneUtil(phone) || '-';
 };
 
 const formatDate = (isoStr) => {

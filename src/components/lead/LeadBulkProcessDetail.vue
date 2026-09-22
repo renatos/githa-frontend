@@ -157,6 +157,7 @@ import BaseModal from '../common/BaseModal.vue';
 import { leadService } from '../../services/leadService';
 import { toastBridge } from '../../services/toastBridge';
 import { confirmBridge } from '../../services/confirmBridge';
+import { formatPhone as formatPhoneUtil } from '../../utils/formatters';
 
 const props = defineProps({
   processId: {
@@ -278,14 +279,7 @@ const itemStatusLabel = (status) => {
 };
 
 const formatPhone = (phone) => {
-  if (!phone) return '-';
-  const cleaned = ('' + phone).replace(/\D/g, '');
-  if (cleaned.length === 11) {
-    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } else if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  }
-  return phone;
+  return formatPhoneUtil(phone) || '-';
 };
 
 const formatDateTime = (isoStr) => {

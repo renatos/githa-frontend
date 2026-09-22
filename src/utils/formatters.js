@@ -39,7 +39,7 @@ export const round2 = (val) => Math.round((val || 0) * 100) / 100;
 
 export const formatPhone = (value) => {
     if (!value) return '';
-    let numericValue = value.replace(/\D/g, '');
+    let numericValue = String(value).replace(/\D/g, '');
 
     // Se vier com o DDI 55 (Brasil) e tiver 12 ou 13 dígitos, remove o 55 para formatar (DDD) Número
     if (numericValue.startsWith('55') && (numericValue.length === 12 || numericValue.length === 13)) {
