@@ -122,6 +122,8 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchLeadsData"
+      :initial-sort-key="'createdAt'"
+      :initial-sort-order="'desc'"
       @row-click="openEditLeadForm"
     >
       <!-- Custom Cell: Name -->
