@@ -113,8 +113,8 @@
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
             >
               <option value="">Selecione um serviço...</option>
-              <option v-for="srv in availableServices" :key="srv.id" :value="srv.name">
-                {{ srv.name }}
+              <option v-for="srv in availableServices" :key="srv.id" :value="srv.name ? srv.name.trim() : ''">
+                {{ srv.name ? srv.name.trim() : '' }}
               </option>
             </select>
           </div>
@@ -411,7 +411,7 @@ onMounted(async () => {
       const crit = props.initialData.criteria;
       if (crit.service) {
         criteriaType.value = 'SERVICE';
-        selectedService.value = crit.service;
+        selectedService.value = crit.service.trim();
       } else if (crit.createdMonth) {
         criteriaType.value = 'MONTH';
         selectedMonth.value = crit.createdMonth;
@@ -441,7 +441,7 @@ const fetchMatchingLeads = async () => {
     };
 
     if (criteriaType.value === 'SERVICE' && selectedService.value) {
-      params.inferredService = selectedService.value;
+      params.inferredService = selectedService.value.trim();
     }
     if (selectedSource.value) {
       params.source = selectedSource.value;

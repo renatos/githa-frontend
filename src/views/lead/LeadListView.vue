@@ -324,7 +324,7 @@ const fetchLeadsData = async (params) => {
     query.source = filters.value.source;
   }
   if (filters.value.inferredService) {
-    query.inferredService = filters.value.inferredService;
+    query.inferredService = filters.value.inferredService.trim();
   }
   if (filters.value.optOut !== '') {
     query.optOut = filters.value.optOut === 'true';
