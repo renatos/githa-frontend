@@ -5,7 +5,7 @@
     :z-index="zIndex"
     @close="$emit('close')"
   >
-    <div class="space-y-6 max-h-[75vh] overflow-y-auto px-1">
+    <div class="space-y-6">
       <!-- Status and Action Bar (Edit Mode Only) -->
       <div v-if="!isNew" class="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-2">
@@ -169,7 +169,7 @@
         </div>
 
         <!-- Conversation Tab -->
-        <div v-if="activeTab === 'conversation'" class="space-y-3 max-h-60 overflow-y-auto p-2">
+        <div v-if="activeTab === 'conversation'" class="space-y-3 p-1">
           <div v-if="!formData.conversationHistory || formData.conversationHistory.length === 0" class="text-center py-6 text-slate-400 text-sm">
             Nenhuma mensagem registrada no histórico.
           </div>
@@ -193,7 +193,7 @@
         </div>
 
         <!-- Notifications Tab -->
-        <div v-if="activeTab === 'notifications'" class="space-y-3 max-h-60 overflow-y-auto p-2">
+        <div v-if="activeTab === 'notifications'" class="space-y-3 p-1">
           <div v-if="!formData.notificationHistory || formData.notificationHistory.length === 0" class="text-center py-6 text-slate-400 text-sm">
             Nenhuma notificação em massa registrada para este lead.
           </div>
