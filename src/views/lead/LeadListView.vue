@@ -60,7 +60,7 @@
     </div>
 
     <!-- Secondary Filters Bar -->
-    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
       <!-- Search Inferred Service -->
       <div>
         <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Procedimento Procurado</label>
@@ -87,6 +87,21 @@
           <option value="INSTAGRAM">Instagram</option>
           <option value="MANUAL">Manual</option>
           <option value="WHATSAPP_INCOMING">WhatsApp Recebido</option>
+        </select>
+      </div>
+
+      <!-- Marketing Campaign Filter -->
+      <div>
+        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Campanha</label>
+        <select
+          v-model="filters.campaignId"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+          @change="refreshTable"
+        >
+          <option value="">Todas as campanhas</option>
+          <option v-for="c in marketingCampaigns" :key="c.id" :value="c.id">
+            {{ c.name }}
+          </option>
         </select>
       </div>
 
@@ -150,6 +165,15 @@
         </span>
       </template>
 
+      <!-- Custom Cell: Marketing Campaign -->
+      <template #cell-campaignName="{ item }">
+        <span v-if="item.campaignName" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800" :title="item.campaignName">
+          <span class="material-symbols-outlined text-[13px]">campaign</span>
+          <span class="truncate max-w-[130px]">{{ item.campaignName }}</span>
+        </span>
+        <span v-else class="text-slate-400 text-xs">-</span>
+      </template>
+
       <!-- Custom Cell: Inferred Service -->
       <template #cell-inferredService="{ value }">
         <span v-if="value" class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-medium">
@@ -204,16 +228,6 @@
           >
             <span class="material-symbols-outlined text-[18px]">person_add</span>
           </button>
-
-          <!-- Edit / View Lead -->
-          <button
-            type="button"
-            class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-            title="Ver / Editar Lead"
-            @click.stop="openEditLeadForm(item)"
-          >
-            <span class="material-symbols-outlined text-[18px]">edit</span>
-          </button>
         </div>
       </template>
     </GenericTable>
@@ -254,7 +268,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import GenericTable from '@/components/common/GenericTable.vue';
 import AiContextBadge from '@/components/common/AiContextBadge.vue';
 import BaseWhatsAppButton from '@/components/common/BaseWhatsAppButton.vue';
@@ -263,6 +277,7 @@ import ClientForm from '@/components/ClientForm.vue';
 import LeadBulkNotifyWizard from '@/components/lead/LeadBulkNotifyWizard.vue';
 import LeadBulkProcessList from '@/components/lead/LeadBulkProcessList.vue';
 import { leadService } from '@/services/leadService';
+import { investmentService } from '@/services/investmentService';
 import { clientService } from '@/services/clientService';
 import { toastBridge } from '@/services/toastBridge';
 import { formatPhone as formatPhoneUtil } from '@/utils/formatters';
@@ -282,15 +297,41 @@ const wizardInitialData = ref(null);
 
 const showBulkProcessList = ref(false);
 
+const marketingCampaigns = ref([]);
+
 // Filter states
 const selectedStatus = ref('');
 const filters = ref({
   inferredService: '',
   source: '',
+  campaignId: '',
   optOut: ''
 });
 
 let debounceTimer = null;
+
+const loadMarketingCampaigns = async () => {
+  try {
+    const res = await investmentService.listInvestments();
+    const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
+    marketingCampaigns.value = data
+      .filter(i => i.type === 'MARKETING')
+      .sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateA !== dateB) {
+          return dateB.localeCompare(dateA);
+        }
+        return (b.id || 0) - (a.id || 0);
+      });
+  } catch (err) {
+    console.error('Erro ao carregar campanhas de marketing:', err);
+  }
+};
+
+onMounted(() => {
+  loadMarketingCampaigns();
+});
 
 const statusOptions = [
   { label: 'Todos os Status', value: '', dotColor: null },
@@ -303,11 +344,12 @@ const statusOptions = [
 
 const columns = [
   { key: 'name', label: 'Contato / Nome', sortable: true, filterable: true },
-  { key: 'source', label: 'Origem', sortable: true, width: '130px' },
+  { key: 'source', label: 'Origem', sortable: true, width: '110px' },
+  { key: 'campaignName', label: 'Campanha', sortable: false, width: '130px' },
   { key: 'inferredService', label: 'Procedimento', sortable: true },
-  { key: 'messageCount', label: 'Msgs', align: 'center', width: '70px', sortable: false },
-  { key: 'status', label: 'Status', align: 'center', width: '140px', sortable: true },
-  { key: 'createdAt', label: 'Data de Entrada', sortable: true, width: '140px' }
+  { key: 'messageCount', label: 'Msgs', align: 'center', width: '60px', sortable: false },
+  { key: 'status', label: 'Status', align: 'center', width: '125px', sortable: true },
+  { key: 'createdAt', label: 'Data de Entrada', sortable: true, width: '130px' }
 ];
 
 const fetchLeadsData = async (params) => {
@@ -323,6 +365,9 @@ const fetchLeadsData = async (params) => {
   }
   if (filters.value.source) {
     query.source = filters.value.source;
+  }
+  if (filters.value.campaignId) {
+    query.campaignId = filters.value.campaignId;
   }
   if (filters.value.inferredService) {
     query.inferredService = filters.value.inferredService.trim();
@@ -359,6 +404,7 @@ const resetFilters = () => {
   filters.value = {
     inferredService: '',
     source: '',
+    campaignId: '',
     optOut: ''
   };
   refreshTable();

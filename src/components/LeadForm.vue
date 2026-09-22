@@ -2,6 +2,7 @@
   <BaseModal
     :show="true"
     :title="isNew ? 'Novo Lead' : `Detalhes do Lead - ${formData.name || formatPhone(formData.phone) || 'Sem Nome'}`"
+    max-width="max-w-2xl"
     :z-index="zIndex"
     @close="$emit('close')"
   >
@@ -107,8 +108,22 @@
           </select>
         </div>
 
-        <!-- Inferred Service -->
+        <!-- Marketing Campaign -->
         <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Campanha de Marketing de Origem</label>
+          <select
+            v-model="formData.campaignId"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+          >
+            <option :value="null">Nenhuma / Sem campanha vinculada</option>
+            <option v-for="c in marketingCampaigns" :key="c.id" :value="c.id">
+              {{ c.name }}{{ c.date ? ` (${formatCampaignDate(c.date)})` : '' }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Inferred Service -->
+        <div class="md:col-span-2">
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Procedimento Procurado</label>
           <input
             v-model="formData.inferredService"
@@ -293,11 +308,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import BaseModal from './common/BaseModal.vue';
 import PhoneInput from './common/PhoneInput.vue';
 import BaseWhatsAppButton from './common/BaseWhatsAppButton.vue';
 import { leadService } from '../services/leadService';
+import { investmentService } from '../services/investmentService';
 import { toastBridge } from '../services/toastBridge';
 import { formatPhone } from '../utils/formatters';
 
@@ -318,6 +334,7 @@ const isNew = computed(() => !props.lead || !props.lead.id);
 const loading = ref(false);
 const activeTab = ref('conversation');
 const showDiscardModal = ref(false);
+const marketingCampaigns = ref([]);
 
 const formData = ref({
   id: null,
@@ -404,6 +421,42 @@ const formatDate = (isoStr) => {
     return isoStr;
   }
 };
+
+const formatCampaignDate = (isoDate) => {
+  if (!isoDate) return '';
+  try {
+    const parts = isoDate.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return isoDate;
+  } catch {
+    return isoDate;
+  }
+};
+
+const loadMarketingCampaigns = async () => {
+  try {
+    const res = await investmentService.listInvestments();
+    const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
+    marketingCampaigns.value = data
+      .filter(i => i.type === 'MARKETING')
+      .sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateA !== dateB) {
+          return dateB.localeCompare(dateA);
+        }
+        return (b.id || 0) - (a.id || 0);
+      });
+  } catch (err) {
+    console.error('Erro ao carregar campanhas de marketing:', err);
+  }
+};
+
+onMounted(() => {
+  loadMarketingCampaigns();
+});
 
 const getNotificationStatusBadgeClass = (status) => {
   switch (status) {
