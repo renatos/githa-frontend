@@ -195,7 +195,7 @@
         <!-- Notifications Tab -->
         <div v-if="activeTab === 'notifications'" class="space-y-3 max-h-60 overflow-y-auto p-2">
           <div v-if="!formData.notificationHistory || formData.notificationHistory.length === 0" class="text-center py-6 text-slate-400 text-sm">
-            Nenhuma notificação em massa enviada para este lead.
+            Nenhuma notificação em massa registrada para este lead.
           </div>
           <div
             v-for="(notif, idx) in formData.notificationHistory"
@@ -203,12 +203,12 @@
             class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-1"
           >
             <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span>{{ formatDate(notif.timestamp) }}</span>
+              <span>{{ notif.status === 'PENDING' ? 'Agendado para: ' : 'Data: ' }}{{ formatDate(notif.timestamp) }}</span>
               <span
                 class="px-2 py-0.5 rounded-full font-medium"
-                :class="notif.status === 'SENT' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'"
+                :class="getNotificationStatusBadgeClass(notif.status)"
               >
-                {{ notif.status === 'SENT' ? 'Enviado' : 'Falhou' }}
+                {{ getNotificationStatusBadgeLabel(notif.status) }}
               </span>
             </div>
             <p class="text-slate-800 dark:text-slate-200 font-normal whitespace-pre-wrap">{{ notif.message }}</p>
@@ -392,6 +392,35 @@ const formatDate = (isoStr) => {
     return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   } catch {
     return isoStr;
+  }
+};
+
+const getNotificationStatusBadgeClass = (status) => {
+  switch (status) {
+    case 'SENT':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    case 'PENDING':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
+    case 'CANCELLED':
+      return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+    case 'FAILED':
+    default:
+      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300';
+  }
+};
+
+const getNotificationStatusBadgeLabel = (status) => {
+  switch (status) {
+    case 'SENT':
+      return 'Enviado';
+    case 'PENDING':
+      return 'Pendente';
+    case 'CANCELLED':
+      return 'Cancelado';
+    case 'FAILED':
+      return 'Falhou';
+    default:
+      return status || '-';
   }
 };
 
