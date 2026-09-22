@@ -341,9 +341,19 @@ const discardData = ref({
   notes: ''
 });
 
-watch(() => props.lead, (newVal) => {
+watch(() => props.lead, async (newVal) => {
   if (newVal) {
     formData.value = { ...newVal };
+    if (newVal.id) {
+      try {
+        const response = await leadService.getById(newVal.id);
+        if (response?.data) {
+          formData.value = { ...response.data };
+        }
+      } catch (err) {
+        console.error('Erro ao buscar detalhes completos do lead:', err);
+      }
+    }
   } else {
     formData.value = {
       id: null,
