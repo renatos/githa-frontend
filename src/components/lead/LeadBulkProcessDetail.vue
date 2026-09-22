@@ -19,7 +19,7 @@
             <div class="flex items-center gap-2">
               <span class="text-xs font-semibold uppercase text-slate-500">Status:</span>
               <span
-                class="px-2.5 py-1 text-xs font-bold rounded-full"
+                class="px-2.5 py-1 text-xs font-bold rounded-full whitespace-nowrap inline-block"
                 :class="statusBadgeClass(processData.status)"
               >
                 {{ statusLabel(processData.status) }}

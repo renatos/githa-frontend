@@ -2,7 +2,7 @@
   <BaseModal
     :show="true"
     title="Histórico de Processos de Disparo em Massa"
-    max-width="max-w-5xl"
+    max-width="max-w-6xl"
     :z-index="zIndex"
     @close="$emit('close')"
   >
@@ -44,8 +44,8 @@
               <th class="px-4 py-3 text-center">Pendentes</th>
               <th class="px-4 py-3 text-center">Enviados</th>
               <th class="px-4 py-3 text-center">Falhas</th>
-              <th class="px-4 py-3 text-left">Status</th>
-              <th class="px-4 py-3 text-left">Data de Criação</th>
+              <th class="px-4 py-3 text-center whitespace-nowrap">Status</th>
+              <th class="px-4 py-3 text-left whitespace-nowrap">Data de Criação</th>
               <th class="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
@@ -74,15 +74,15 @@
               <td class="px-4 py-3 text-center text-rose-600 dark:text-rose-400 font-semibold">
                 {{ proc.failedCount || 0 }}
               </td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 text-center whitespace-nowrap">
                 <span
-                  class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                  class="px-2.5 py-1 text-[11px] font-bold rounded-full whitespace-nowrap inline-block"
                   :class="statusBadgeClass(proc.status)"
                 >
                   {{ statusLabel(proc.status) }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-slate-500">
+              <td class="px-4 py-3 text-slate-500 whitespace-nowrap">
                 {{ formatDateTime(proc.createdAt) }}
               </td>
               <td class="px-4 py-3 text-right space-x-1" @click.stop>
