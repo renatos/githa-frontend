@@ -14,7 +14,7 @@
 
       <label class="flex flex-col">
         <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Telefone</p>
-        <input v-model="form.phone" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" type="tel" maxlength="15" placeholder="(DD) 99999-9999" @input="onPhoneInput" />
+        <PhoneInput v-model="form.phone" />
       </label>
 
       <label class="flex flex-col">
@@ -64,7 +64,7 @@ import { professionalService } from '../services/professionalService';
 import { userService } from '../services/userService';
 import BaseModal from './common/BaseModal.vue';
 import BaseLookup from './common/BaseLookup.vue';
-import { formatPhone } from '../utils/formatters';
+import PhoneInput from './common/PhoneInput.vue';
 
 const props = defineProps({
   professional: { type: Object, default: () => ({}) },
@@ -92,12 +92,6 @@ onMounted(() => {
 
 const save = () => {
   emit('save', form.value);
-};
-
-const onPhoneInput = (event) => {
-  const formatted = formatPhone(event.target.value);
-  form.value.phone = formatted;
-  event.target.value = formatted;
 };
 </script>
 

@@ -33,12 +33,13 @@ const emit = defineEmits(['update:modelValue']);
 
 const formatPhone = (value) => {
   if (!value) return '';
-  let digits = value.replace(/\D/g, '');
+  let digits = String(value).replace(/\D/g, '');
   if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
     digits = digits.substring(2);
   }
   digits = digits.substring(0, 11);
 
+  if (digits.length === 0) return '';
   if (digits.length <= 2) return `(${digits}`;
   if (digits.length <= 6) return `(${digits.substring(0, 2)}) ${digits.substring(2)}`;
   if (digits.length <= 10) return `(${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`;
@@ -48,8 +49,13 @@ const formatPhone = (value) => {
 const displayValue = computed(() => formatPhone(props.modelValue));
 
 const onInput = (event) => {
-  const formatted = formatPhone(event.target.value);
-  event.target.value = formatted;
-  emit('update:modelValue', formatted);
+  let digits = event.target.value.replace(/\D/g, '');
+  if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+    digits = digits.substring(2);
+  }
+  digits = digits.substring(0, 11);
+
+  event.target.value = formatPhone(digits);
+  emit('update:modelValue', digits);
 };
 </script>
