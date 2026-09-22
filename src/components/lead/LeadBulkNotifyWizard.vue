@@ -387,12 +387,17 @@ const previewMessage = computed(() => {
   if (!messageTemplate.value.trim()) {
     return 'Digite a mensagem acima para visualizar a prévia.';
   }
-  const sampleName = matchingLeads.value.length > 0 ? (matchingLeads.value[0].name || 'Maria Silva') : 'Maria Silva';
-  const sampleService = (matchingLeads.value.length > 0 && matchingLeads.value[0].inferredService) || selectedService.value || 'Limpeza de Pele';
+  const sampleLead = matchingLeads.value.find(lead => selectedLeadIds.value.includes(lead.id))
+    || (matchingLeads.value.length > 0 ? matchingLeads.value[0] : null);
+
+  const sampleName = (sampleLead && sampleLead.name?.trim()) ? sampleLead.name.trim() : 'Cliente';
+  const sampleService = (sampleLead && sampleLead.inferredService?.trim())
+    ? sampleLead.inferredService.trim()
+    : (selectedService.value || 'nossos procedimentos');
 
   return messageTemplate.value
-    .replace(/{nome}/g, sampleName)
-    .replace(/{servico}/g, sampleService);
+    .replace(/{nome}/gi, sampleName)
+    .replace(/{servi[cç]o}/gi, sampleService);
 });
 
 onMounted(async () => {
