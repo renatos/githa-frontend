@@ -43,6 +43,11 @@ export const dispatchMessageService = {
     return response.data;
   },
 
+  generateFollowUpCandidates: async (data = {}) => {
+    const response = await api.post('/dispatch-messages/generate-follow-up-candidates', data);
+    return response.data;
+  },
+
   enqueueFromReminder: async (reminderId, data = {}) => {
     const response = await api.post(`/dispatch-messages/from-reminder/${reminderId}`, data);
     return response.data;
