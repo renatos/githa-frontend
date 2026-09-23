@@ -30,20 +30,23 @@
 
     <!-- Tabs Navigation -->
     <div class="border-b border-slate-200 dark:border-slate-700">
-      <nav class="flex space-x-6 text-sm font-medium">
+      <nav class="flex space-x-2 sm:space-x-6 text-xs sm:text-sm font-medium overflow-x-auto no-scrollbar justify-between sm:justify-start">
         <button
           type="button"
-          class="pb-3 border-b-2 flex items-center gap-2 transition-colors"
+          class="pb-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 cursor-pointer"
           :class="activeTab === 'pending'
             ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 font-semibold'
             : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
           @click="switchTab('pending')"
         >
-          <i class="fa-solid fa-clock"></i>
-          <span>Aguardando Aprovação</span>
+          <i class="fa-solid fa-clock text-xs sm:text-sm"></i>
+          <span>
+            <span class="sm:hidden">Aprovação</span>
+            <span class="hidden sm:inline">Aguardando Aprovação</span>
+          </span>
           <span
             v-if="pendingCount > 0"
-            class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+            class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
           >
             {{ pendingCount }}
           </span>
@@ -51,17 +54,20 @@
 
         <button
           type="button"
-          class="pb-3 border-b-2 flex items-center gap-2 transition-colors"
+          class="pb-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 cursor-pointer"
           :class="activeTab === 'queue'
             ? 'border-blue-500 text-blue-600 dark:text-blue-400 font-semibold'
             : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
           @click="switchTab('queue')"
         >
-          <i class="fa-solid fa-list-check"></i>
-          <span>Fila de Envio (Agendadas)</span>
+          <i class="fa-solid fa-list-check text-xs sm:text-sm"></i>
+          <span>
+            <span class="sm:hidden">Fila de Envio</span>
+            <span class="hidden sm:inline">Fila de Envio (Agendadas)</span>
+          </span>
           <span
             v-if="queueMessages.length > 0"
-            class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+            class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
           >
             {{ queueMessages.length }}
           </span>
@@ -69,28 +75,179 @@
 
         <button
           type="button"
-          class="pb-3 border-b-2 flex items-center gap-2 transition-colors"
+          class="pb-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 cursor-pointer"
           :class="activeTab === 'history'
             ? 'border-slate-500 text-slate-700 dark:text-white font-semibold'
             : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
           @click="switchTab('history')"
         >
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>Histórico & Falhas</span>
+          <i class="fa-solid fa-clock-rotate-left text-xs sm:text-sm"></i>
+          <span>
+            <span class="sm:hidden">Histórico</span>
+            <span class="hidden sm:inline">Histórico & Falhas</span>
+          </span>
         </button>
 
         <button
           type="button"
-          class="pb-3 border-b-2 flex items-center gap-2 transition-colors"
+          class="pb-3 border-b-2 flex items-center gap-1.5 sm:gap-2 transition-colors shrink-0 cursor-pointer"
           :class="activeTab === 'templates'
             ? 'border-purple-500 text-purple-600 dark:text-purple-400 font-semibold'
             : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
           @click="switchTab('templates')"
         >
-          <i class="fa-solid fa-file-lines"></i>
-          <span>Modelos de Mensagem (Templates)</span>
+          <i class="fa-solid fa-file-lines text-xs sm:text-sm"></i>
+          <span>
+            <span class="sm:hidden">Templates</span>
+            <span class="hidden sm:inline">Modelos de Mensagem (Templates)</span>
+          </span>
         </button>
       </nav>
+    </div>
+
+    <!-- Origin Filter Bar (Active on pending, queue, history) -->
+    <div v-if="activeTab !== 'templates'" class="flex flex-col gap-3">
+      <!-- Desktop Origin Bullets -->
+      <div class="hidden sm:block">
+        <StatusBulletsBar
+          v-model="selectedOrigin"
+          :items="originFilterItems"
+        />
+      </div>
+
+      <!-- Mobile Origin Select -->
+      <div class="sm:hidden">
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          Origem da Mensagem
+        </label>
+        <select
+          v-model="selectedOrigin"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs"
+        >
+          <option v-for="item in originFilterItems" :key="item.value" :value="item.value">
+            {{ item.label }} ({{ item.count }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Mobile Secondary Filters Toggle Button -->
+      <div class="sm:hidden flex items-center justify-between gap-2 pt-0.5">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer"
+          :class="showMobileFilters || activeFiltersCount > 0
+            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700 font-semibold'
+            : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
+          @click="showMobileFilters = !showMobileFilters"
+        >
+          <i class="fa-solid fa-sliders text-xs"></i>
+          <span>Filtros Adicionais</span>
+          <span
+            v-if="activeFiltersCount > 0"
+            class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-600 text-white"
+          >
+            {{ activeFiltersCount }}
+          </span>
+          <i
+            class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ml-0.5"
+            :class="{ 'rotate-180': showMobileFilters }"
+          ></i>
+        </button>
+
+        <button
+          v-if="activeFiltersCount > 0 || selectedOrigin"
+          type="button"
+          class="text-xs text-rose-600 dark:text-rose-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
+          @click="resetFilters"
+        >
+          <i class="fa-solid fa-filter-circle-xmark text-xs"></i>
+          Limpar Filtros
+        </button>
+      </div>
+
+      <!-- Secondary Filters Bar (Collapsible on Mobile, Grid on Desktop) -->
+      <div
+        class="p-3.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs shadow-xs"
+        :class="showMobileFilters ? 'grid' : 'hidden sm:grid'"
+      >
+        <!-- Search Client or Phone -->
+        <div>
+          <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Buscar Cliente / Telefone</label>
+          <input
+            v-model="filters.search"
+            type="text"
+            placeholder="Nome ou telefone..."
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          />
+        </div>
+
+        <!-- Service / Procedure -->
+        <div>
+          <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Procedimento</label>
+          <select
+            v-model="filters.service"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          >
+            <option value="">Todos os procedimentos</option>
+            <option v-for="srv in availableServices" :key="srv" :value="srv">
+              {{ srv }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Professional -->
+        <div>
+          <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Profissional Responsável</label>
+          <select
+            v-model="filters.professionalId"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          >
+            <option :value="null">Todos os profissionais</option>
+            <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
+              {{ prof.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Message Status -->
+        <div>
+          <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Status da Mensagem</label>
+          <select
+            v-model="filters.status"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          >
+            <option value="">Todos os status</option>
+            <option v-for="st in availableStatusOptions" :key="st.name" :value="st.name">
+              {{ st.description }} ({{ st.count }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Sort By -->
+        <div>
+          <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Ordenar Por</label>
+          <select
+            v-model="filters.sortBy"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+          >
+            <option value="POTENTIAL_DESC">Maior Potencial / Ticket</option>
+            <option value="DATE_ASC">Mais Antigos (FIFO)</option>
+            <option value="DATE_DESC">Mais Recentes</option>
+          </select>
+        </div>
+
+        <!-- Clear Filters -->
+        <div class="flex items-end">
+          <button
+            type="button"
+            class="w-full inline-flex items-center justify-center px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium cursor-pointer"
+            @click="resetFilters"
+          >
+            <i class="fa-solid fa-filter-circle-xmark mr-1.5 text-slate-400"></i>
+            Limpar Filtros
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Tab 1: Aguardando Aprovação -->
@@ -101,21 +258,25 @@
       </div>
 
       <div
-        v-else-if="pendingMessages.length === 0"
+        v-else-if="filteredPendingMessages.length === 0"
         class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl p-12 text-center"
       >
         <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
           <i class="fa-solid fa-check text-xl"></i>
         </div>
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white">Tudo em dia!</h3>
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white">
+          {{ pendingMessages.length === 0 ? 'Tudo em dia!' : 'Nenhuma mensagem para os filtros selecionados' }}
+        </h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
-          Não há mensagens para moderação no momento. A lista matinal de rebooking é gerada diariamente às 08:00.
+          {{ pendingMessages.length === 0
+            ? 'Não há mensagens para moderação no momento. A lista matinal de rebooking é gerada diariamente às 08:00.'
+            : 'Tente alterar os filtros de origem, procedimento ou busca para ver outras mensagens.' }}
         </p>
       </div>
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DispatchMessageCard
-          v-for="msg in pendingMessages"
+          v-for="msg in filteredPendingMessages"
           :key="msg.id"
           :message="msg"
           :professionals="professionals"
@@ -128,12 +289,12 @@
 
     <!-- Tab 2: Fila de Envio (Agendadas) -->
     <div v-if="activeTab === 'queue'">
-      <DispatchQueueTable :messages="queueMessages" :loading="loading" @unapprove="handleQueueUnapprove" />
+      <DispatchQueueTable :messages="filteredQueueMessages" :loading="loading" @unapprove="handleQueueUnapprove" />
     </div>
 
     <!-- Tab 3: Histórico & Falhas -->
     <div v-if="activeTab === 'history'">
-      <DispatchQueueTable :messages="historyMessages" :loading="loading" />
+      <DispatchQueueTable :messages="filteredHistoryMessages" :loading="loading" />
     </div>
 
     <!-- Tab 4: Modelos de Mensagem (Templates) -->
@@ -147,7 +308,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { dispatchMessageService } from '../../services/dispatchMessageService';
 import { professionalService } from '../../services/professionalService';
+import { enumService } from '../../services/enumService';
 import PageHeader from '../../components/common/PageHeader.vue';
+import StatusBulletsBar from '../../components/common/StatusBulletsBar.vue';
 import DispatchMessageCard from '../../components/messages/DispatchMessageCard.vue';
 import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue';
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
@@ -160,6 +323,163 @@ const pendingMessages = ref([]);
 const queueMessages = ref([]);
 const historyMessages = ref([]);
 const professionals = ref([]);
+const statusOptions = ref([]);
+
+// Filter States
+const selectedOrigin = ref('');
+const showMobileFilters = ref(false);
+const filters = ref({
+  search: '',
+  service: '',
+  professionalId: null,
+  status: '',
+  sortBy: 'POTENTIAL_DESC'
+});
+
+const activeFiltersCount = computed(() => {
+  let count = 0;
+  if (filters.value.search) count++;
+  if (filters.value.service) count++;
+  if (filters.value.professionalId) count++;
+  if (filters.value.status) count++;
+  if (filters.value.sortBy !== 'POTENTIAL_DESC') count++;
+  return count;
+});
+
+const currentActiveList = computed(() => {
+  if (activeTab.value === 'pending') return pendingMessages.value;
+  if (activeTab.value === 'queue') return queueMessages.value;
+  if (activeTab.value === 'history') return historyMessages.value;
+  return [];
+});
+
+const originFilterItems = computed(() => {
+  const list = currentActiveList.value;
+  const countByOrigin = (origin) => list.filter(m => m.originType === origin).length;
+
+  return [
+    { label: 'Todas as Mensagens', value: '', count: list.length },
+    { label: 'Retorno / Rebooking', value: 'REBOOKING', dotColor: 'bg-emerald-500', count: countByOrigin('REBOOKING') },
+    { label: 'Acompanhamento', value: 'FOLLOW_UP', dotColor: 'bg-indigo-500', count: countByOrigin('FOLLOW_UP') },
+    { label: 'Leads', value: 'LEAD', dotColor: 'bg-blue-500', count: countByOrigin('LEAD') },
+    { label: 'Agendamentos', value: 'APPOINTMENT', dotColor: 'bg-amber-500', count: countByOrigin('APPOINTMENT') },
+    { label: 'Sistema', value: 'SYSTEM', dotColor: 'bg-slate-500', count: countByOrigin('SYSTEM') }
+  ];
+});
+
+const getParsedMetadata = (msg) => {
+  if (!msg.metadata) return {};
+  if (typeof msg.metadata === 'object') return msg.metadata;
+  try {
+    return JSON.parse(msg.metadata);
+  } catch {
+    return {};
+  }
+};
+
+const availableServices = computed(() => {
+  const set = new Set();
+  currentActiveList.value.forEach(msg => {
+    const meta = getParsedMetadata(msg);
+    if (meta.serviceName) {
+      set.add(meta.serviceName);
+    }
+  });
+  return Array.from(set).sort();
+});
+
+const availableStatusOptions = computed(() => {
+  const counts = {};
+  currentActiveList.value.forEach(m => {
+    counts[m.status] = (counts[m.status] || 0) + 1;
+  });
+
+  if (statusOptions.value.length > 0) {
+    return statusOptions.value
+      .filter(opt => counts[opt.name] > 0)
+      .map(opt => ({
+        ...opt,
+        count: counts[opt.name]
+      }));
+  }
+
+  return Object.keys(counts).map(status => ({
+    name: status,
+    description: status,
+    count: counts[status]
+  }));
+});
+
+const resetFilters = () => {
+  selectedOrigin.value = '';
+  filters.value = {
+    search: '',
+    service: '',
+    professionalId: null,
+    status: '',
+    sortBy: 'POTENTIAL_DESC'
+  };
+};
+
+const applyFiltersAndSort = (items) => {
+  return items.filter(msg => {
+    // 1. Origin filter
+    if (selectedOrigin.value && msg.originType !== selectedOrigin.value) {
+      return false;
+    }
+
+    // 2. Status filter
+    if (filters.value.status && msg.status !== filters.value.status) {
+      return false;
+    }
+
+    // 3. Search filter (targetName or phone)
+    if (filters.value.search) {
+      const q = filters.value.search.toLowerCase().trim();
+      const matchName = msg.targetName && msg.targetName.toLowerCase().includes(q);
+      const matchPhone = msg.targetPhone && msg.targetPhone.includes(q.replace(/\D/g, ''));
+      if (!matchName && !matchPhone) return false;
+    }
+
+    // 4. Service filter
+    if (filters.value.service) {
+      const meta = getParsedMetadata(msg);
+      if (meta.serviceName !== filters.value.service) return false;
+    }
+
+    // 5. Professional filter
+    if (filters.value.professionalId) {
+      const meta = getParsedMetadata(msg);
+      if (meta.professionalId !== filters.value.professionalId && msg.contactResponsibleId !== filters.value.professionalId) {
+        return false;
+      }
+    }
+
+    return true;
+  }).sort((a, b) => {
+    if (filters.value.sortBy === 'POTENTIAL_DESC') {
+      const prioA = a.priority || 0;
+      const prioB = b.priority || 0;
+      if (prioB !== prioA) return prioB - prioA;
+      return (a.id || 0) - (b.id || 0);
+    }
+    if (filters.value.sortBy === 'DATE_ASC') {
+      const dateA = a.createdAt || a.scheduledAt || '';
+      const dateB = b.createdAt || b.scheduledAt || '';
+      return dateA.localeCompare(dateB);
+    }
+    if (filters.value.sortBy === 'DATE_DESC') {
+      const dateA = a.createdAt || a.scheduledAt || '';
+      const dateB = b.createdAt || b.scheduledAt || '';
+      return dateB.localeCompare(dateA);
+    }
+    return 0;
+  });
+};
+
+const filteredPendingMessages = computed(() => applyFiltersAndSort(pendingMessages.value));
+const filteredQueueMessages = computed(() => applyFiltersAndSort(queueMessages.value));
+const filteredHistoryMessages = computed(() => applyFiltersAndSort(historyMessages.value));
 
 const pendingCount = computed(() => {
   return pendingMessages.value.filter(m => m.status === 'PENDING_APPROVAL').length;
@@ -223,6 +543,7 @@ const loadCurrentTab = () => {
 
 const switchTab = (tab) => {
   activeTab.value = tab;
+  filters.value.status = '';
   loadCurrentTab();
 };
 
@@ -291,8 +612,23 @@ const handleQueueUnapprove = async (msg) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   loadProfessionals();
   loadPending();
+  try {
+    statusOptions.value = await enumService.getOptions('DispatchStatus');
+  } catch (e) {
+    console.error('Erro ao carregar enum DispatchStatus:', e);
+  }
 });
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
