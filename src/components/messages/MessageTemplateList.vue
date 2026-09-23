@@ -165,13 +165,7 @@ const templates = ref([]);
 const loading = ref(false);
 const filterOrigin = ref('');
 const filterActive = ref('');
-const originOptions = ref([
-  { name: 'REBOOKING', description: 'Retorno / Rebooking' },
-  { name: 'FOLLOW_UP', description: 'Acompanhamento Pós-Procedimento' },
-  { name: 'APPOINTMENT', description: 'Agendamento' },
-  { name: 'LEAD', description: 'Lead' },
-  { name: 'SYSTEM', description: 'Sistema / Operacional' }
-]);
+const originOptions = ref([]);
 
 const showModal = ref(false);
 const selectedTemplate = ref(null);

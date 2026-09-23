@@ -193,19 +193,8 @@ const emit = defineEmits(['close', 'save']);
 const textareaRef = ref(null);
 const submitting = ref(false);
 
-const originOptions = ref([
-  { name: 'REBOOKING', description: 'Retorno / Rebooking' },
-  { name: 'FOLLOW_UP', description: 'Acompanhamento Pós-Procedimento' },
-  { name: 'APPOINTMENT', description: 'Agendamento' },
-  { name: 'LEAD', description: 'Lead' },
-  { name: 'SYSTEM', description: 'Sistema / Operacional' }
-]);
-
-const audienceOptions = ref([
-  { name: 'CLIENT', description: 'Clientes' },
-  { name: 'LEAD', description: 'Leads' },
-  { name: 'PROFESSIONAL', description: 'Profissionais do Estúdio' }
-]);
+const originOptions = ref([]);
+const audienceOptions = ref([]);
 
 onMounted(async () => {
   try {
@@ -213,8 +202,8 @@ onMounted(async () => {
       enumService.getOptions('MessageOriginType'),
       enumService.getOptions('TargetAudienceType')
     ]);
-    if (origins && origins.length > 0) originOptions.value = origins;
-    if (audiences && audiences.length > 0) audienceOptions.value = audiences;
+    originOptions.value = origins || [];
+    audienceOptions.value = audiences || [];
   } catch (e) {
     console.error('Failed to load enum options in modal:', e);
   }
