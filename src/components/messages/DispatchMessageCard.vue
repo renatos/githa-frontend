@@ -10,7 +10,7 @@
           <div>
             <h4 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               {{ message.targetName }}
-              <span v-if="metadataObj.serviceName" class="text-xs font-normal text-slate-500 dark:text-slate-400">
+              <span v-if="metadataObj.serviceName && displayTags.length === 0" class="text-xs font-normal text-slate-500 dark:text-slate-400">
                 • {{ metadataObj.serviceName.toLowerCase() }}
               </span>
             </h4>
@@ -18,7 +18,7 @@
               <span>{{ formatPhone(message.targetPhone) }}</span>
               <span>•</span>
               <span class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
-                <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Rebooking
+                <i :class="originIcon" class="text-[10px]"></i> {{ originLabel }}
               </span>
             </div>
           </div>
@@ -45,6 +45,9 @@
           <i class="fa-solid fa-clock text-[10px]"></i> Aguardando OK
         </span>
       </div>
+
+      <!-- Dynamic Metadata Display Tags -->
+      <DisplayTags :tags="displayTags" class="mt-2 mb-1" />
 
       <!-- Message Content -->
       <div class="mt-3">
@@ -142,7 +145,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import DisplayTags from '@/components/common/DisplayTags.vue';
+import { enumService } from '@/services/enumService';
 
 const props = defineProps({
   message: { type: Object, required: true },
@@ -157,6 +162,26 @@ const selectedProfessionalId = ref(props.message.approvedByProfessionalId || nul
 const approving = ref(false);
 const rejecting = ref(false);
 const unapproving = ref(false);
+const originDescription = ref('');
+
+const fetchOriginDescription = async (originType) => {
+  if (!originType) {
+    originDescription.value = '';
+    return;
+  }
+  try {
+    const desc = await enumService.getDescription('MessageOriginType', originType);
+    if (desc) {
+      originDescription.value = desc;
+    }
+  } catch (e) {
+    // fallback will be used
+  }
+};
+
+onMounted(() => {
+  fetchOriginDescription(props.message?.originType);
+});
 
 watch(
   () => props.message,
@@ -164,6 +189,7 @@ watch(
     if (newMsg) {
       editedText.value = newMsg.messageText || '';
       selectedProfessionalId.value = newMsg.approvedByProfessionalId || null;
+      fetchOriginDescription(newMsg.originType);
     }
   },
   { deep: true }
@@ -191,6 +217,38 @@ const metadataObj = computed(() => {
   } catch {
     return {};
   }
+});
+
+const displayTags = computed(() => {
+  if (Array.isArray(metadataObj.value?.displayTags)) {
+    return metadataObj.value.displayTags;
+  }
+  return [];
+});
+
+const originLabel = computed(() => {
+  if (originDescription.value) {
+    return originDescription.value;
+  }
+  const map = {
+    REBOOKING: 'Retorno / Rebooking',
+    FOLLOW_UP: 'Acompanhamento',
+    APPOINTMENT: 'Agendamento',
+    LEAD: 'Lead',
+    SYSTEM: 'Sistema'
+  };
+  return map[props.message.originType] || props.message.originType || 'Mensagem';
+});
+
+const originIcon = computed(() => {
+  const map = {
+    REBOOKING: 'fa-solid fa-arrows-rotate',
+    FOLLOW_UP: 'fa-solid fa-heart-pulse',
+    APPOINTMENT: 'fa-regular fa-calendar-check',
+    LEAD: 'fa-solid fa-bullhorn',
+    SYSTEM: 'fa-solid fa-gear'
+  };
+  return map[props.message.originType] || 'fa-solid fa-message';
 });
 
 const formatPhone = (phone) => {
