@@ -236,36 +236,28 @@ watch(
   { immediate: true }
 );
 
-const availableVariables = computed(() => {
-  switch (form.value.originType) {
-    case 'REBOOKING':
-      return [
-        { tag: '{nome}', label: 'Nome do Cliente', desc: 'Nome ou nome composto' },
-        { tag: '{servico}', label: 'Procedimento', desc: 'Nome do serviço a retornar' },
-        { tag: '{seu_sua}', label: 'Pronome', desc: 'Resolve para "seu" ou "sua" conforme o gênero do procedimento' },
-        { tag: '{artigo}', label: 'Artigo', desc: 'Resolve para "o" ou "a" conforme o gênero do procedimento' },
-        { tag: '{do_da}', label: 'Contração do/da', desc: 'Resolve para "do" ou "da"' },
-        { tag: '{ao_a}', label: 'Contração ao/à', desc: 'Resolve para "ao" ou "à"' }
-      ];
-    case 'LEAD':
-      return [
-        { tag: '{nome}', label: 'Nome do Lead', desc: 'Nome da pessoa interessada' },
-        { tag: '{origem}', label: 'Canal de Origem', desc: 'Instagram, Indicação, etc.' }
-      ];
-    case 'APPOINTMENT':
-      return [
-        { tag: '{nome}', label: 'Nome do Cliente', desc: 'Nome do cliente' },
-        { tag: '{servico}', label: 'Procedimento', desc: 'Nome do procedimento' },
-        { tag: '{data}', label: 'Data', desc: 'Data do agendamento' },
-        { tag: '{horario}', label: 'Horário', desc: 'Horário do agendamento' },
-        { tag: '{profissional}', label: 'Profissional', desc: 'Profissional responsável' }
-      ];
-    default:
-      return [
-        { tag: '{nome}', label: 'Nome', desc: 'Nome do destinatário' }
-      ];
+const availableVariables = ref([]);
+
+const loadVariables = async () => {
+  try {
+    const vars = await messageTemplateService.getVariables(form.value.originType);
+    availableVariables.value = (vars || []).map(v => ({
+      tag: v.tag,
+      label: v.label,
+      desc: v.description
+    }));
+  } catch (e) {
+    console.error('Erro ao carregar variáveis de template do backend:', e);
   }
-});
+};
+
+watch(
+  () => form.value.originType,
+  () => {
+    loadVariables();
+  },
+  { immediate: true }
+);
 
 const insertVariable = (tag) => {
   const textarea = textareaRef.value;

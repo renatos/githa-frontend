@@ -34,6 +34,12 @@ export const messageTemplateService = {
   delete: async (id) => {
     const response = await api.delete(`/message-templates/${id}`);
     return response.data;
+  },
+
+  getVariables: async (origin) => {
+    const params = origin ? { origin } : {};
+    const response = await api.get('/message-templates/variables', { params });
+    return response.data;
   }
 };
 
