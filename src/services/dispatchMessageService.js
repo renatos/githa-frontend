@@ -41,6 +41,18 @@ export const dispatchMessageService = {
   generateCandidates: async (data = {}) => {
     const response = await api.post('/dispatch-messages/generate-candidates', data);
     return response.data;
+  },
+
+  enqueueFromReminder: async (reminderId, data = {}) => {
+    const response = await api.post(`/dispatch-messages/from-reminder/${reminderId}`, data);
+    return response.data;
+  },
+
+  getHistoryByOrigin: async (originType, originId) => {
+    const response = await api.get('/dispatch-messages/history', {
+      params: { originType, originId }
+    });
+    return response.data;
   }
 };
 
