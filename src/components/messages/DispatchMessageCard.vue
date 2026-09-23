@@ -1,16 +1,63 @@
 <template>
-  <div
-    :id="'dispatch-card-' + message.id"
-    class="bg-white dark:bg-slate-800 border rounded-xl p-5 shadow-sm transition-all duration-500 flex flex-col justify-between"
-    :class="[
-      highlighted
-        ? 'ring-4 ring-emerald-500/90 dark:ring-emerald-400 border-emerald-500 shadow-xl shadow-emerald-500/25 scale-[1.01]'
-        : 'border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600'
-    ]"
-  >
-    <!-- Header -->
-    <div>
-      <div class="flex items-start justify-between gap-3 mb-3">
+  <div class="relative overflow-hidden sm:overflow-visible rounded-xl">
+    <!-- Swipe Action Backdrop (Mobile visual cues revealed when dragging horizontally) -->
+    <div
+      v-if="!isScheduled && message.status !== 'SENT' && (isSwiping || animatingOut)"
+      class="absolute inset-0 rounded-xl flex items-center justify-between px-6 pointer-events-none transition-colors duration-200 z-0"
+      :class="{
+        'bg-emerald-500/15 dark:bg-emerald-500/25 border-2 border-emerald-500/50': touchDeltaX > 0 || animatingOut === 'right',
+        'bg-red-500/15 dark:bg-red-500/25 border-2 border-red-500/50': touchDeltaX < 0 || animatingOut === 'left',
+      }"
+    >
+      <!-- Left side (Aprovar) -->
+      <div
+        class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm transition-all duration-150"
+        :style="{
+          opacity: (touchDeltaX > 15 || animatingOut === 'right') ? 1 : 0,
+          transform: `scale(${touchDeltaX > 70 || animatingOut === 'right' ? 1.08 : 0.95})`
+        }"
+      >
+        <div class="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+          <i class="fa-solid fa-check text-base"></i>
+        </div>
+        <span>Aprovar e Agendar</span>
+      </div>
+
+      <!-- Right side (Descartar) -->
+      <div
+        class="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm ml-auto transition-all duration-150"
+        :style="{
+          opacity: (touchDeltaX < -15 || animatingOut === 'left') ? 1 : 0,
+          transform: `scale(${Math.abs(touchDeltaX) > 70 || animatingOut === 'left' ? 1.08 : 0.95})`
+        }"
+      >
+        <span>Descartar</span>
+        <div class="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Interactive Card Element -->
+    <div
+      :id="'dispatch-card-' + message.id"
+      class="bg-white dark:bg-slate-800 border rounded-xl p-5 shadow-sm flex flex-col justify-between select-none touch-pan-y relative z-10"
+      :class="[
+        highlighted
+          ? 'ring-4 ring-emerald-500/90 dark:ring-emerald-400 border-emerald-500 shadow-xl shadow-emerald-500/25 scale-[1.01]'
+          : 'border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600',
+        animatingOut === 'right' ? 'shadow-2xl shadow-emerald-500/30' : '',
+        animatingOut === 'left' ? 'shadow-2xl shadow-red-500/30' : ''
+      ]"
+      :style="cardTransformStyle"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
+      @touchcancel="onTouchEnd"
+    >
+      <!-- Header -->
+      <div>
+        <div class="flex items-start justify-between gap-3 mb-3">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <i class="fa-brands fa-whatsapp text-lg"></i>
@@ -150,6 +197,7 @@
       </template>
     </div>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -183,7 +231,7 @@ const fetchOriginDescription = async (originType) => {
     if (desc) {
       originDescription.value = desc;
     }
-  } catch (e) {
+  } catch {
     // fallback will be used
   }
 };
@@ -269,25 +317,147 @@ const formatPhone = (phone) => {
   return phone;
 };
 
+const animatingOut = ref(null); // 'right' | 'left' | null
+const touchDeltaX = ref(0);
+const isSwiping = ref(false);
+let touchStartX = null;
+let touchStartY = null;
+
+const cardTransformStyle = computed(() => {
+  if (animatingOut.value === 'right') {
+    return {
+      transform: 'translateX(110%) rotate(6deg)',
+      opacity: '0',
+      transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 280ms ease'
+    };
+  }
+  if (animatingOut.value === 'left') {
+    return {
+      transform: 'translateX(-110%) rotate(-6deg)',
+      opacity: '0',
+      transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 280ms ease'
+    };
+  }
+  if (isSwiping.value) {
+    const rot = touchDeltaX.value * 0.04;
+    return {
+      transform: `translateX(${touchDeltaX.value}px) rotate(${rot}deg)`,
+      transition: 'none'
+    };
+  }
+  return {
+    transform: 'translateX(0px) rotate(0deg)',
+    transition: 'transform 250ms ease, opacity 250ms ease'
+  };
+});
+
+const onTouchStart = (e) => {
+  if (animatingOut.value || isScheduled.value || props.message.status === 'SENT') return;
+  const target = e.target;
+  // Ignore swipe when touching interactive controls
+  if (target && target.closest('input, textarea, select, button, a, [contenteditable="true"]')) {
+    touchStartX = null;
+    touchStartY = null;
+    return;
+  }
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchDeltaX.value = 0;
+  isSwiping.value = false;
+};
+
+const onTouchMove = (e) => {
+  if (touchStartX === null || animatingOut.value) return;
+  const currentX = e.touches[0].clientX;
+  const currentY = e.touches[0].clientY;
+  const deltaX = currentX - touchStartX;
+  const deltaY = currentY - touchStartY;
+
+  if (!isSwiping.value) {
+    // If vertical scrolling is dominant, abort swipe to allow native scrolling
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
+      touchStartX = null;
+      return;
+    }
+    // If horizontal drag is dominant, engage swipe
+    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      isSwiping.value = true;
+    }
+  }
+
+  if (isSwiping.value) {
+    if (e.cancelable) e.preventDefault();
+    touchDeltaX.value = deltaX;
+  }
+};
+
+const onTouchEnd = () => {
+  if (!isSwiping.value || touchStartX === null || animatingOut.value) {
+    touchStartX = null;
+    touchStartY = null;
+    isSwiping.value = false;
+    touchDeltaX.value = 0;
+    return;
+  }
+
+  const threshold = 85;
+  if (touchDeltaX.value > threshold) {
+    triggerApprove();
+  } else if (touchDeltaX.value < -threshold) {
+    triggerReject();
+  } else {
+    touchDeltaX.value = 0;
+    isSwiping.value = false;
+  }
+  touchStartX = null;
+  touchStartY = null;
+};
+
+const triggerApprove = () => {
+  if (animatingOut.value) return;
+  animatingOut.value = 'right';
+  setTimeout(() => {
+    approving.value = true;
+    emit('approve', {
+      id: props.message.id,
+      customMessageText: editedText.value,
+      professionalId: selectedProfessionalId.value,
+      done: () => {
+        approving.value = false;
+        animatingOut.value = null;
+        isSwiping.value = false;
+        touchDeltaX.value = 0;
+      }
+    });
+  }, 280);
+};
+
+const triggerReject = () => {
+  if (animatingOut.value) return;
+  animatingOut.value = 'left';
+  setTimeout(() => {
+    rejecting.value = true;
+    emit('reject', {
+      id: props.message.id,
+      done: () => {
+        rejecting.value = false;
+        animatingOut.value = null;
+        isSwiping.value = false;
+        touchDeltaX.value = 0;
+      }
+    });
+  }, 280);
+};
+
 const handleApprove = () => {
-  approving.value = true;
-  emit('approve', {
-    id: props.message.id,
-    customMessageText: editedText.value,
-    professionalId: selectedProfessionalId.value,
-    done: () => { approving.value = false; }
-  });
+  triggerApprove();
 };
 
 const handleReject = () => {
   if (!confirm(`Deseja descartar o envio da mensagem para ${props.message.targetName}?`)) {
     return;
   }
-  rejecting.value = true;
-  emit('reject', {
-    id: props.message.id,
-    done: () => { rejecting.value = false; }
-  });
+  triggerReject();
 };
 
 const handleUnapprove = () => {

@@ -274,18 +274,32 @@
         </p>
       </div>
 
-      <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DispatchMessageCard
-          v-for="msg in filteredPendingMessages"
-          :key="msg.id"
-          :message="msg"
-          :professionals="professionals"
-          :highlighted="highlightedMessageId === msg.id"
-          @approve="onApprove"
-          @reject="onReject"
-          @unapprove="onUnapprove"
-        />
-      </div>
+      <template v-else>
+        <!-- Mobile swipe hint -->
+        <div class="sm:hidden flex items-center justify-between px-3 py-1.5 bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700/50 rounded-lg text-[11px] text-slate-500 dark:text-slate-400">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-arrows-left-right text-slate-400"></i>
+            <span>Deslize o card: <strong class="text-emerald-600 dark:text-emerald-400">direita</strong> aprova, <strong class="text-red-600 dark:text-red-400">esquerda</strong> descarta</span>
+          </span>
+        </div>
+
+        <TransitionGroup
+          name="dispatch-card-list"
+          tag="div"
+          class="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          <DispatchMessageCard
+            v-for="msg in filteredPendingMessages"
+            :key="msg.id"
+            :message="msg"
+            :professionals="professionals"
+            :highlighted="highlightedMessageId === msg.id"
+            @approve="onApprove"
+            @reject="onReject"
+            @unapprove="onUnapprove"
+          />
+        </TransitionGroup>
+      </template>
     </div>
 
     <!-- Tab 2: Fila de Envio (Agendadas) -->
@@ -511,7 +525,7 @@ const loadPending = async () => {
   loading.value = true;
   try {
     const data = await dispatchMessageService.getAll({
-      statuses: 'PENDING_APPROVAL,SCHEDULED'
+      statuses: 'PENDING_APPROVAL'
     });
     pendingMessages.value = data || [];
   } catch (e) {
@@ -644,9 +658,11 @@ const onApprove = async ({ id, customMessageText, professionalId, done }) => {
       customMessageText,
       professionalId
     });
-    const idx = pendingMessages.value.findIndex(m => m.id === id);
-    if (idx !== -1 && updated) {
-      pendingMessages.value.splice(idx, 1, { ...pendingMessages.value[idx], ...updated });
+    // Remove from pending list (next pending card seamlessly moves up)
+    pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
+    // Add to scheduled queue list
+    if (updated) {
+      queueMessages.value = [updated, ...queueMessages.value.filter(m => m.id !== id)];
     }
     toastBridge.success('Sucesso', 'Mensagem aprovada e agendada na fila!');
   } catch (e) {
@@ -693,9 +709,14 @@ const handleQueueUnapprove = async (msg) => {
     return;
   }
   try {
-    await dispatchMessageService.unapprove(msg.id);
+    const unapproved = await dispatchMessageService.unapprove(msg.id);
     toastBridge.info('Informação', 'Aprovação desfeita com sucesso!');
-    loadQueue();
+    queueMessages.value = queueMessages.value.filter(m => m.id !== msg.id);
+    if (unapproved) {
+      pendingMessages.value = [unapproved, ...pendingMessages.value.filter(m => m.id !== msg.id)];
+    } else {
+      await loadPending();
+    }
   } catch (e) {
     console.error('Erro ao desfazer aprovação:', e);
     const errorMsg = e.response?.data?.message || 'Erro ao desfazer aprovação.';
@@ -739,5 +760,24 @@ watch(() => route.query.messageId, async (newVal) => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* FLIP animation for cards remaining in list */
+.dispatch-card-list-move {
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.dispatch-card-list-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.dispatch-card-list-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.dispatch-card-list-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.dispatch-card-list-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 </style>

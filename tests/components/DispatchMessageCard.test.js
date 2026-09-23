@@ -2,6 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import DispatchMessageCard from '@/components/messages/DispatchMessageCard.vue';
 
+vi.mock('@/services/enumService', () => ({
+  enumService: {
+    getDescription: vi.fn().mockResolvedValue('Retorno / Rebooking')
+  }
+}));
+
 describe('DispatchMessageCard.vue', () => {
   const baseMessage = {
     id: 1,
@@ -94,9 +100,6 @@ describe('DispatchMessageCard.vue', () => {
   });
 
   it('updates origin label when enumService returns description', async () => {
-    const { enumService } = await import('@/services/enumService');
-    const spy = vi.spyOn(enumService, 'getDescription').mockResolvedValue('Retorno / Rebooking');
-
     const wrapper = mount(DispatchMessageCard, {
       props: {
         message: baseMessage,
@@ -107,8 +110,6 @@ describe('DispatchMessageCard.vue', () => {
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Retorno / Rebooking');
     });
-
-    spy.mockRestore();
   });
 
   it('emits approve event with message id and text', async () => {
@@ -124,7 +125,9 @@ describe('DispatchMessageCard.vue', () => {
 
     await approveBtn.trigger('click');
 
-    expect(wrapper.emitted('approve')).toBeTruthy();
+    await vi.waitFor(() => {
+      expect(wrapper.emitted('approve')).toBeTruthy();
+    });
     expect(wrapper.emitted('approve')[0][0].id).toBe(1);
     expect(wrapper.emitted('approve')[0][0].customMessageText).toBe('Olá Ana Paula! Está quase na hora do retorno.');
   });
