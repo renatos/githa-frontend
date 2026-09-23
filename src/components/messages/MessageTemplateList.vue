@@ -9,11 +9,9 @@
           class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <option value="">Todas as Origens</option>
-          <option value="REBOOKING">Rebooking (Retorno)</option>
-          <option value="FOLLOW_UP">Acompanhamento (Pós-Procedimento)</option>
-          <option value="LEAD">Leads</option>
-          <option value="APPOINTMENT">Agendamentos</option>
-          <option value="SYSTEM">Sistema</option>
+          <option v-for="opt in originOptions" :key="opt.name" :value="opt.name">
+            {{ opt.description }}
+          </option>
         </select>
 
         <!-- Filter Status -->
@@ -160,12 +158,20 @@
 import { ref, computed, onMounted } from 'vue';
 import { Plus, Trash2, Power, FileText, Loader2 } from 'lucide-vue-next';
 import messageTemplateService from '../../services/messageTemplateService';
+import { enumService } from '../../services/enumService';
 import MessageTemplateModal from './MessageTemplateModal.vue';
 
 const templates = ref([]);
 const loading = ref(false);
 const filterOrigin = ref('');
 const filterActive = ref('');
+const originOptions = ref([
+  { name: 'REBOOKING', description: 'Retorno / Rebooking' },
+  { name: 'FOLLOW_UP', description: 'Acompanhamento Pós-Procedimento' },
+  { name: 'APPOINTMENT', description: 'Agendamento' },
+  { name: 'LEAD', description: 'Lead' },
+  { name: 'SYSTEM', description: 'Sistema / Operacional' }
+]);
 
 const showModal = ref(false);
 const selectedTemplate = ref(null);
@@ -182,7 +188,21 @@ const loadTemplates = async () => {
   }
 };
 
-onMounted(loadTemplates);
+const loadEnums = async () => {
+  try {
+    const opts = await enumService.getOptions('MessageOriginType');
+    if (opts && opts.length > 0) {
+      originOptions.value = opts;
+    }
+  } catch (err) {
+    console.error('Failed to load MessageOriginType enums:', err);
+  }
+};
+
+onMounted(() => {
+  loadTemplates();
+  loadEnums();
+});
 
 const filteredTemplates = computed(() => {
   return templates.value.filter((t) => {

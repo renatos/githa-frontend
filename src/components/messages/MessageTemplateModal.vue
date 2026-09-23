@@ -31,11 +31,9 @@
             v-model="form.originType"
             class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
           >
-            <option value="REBOOKING">Rebooking (Retorno de Clientes)</option>
-            <option value="FOLLOW_UP">Acompanhamento (Pós-Procedimento)</option>
-            <option value="LEAD">Leads (Captação e Boas-Vindas)</option>
-            <option value="APPOINTMENT">Agendamentos (Lembretes e Confirmações)</option>
-            <option value="SYSTEM">Sistema (Avisos Operacionais)</option>
+            <option v-for="opt in originOptions" :key="opt.name" :value="opt.name">
+              {{ opt.description }}
+            </option>
           </select>
         </div>
 
@@ -48,9 +46,9 @@
             v-model="form.audienceType"
             class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
           >
-            <option value="CLIENT">Clientes</option>
-            <option value="LEAD">Leads</option>
-            <option value="PROFESSIONAL">Profissionais do Estúdio</option>
+            <option v-for="opt in audienceOptions" :key="opt.name" :value="opt.name">
+              {{ opt.description }}
+            </option>
           </select>
         </div>
 
@@ -174,8 +172,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import BaseModal from '../common/BaseModal.vue';
+import messageTemplateService from '../../services/messageTemplateService';
+import { enumService } from '../../services/enumService';
 
 const props = defineProps({
   show: {
@@ -192,6 +192,33 @@ const emit = defineEmits(['close', 'save']);
 
 const textareaRef = ref(null);
 const submitting = ref(false);
+
+const originOptions = ref([
+  { name: 'REBOOKING', description: 'Retorno / Rebooking' },
+  { name: 'FOLLOW_UP', description: 'Acompanhamento Pós-Procedimento' },
+  { name: 'APPOINTMENT', description: 'Agendamento' },
+  { name: 'LEAD', description: 'Lead' },
+  { name: 'SYSTEM', description: 'Sistema / Operacional' }
+]);
+
+const audienceOptions = ref([
+  { name: 'CLIENT', description: 'Clientes' },
+  { name: 'LEAD', description: 'Leads' },
+  { name: 'PROFESSIONAL', description: 'Profissionais do Estúdio' }
+]);
+
+onMounted(async () => {
+  try {
+    const [origins, audiences] = await Promise.all([
+      enumService.getOptions('MessageOriginType'),
+      enumService.getOptions('TargetAudienceType')
+    ]);
+    if (origins && origins.length > 0) originOptions.value = origins;
+    if (audiences && audiences.length > 0) audienceOptions.value = audiences;
+  } catch (e) {
+    console.error('Failed to load enum options in modal:', e);
+  }
+});
 
 const form = ref({
   name: '',
