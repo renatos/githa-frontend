@@ -241,7 +241,11 @@ const availableVariables = computed(() => {
     case 'REBOOKING':
       return [
         { tag: '{nome}', label: 'Nome do Cliente', desc: 'Nome ou nome composto' },
-        { tag: '{servico}', label: 'Procedimento', desc: 'Nome do serviço a retornar' }
+        { tag: '{servico}', label: 'Procedimento', desc: 'Nome do serviço a retornar' },
+        { tag: '{seu_sua}', label: 'Pronome', desc: 'Resolve para "seu" ou "sua" conforme o gênero do procedimento' },
+        { tag: '{artigo}', label: 'Artigo', desc: 'Resolve para "o" ou "a" conforme o gênero do procedimento' },
+        { tag: '{do_da}', label: 'Contração do/da', desc: 'Resolve para "do" ou "da"' },
+        { tag: '{ao_a}', label: 'Contração ao/à', desc: 'Resolve para "ao" ou "à"' }
       ];
     case 'LEAD':
       return [
@@ -287,6 +291,11 @@ const renderedPreview = computed(() => {
   return form.value.content
     .replace(/\{nome\}/g, 'Ana Paula')
     .replace(/\{servico\}/g, 'design de sobrancelhas')
+    .replace(/\{seu_sua\}/g, 'seu')
+    .replace(/\{artigo\}/g, 'o')
+    .replace(/\{do_da\}/g, 'do')
+    .replace(/\{ao_a\}/g, 'ao')
+    .replace(/\{no_na\}/g, 'no')
     .replace(/\{data\}/g, '25/09/2026')
     .replace(/\{horario\}/g, '14:30')
     .replace(/\{profissional\}/g, 'Dra. Camila')
