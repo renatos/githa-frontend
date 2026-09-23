@@ -1,5 +1,10 @@
 <template>
-  <div class="relative overflow-hidden sm:overflow-visible rounded-xl">
+  <div
+    class="card-collapse-track"
+    :class="{ 'is-collapsing': isCollapsing }"
+  >
+    <div class="card-collapse-content">
+      <div class="relative overflow-hidden sm:overflow-visible rounded-xl">
     <!-- Swipe Action Backdrop (Mobile visual cues revealed when dragging horizontally) -->
     <div
       v-if="!isScheduled && message.status !== 'SENT' && (isSwiping || animatingOut)"
@@ -198,6 +203,8 @@
     </div>
   </div>
 </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -317,6 +324,7 @@ const formatPhone = (phone) => {
   return phone;
 };
 
+const isCollapsing = ref(false);
 const animatingOut = ref(null); // 'right' | 'left' | null
 const touchDeltaX = ref(0);
 const isSwiping = ref(false);
@@ -326,16 +334,16 @@ let touchStartY = null;
 const cardTransformStyle = computed(() => {
   if (animatingOut.value === 'right') {
     return {
-      transform: 'translateX(110%) rotate(6deg)',
+      transform: 'translateX(110%) rotate(5deg)',
       opacity: '0',
-      transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 280ms ease'
+      transition: 'transform 360ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease'
     };
   }
   if (animatingOut.value === 'left') {
     return {
-      transform: 'translateX(-110%) rotate(-6deg)',
+      transform: 'translateX(-110%) rotate(-5deg)',
       opacity: '0',
-      transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1), opacity 280ms ease'
+      transition: 'transform 360ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease'
     };
   }
   if (isSwiping.value) {
@@ -416,6 +424,11 @@ const onTouchEnd = () => {
 const triggerApprove = () => {
   if (animatingOut.value) return;
   animatingOut.value = 'right';
+  // Begin height collapse at 60ms so the next card smoothly glides up simultaneously with the slide
+  setTimeout(() => {
+    isCollapsing.value = true;
+  }, 60);
+
   setTimeout(() => {
     approving.value = true;
     emit('approve', {
@@ -425,16 +438,21 @@ const triggerApprove = () => {
       done: () => {
         approving.value = false;
         animatingOut.value = null;
+        isCollapsing.value = false;
         isSwiping.value = false;
         touchDeltaX.value = 0;
       }
     });
-  }, 280);
+  }, 380);
 };
 
 const triggerReject = () => {
   if (animatingOut.value) return;
   animatingOut.value = 'left';
+  setTimeout(() => {
+    isCollapsing.value = true;
+  }, 60);
+
   setTimeout(() => {
     rejecting.value = true;
     emit('reject', {
@@ -442,11 +460,12 @@ const triggerReject = () => {
       done: () => {
         rejecting.value = false;
         animatingOut.value = null;
+        isCollapsing.value = false;
         isSwiping.value = false;
         touchDeltaX.value = 0;
       }
     });
-  }, 280);
+  }, 380);
 };
 
 const handleApprove = () => {
@@ -471,3 +490,28 @@ const handleUnapprove = () => {
   });
 };
 </script>
+
+<style scoped>
+.card-collapse-track {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-bottom: 0px;
+  transition: grid-template-rows 380ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 320ms ease,
+              margin-bottom 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: grid-template-rows, opacity, margin-bottom;
+}
+
+.card-collapse-track.is-collapsing {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-bottom: -1rem; /* Absorb the parent grid gap-4 smoothly */
+  pointer-events: none;
+}
+
+.card-collapse-content {
+  min-height: 0;
+  overflow: hidden;
+}
+</style>

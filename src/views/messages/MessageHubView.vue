@@ -653,13 +653,15 @@ const handleTargetMessageHighlight = async () => {
 };
 
 const onApprove = async ({ id, customMessageText, professionalId, done }) => {
+  const originalMessage = pendingMessages.value.find(m => m.id === id);
+  // Optimistically remove from pending list so UI updates immediately without network lag
+  pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
+
   try {
     const updated = await dispatchMessageService.approve(id, {
       customMessageText,
       professionalId
     });
-    // Remove from pending list (next pending card seamlessly moves up)
-    pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
     // Add to scheduled queue list
     if (updated) {
       queueMessages.value = [updated, ...queueMessages.value.filter(m => m.id !== id)];
@@ -667,6 +669,9 @@ const onApprove = async ({ id, customMessageText, professionalId, done }) => {
     toastBridge.success('Sucesso', 'Mensagem aprovada e agendada na fila!');
   } catch (e) {
     console.error('Erro ao aprovar mensagem:', e);
+    if (originalMessage) {
+      pendingMessages.value = [originalMessage, ...pendingMessages.value];
+    }
     const errorMsg = e.response?.data?.message || 'Erro ao aprovar mensagem.';
     toastBridge.error('Erro', errorMsg);
   } finally {
@@ -764,13 +769,15 @@ watch(() => route.query.messageId, async (newVal) => {
 
 /* FLIP animation for cards remaining in list */
 .dispatch-card-list-move {
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dispatch-card-list-enter-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .dispatch-card-list-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 .dispatch-card-list-enter-from {
   opacity: 0;
@@ -778,6 +785,5 @@ watch(() => route.query.messageId, async (newVal) => {
 }
 .dispatch-card-list-leave-to {
   opacity: 0;
-  transform: scale(0.96);
 }
 </style>
