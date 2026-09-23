@@ -57,6 +57,10 @@
           <i class="fa-solid fa-filter w-6 text-lg"></i>
           <span class="ml-2">Leads</span>
         </router-link>
+        <router-link to="/messages" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
+          <i class="fa-solid fa-paper-plane w-6 text-lg"></i>
+          <span class="ml-2">Central de Mensagens</span>
+        </router-link>
         <router-link to="/strategic-clients" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-solid fa-user-group w-6 text-lg"></i>
           <span class="ml-2">Clientes Estratégicos</span>

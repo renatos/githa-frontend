@@ -42,6 +42,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/messages',
+            name: 'messages',
+            component: () => import('../views/messages/MessageHubView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/strategic-clients',
             name: 'strategic-clients',
             component: () => import('../views/StrategicClientsView.vue'),
