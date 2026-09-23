@@ -152,6 +152,7 @@ const audienceBadgeClass = (type) => {
 
 const originLabel = (origin) => {
   if (origin === 'REBOOKING') return 'Rebooking';
+  if (origin === 'FOLLOW_UP') return 'Acompanhamento';
   if (origin === 'APPOINTMENT') return 'Agendamento';
   if (origin === 'LEAD') return 'Lead';
   if (origin === 'SYSTEM') return 'Sistema';

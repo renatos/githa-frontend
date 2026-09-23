@@ -10,6 +10,7 @@
         >
           <option value="">Todas as Origens</option>
           <option value="REBOOKING">Rebooking (Retorno)</option>
+          <option value="FOLLOW_UP">Acompanhamento (Pós-Procedimento)</option>
           <option value="LEAD">Leads</option>
           <option value="APPOINTMENT">Agendamentos</option>
           <option value="SYSTEM">Sistema</option>
@@ -198,6 +199,8 @@ const getOriginBadgeClass = (origin) => {
   switch (origin) {
     case 'REBOOKING':
       return 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
+    case 'FOLLOW_UP':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
     case 'LEAD':
       return 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
     case 'APPOINTMENT':

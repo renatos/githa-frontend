@@ -32,6 +32,7 @@
             class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
           >
             <option value="REBOOKING">Rebooking (Retorno de Clientes)</option>
+            <option value="FOLLOW_UP">Acompanhamento (Pós-Procedimento)</option>
             <option value="LEAD">Leads (Captação e Boas-Vindas)</option>
             <option value="APPOINTMENT">Agendamentos (Lembretes e Confirmações)</option>
             <option value="SYSTEM">Sistema (Avisos Operacionais)</option>
@@ -291,7 +292,9 @@ const renderedPreview = computed(() => {
     .replace(/\{data\}/g, '25/09/2026')
     .replace(/\{horario\}/g, '14:30')
     .replace(/\{profissional\}/g, 'Dra. Camila')
-    .replace(/\{origem\}/g, 'Instagram');
+    .replace(/\{origem\}/g, 'Instagram')
+    .replace(/\{dias\}/g, '7')
+    .replace(/\{link_avaliacao\}/g, 'https://g.page/r/CW-rcCV825eOEBM/review');
 });
 
 const currentTime = computed(() => {
