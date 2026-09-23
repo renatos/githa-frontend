@@ -1,5 +1,13 @@
 <template>
-  <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/70 rounded-xl p-5 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-600 flex flex-col justify-between">
+  <div
+    :id="'dispatch-card-' + message.id"
+    class="bg-white dark:bg-slate-800 border rounded-xl p-5 shadow-sm transition-all duration-500 flex flex-col justify-between"
+    :class="[
+      highlighted
+        ? 'ring-4 ring-emerald-500/90 dark:ring-emerald-400 border-emerald-500 shadow-xl shadow-emerald-500/25 scale-[1.01]'
+        : 'border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600'
+    ]"
+  >
     <!-- Header -->
     <div>
       <div class="flex items-start justify-between gap-3 mb-3">
@@ -151,7 +159,8 @@ import { enumService } from '@/services/enumService';
 
 const props = defineProps({
   message: { type: Object, required: true },
-  professionals: { type: Array, default: () => [] }
+  professionals: { type: Array, default: () => [] },
+  highlighted: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['approve', 'reject', 'unapprove']);

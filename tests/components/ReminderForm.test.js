@@ -191,6 +191,14 @@ describe('ReminderForm.vue - Fase 2 Unification', () => {
 
     await viewHubBtn.trigger('click');
     expect(wrapper.emitted('close')).toBeTruthy();
-    expect(mockPush).toHaveBeenCalledWith('/messages');
+    expect(mockPush).toHaveBeenCalledWith({
+      path: '/messages',
+      query: {
+        messageId: '55',
+        origin: 'FOLLOW_UP',
+        tab: 'pending',
+        reminderId: '101'
+      }
+    });
   });
 });

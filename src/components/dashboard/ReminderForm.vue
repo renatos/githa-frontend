@@ -339,7 +339,21 @@ const copyMessage = () => {
 
 const goToMessageHub = () => {
     emit('close');
-    router.push('/messages');
+    const msg = activeDispatch.value;
+    const msgId = msg?.id;
+    const origin = msg?.originType || originType.value;
+    const isSent = msg?.status === 'SENT';
+    const targetTab = isSent ? 'history' : 'pending';
+
+    router.push({
+        path: '/messages',
+        query: {
+            messageId: msgId ? String(msgId) : undefined,
+            origin: origin || undefined,
+            tab: targetTab,
+            reminderId: props.reminder.id ? String(props.reminder.id) : undefined
+        }
+    });
 };
 
 const interpolateTemplate = (content) => {

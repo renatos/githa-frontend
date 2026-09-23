@@ -24,8 +24,14 @@
         </tr>
         <tr
           v-for="msg in messages"
+          :id="`dispatch-row-${msg.id}`"
           :key="msg.id"
-          class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors"
+          class="transition-all duration-300"
+          :class="[
+            highlightedMessageId && highlightedMessageId == msg.id
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 ring-2 ring-emerald-500 font-semibold'
+              : 'hover:bg-slate-50/60 dark:hover:bg-slate-700/30'
+          ]"
         >
           <!-- Destinatário -->
           <td class="py-3.5 px-4">
@@ -112,7 +118,8 @@
 <script setup>
 defineProps({
   messages: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: () => false }
+  loading: { type: Boolean, default: () => false },
+  highlightedMessageId: { type: [Number, String], default: null }
 });
 
 defineEmits(['unapprove']);

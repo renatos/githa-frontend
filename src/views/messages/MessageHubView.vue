@@ -280,6 +280,7 @@
           :key="msg.id"
           :message="msg"
           :professionals="professionals"
+          :highlighted="highlightedMessageId === msg.id"
           @approve="onApprove"
           @reject="onReject"
           @unapprove="onUnapprove"
@@ -289,12 +290,21 @@
 
     <!-- Tab 2: Fila de Envio (Agendadas) -->
     <div v-if="activeTab === 'queue'">
-      <DispatchQueueTable :messages="filteredQueueMessages" :loading="loading" @unapprove="handleQueueUnapprove" />
+      <DispatchQueueTable
+        :messages="filteredQueueMessages"
+        :loading="loading"
+        :highlighted-message-id="highlightedMessageId"
+        @unapprove="handleQueueUnapprove"
+      />
     </div>
 
     <!-- Tab 3: Histórico & Falhas -->
     <div v-if="activeTab === 'history'">
-      <DispatchQueueTable :messages="filteredHistoryMessages" :loading="loading" />
+      <DispatchQueueTable
+        :messages="filteredHistoryMessages"
+        :loading="loading"
+        :highlighted-message-id="highlightedMessageId"
+      />
     </div>
 
     <!-- Tab 4: Modelos de Mensagem (Templates) -->
@@ -305,7 +315,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { dispatchMessageService } from '../../services/dispatchMessageService';
 import { professionalService } from '../../services/professionalService';
 import { enumService } from '../../services/enumService';
@@ -316,8 +327,10 @@ import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
 import { toastBridge } from '../../services/toastBridge';
 
+const route = useRoute();
 const activeTab = ref('pending');
 const loading = ref(false);
+const highlightedMessageId = ref(null);
 
 const pendingMessages = ref([]);
 const queueMessages = ref([]);
@@ -535,16 +548,94 @@ const loadHistory = async () => {
   }
 };
 
-const loadCurrentTab = () => {
-  if (activeTab.value === 'pending') loadPending();
-  else if (activeTab.value === 'queue') loadQueue();
-  else if (activeTab.value === 'history') loadHistory();
+const loadCurrentTab = async () => {
+  if (activeTab.value === 'pending') await loadPending();
+  else if (activeTab.value === 'queue') await loadQueue();
+  else if (activeTab.value === 'history') await loadHistory();
 };
 
 const switchTab = (tab) => {
   activeTab.value = tab;
   filters.value.status = '';
   loadCurrentTab();
+};
+
+const scrollToTargetCard = (msgId) => {
+  nextTick(() => {
+    setTimeout(() => {
+      const cardEl = document.getElementById(`dispatch-card-${msgId}`) || document.getElementById(`dispatch-row-${msgId}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightedMessageId.value = msgId;
+        setTimeout(() => {
+          highlightedMessageId.value = null;
+        }, 4500);
+      }
+    }, 250);
+  });
+};
+
+const handleTargetMessageHighlight = async () => {
+  const targetMessageId = route.query.messageId ? Number(route.query.messageId) : null;
+  const targetReminderId = route.query.reminderId ? Number(route.query.reminderId) : null;
+  if (!targetMessageId && !targetReminderId) return;
+
+  // Search in current active list
+  let targetMsg = currentActiveList.value.find(m =>
+    (targetMessageId && m.id === targetMessageId) ||
+    (targetReminderId && m.originId === targetReminderId)
+  );
+
+  // If not found in current tab, search other tabs
+  if (!targetMsg) {
+    if (activeTab.value !== 'pending') {
+      if (pendingMessages.value.length === 0) await loadPending();
+      targetMsg = pendingMessages.value.find(m =>
+        (targetMessageId && m.id === targetMessageId) ||
+        (targetReminderId && m.originId === targetReminderId)
+      );
+      if (targetMsg) {
+        activeTab.value = 'pending';
+      }
+    }
+    if (!targetMsg && activeTab.value !== 'queue') {
+      if (queueMessages.value.length === 0) await loadQueue();
+      targetMsg = queueMessages.value.find(m =>
+        (targetMessageId && m.id === targetMessageId) ||
+        (targetReminderId && m.originId === targetReminderId)
+      );
+      if (targetMsg) {
+        activeTab.value = 'queue';
+      }
+    }
+    if (!targetMsg && activeTab.value !== 'history') {
+      if (historyMessages.value.length === 0) await loadHistory();
+      targetMsg = historyMessages.value.find(m =>
+        (targetMessageId && m.id === targetMessageId) ||
+        (targetReminderId && m.originId === targetReminderId)
+      );
+      if (targetMsg) {
+        activeTab.value = 'history';
+      }
+    }
+  }
+
+  if (targetMsg) {
+    // If origin filter would hide this message, adjust to match
+    if (selectedOrigin.value && selectedOrigin.value !== targetMsg.originType) {
+      selectedOrigin.value = targetMsg.originType;
+    }
+    // If status filter would hide this message, reset it
+    if (filters.value.status && filters.value.status !== targetMsg.status) {
+      filters.value.status = '';
+    }
+    // If search text would hide this message, reset it
+    if (filters.value.search) {
+      filters.value.search = '';
+    }
+
+    scrollToTargetCard(targetMsg.id);
+  }
 };
 
 const onApprove = async ({ id, customMessageText, professionalId, done }) => {
@@ -614,11 +705,29 @@ const handleQueueUnapprove = async (msg) => {
 
 onMounted(async () => {
   loadProfessionals();
-  loadPending();
   try {
     statusOptions.value = await enumService.getOptions('DispatchStatus');
   } catch (e) {
     console.error('Erro ao carregar enum DispatchStatus:', e);
+  }
+
+  if (route.query.tab && ['pending', 'queue', 'history', 'templates'].includes(route.query.tab)) {
+    activeTab.value = route.query.tab;
+  }
+  if (route.query.origin) {
+    selectedOrigin.value = route.query.origin;
+  }
+
+  await loadCurrentTab();
+
+  if (route.query.messageId || route.query.reminderId) {
+    await handleTargetMessageHighlight();
+  }
+});
+
+watch(() => route.query.messageId, async (newVal) => {
+  if (newVal) {
+    await handleTargetMessageHighlight();
   }
 });
 </script>
