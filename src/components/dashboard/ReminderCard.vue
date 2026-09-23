@@ -1,13 +1,19 @@
 <template>
   <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-        <span>🔄</span> Smart Rebooking
-      </h2>
-      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-        <option value="">Todos</option>
-        <option v-for="opt in statusFilterOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
-      </select>
+    <div class="flex flex-col gap-3 mb-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+          <span>🔄</span> Smart Rebooking
+        </h2>
+      </div>
+
+      <!-- Bullets / Pills Filter Bar -->
+      <StatusBulletsBar
+        v-model="statusFilter"
+        :items="bulletFilterItems"
+        wrap
+        size="xs"
+      />
     </div>
 
     <!-- Metrics Summary Section -->
@@ -117,6 +123,7 @@ defineEmits(['select-client']);
 import { listReminders } from '../../services/reminderService';
 import ReminderForm from './ReminderForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
+import StatusBulletsBar from '../common/StatusBulletsBar.vue';
 import AppointmentForm from '../AppointmentForm.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { enumService } from '../../services/enumService';
@@ -132,12 +139,28 @@ const props = defineProps({
 const loading = ref(true);
 const error = ref(false);
 const allReminders = ref([]);
-const statusFilter = ref('NEW');
+const statusFilter = ref('PENDING');
 const selectedReminder = ref(null);
 const showAppointmentForm = ref(false);
 const preFilledAppointment = ref({});
 
 const statusFilterOptions = ref([]);
+
+const bulletFilterItems = computed(() => {
+    const totalCount = allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt)).length;
+    const pending = allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+    const scheduled = allReminders.value.filter(r => r.status === 'SCHEDULED').length;
+    const converted = allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt)).length;
+    const declined = allReminders.value.filter(r => r.status === 'DECLINED').length;
+
+    return [
+        { label: 'Todos', value: '', count: totalCount },
+        { label: 'Pendentes', value: 'PENDING', dotColor: 'bg-amber-500', count: pending },
+        { label: 'Agendados', value: 'SCHEDULED', dotColor: 'bg-blue-500', count: scheduled },
+        { label: 'Efetivados', value: 'CONVERTED', dotColor: 'bg-emerald-500', count: converted },
+        { label: 'Declinados', value: 'DECLINED', dotColor: 'bg-slate-400', count: declined }
+    ];
+});
 
 const rebookingStyles = {
     NEW: { badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
@@ -176,6 +199,9 @@ const reminders = computed(() => {
     if (!statusFilter.value) {
         return allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt));
     }
+    if (statusFilter.value === 'PENDING') {
+        return allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED');
+    }
     if (statusFilter.value === 'CONVERTED') {
         return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt));
     }
@@ -185,6 +211,18 @@ const reminders = computed(() => {
 const emptyMessage = computed(() => {
     if (!statusFilter.value) {
         return 'Nenhum lembrete encontrado.';
+    }
+    if (statusFilter.value === 'PENDING') {
+        return 'Nenhum lembrete pendente encontrado.';
+    }
+    if (statusFilter.value === 'SCHEDULED') {
+        return 'Nenhum lembrete agendado encontrado.';
+    }
+    if (statusFilter.value === 'CONVERTED') {
+        return 'Nenhum lembrete efetivado encontrado.';
+    }
+    if (statusFilter.value === 'DECLINED') {
+        return 'Nenhum lembrete declinado encontrado.';
     }
     const selectedOption = statusFilterOptions.value.find(opt => opt.name === statusFilter.value);
     if (selectedOption?.description) {

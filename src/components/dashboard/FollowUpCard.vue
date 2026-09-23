@@ -1,14 +1,20 @@
 <template>
   <div class="bg-white dark:bg-[#1E222B] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-slate-800 flex flex-col">
-    <!-- Header Title & Status Select -->
-    <div class="flex items-center justify-between mb-4 gap-2">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-        <span>📋</span> Acompanhamento Pós-Procedimento
-      </h2>
-      <select v-model="statusFilter" class="text-xs bg-gray-50 border border-gray-200 text-gray-900 rounded focus:ring-blue-500 focus:border-blue-500 block p-1.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shrink-0">
-        <option value="">Todos</option>
-        <option v-for="opt in filteredStatusOptions" :key="opt.name" :value="opt.name">{{ opt.description }}</option>
-      </select>
+    <!-- Header Title & Status Bullets Bar -->
+    <div class="flex flex-col gap-3 mb-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+          <span>📋</span> Acompanhamento Pós-Procedimento
+        </h2>
+      </div>
+
+      <!-- Bullets / Pills Filter Bar -->
+      <StatusBulletsBar
+        v-model="statusFilter"
+        :items="bulletFilterItems"
+        wrap
+        size="xs"
+      />
     </div>
 
     <!-- Select Profissional (Acima de Acompanhamentos Pendentes) -->
@@ -89,12 +95,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { listReminders } from '../../services/reminderService';
 import { professionalService } from '../../services/professionalService';
 import { authService } from '../../services/authService';
 import ReminderForm from './ReminderForm.vue';
 import StatusBadge from '../common/StatusBadge.vue';
+import StatusBulletsBar from '../common/StatusBulletsBar.vue';
 import { enumService } from '../../services/enumService';
 
 defineEmits(['select-client']);
@@ -115,6 +122,23 @@ const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
 const statusFilterOptions = ref([]);
 
+const bulletFilterItems = computed(() => {
+    const list = filteredByProfessional.value;
+    const totalCount = list.length;
+    const awaiting = list.filter(r => r.status === 'NEW').length;
+    const following = list.filter(r => r.status === 'NOTIFIED').length;
+    const concluded = list.filter(r => r.status === 'CONVERTED').length;
+    const declined = list.filter(r => r.status === 'DECLINED').length;
+
+    return [
+        { label: 'Todos', value: '', count: totalCount },
+        { label: 'Aguardando Contato', value: 'NEW', dotColor: 'bg-indigo-500', count: awaiting },
+        { label: 'Em Acompanhamento', value: 'NOTIFIED', dotColor: 'bg-blue-500', count: following },
+        { label: 'Concluídos', value: 'CONVERTED', dotColor: 'bg-emerald-500', count: concluded },
+        { label: 'Declinados', value: 'DECLINED', dotColor: 'bg-slate-400', count: declined }
+    ];
+});
+
 const followUpStyles = {
     NEW: { badge: 'bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 border border-green-200 dark:border-green-500/30', dot: 'bg-green-500' },
     NOTIFIED: { badge: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/30', dot: 'bg-yellow-500' },
@@ -122,9 +146,6 @@ const followUpStyles = {
     NO_CONTACT: { badge: 'bg-gray-50 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400 border border-gray-200 dark:border-gray-500/30', dot: 'bg-gray-500' }
 };
 
-const filteredStatusOptions = computed(() => {
-    return statusFilterOptions.value.filter(opt => opt.name !== 'SCHEDULED' && opt.name !== 'CONVERTED');
-});
 
 const followUpStatusMap = computed(() => {
     const map = {};

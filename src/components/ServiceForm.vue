@@ -65,6 +65,28 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
 
         <!-- Retorno Tab -->
         <div v-show="activeTab === 1" class="flex flex-col gap-6">
+          <div class="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/40 rounded-xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+              <i class="fa-solid fa-file-lines text-sm"></i>
+            </div>
+            <div class="text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
+              <strong class="font-semibold">Modelos de Mensagem Centralizados:</strong> O texto das mensagens de retorno e acompanhamento agora é gerenciado em <strong>Mensagens &gt; Modelos de Mensagem (Templates)</strong>, com concordância de gênero automática (ex: <em>sua limpeza de pele</em>, <em>seu design</em>).
+            </div>
+          </div>
+
+          <label class="flex flex-col">
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Nome para Mensagens (Fantasia)</p>
+            <input
+              v-model="form.friendlyName"
+              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors"
+              placeholder="Ex: design de sobrancelhas mais buço e rosto"
+              type="text"
+            />
+            <p class="text-slate-500 text-xs mt-1">
+              Nome amigável utilizado na composição das mensagens do WhatsApp (ex: em vez de <em>Design sobrancelhas+buço+rosto</em>, informe <em>design de sobrancelhas mais buço e rosto</em>). Se não preenchido, será utilizado o Nome principal.
+            </p>
+          </label>
+
           <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Retorno Ideal (dias)</p>
             <input v-model="form.idealReturnDays" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="0" placeholder="Ex: 30" type="number"/>
@@ -72,21 +94,9 @@ class="flex items-center justify-between gap-4 p-4 rounded-lg transition-colors 
           </label>
 
           <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Template da Mensagem de Retorno</p>
-            <textarea v-model="form.rebookingTemplate" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors font-mono" rows="4" placeholder="Olá ${clientName}! ..."></textarea>
-            <p class="text-slate-500 text-xs mt-1">Use <code>${clientName}</code> para inserir o nome do cliente automaticamente.</p>
-          </label>
-
-          <label class="flex flex-col">
             <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Acompanhamento Pós-Procedimento (dias)</p>
-            <input v-model="form.followUpDays" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="0" placeholder="Ex: 5" type="number"/>
+            <input v-model="form.followUpDays" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors" min="0" placeholder="Ex: 7" type="number"/>
             <p class="text-slate-500 text-xs mt-1">Número de dias após o procedimento para gerar lembrete de acompanhamento.</p>
-          </label>
-
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Template da Mensagem de Acompanhamento</p>
-            <textarea v-model="form.followUpTemplate" class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 p-4 text-base transition-colors font-mono" rows="4" placeholder="Olá ${clientName}! Já se passaram X dias desde o seu procedimento..."></textarea>
-            <p class="text-slate-500 text-xs mt-1">Use <code>${clientName}</code> e <code>${serviceName}</code> para personalização.</p>
           </label>
         </div>
       </div>
@@ -130,9 +140,8 @@ const form = ref({
   procedureDetails: '',
   durationMinutes: 30,
   idealReturnDays: null,
-  rebookingTemplate: '',
   followUpDays: null,
-  followUpTemplate: '',
+  friendlyName: '',
   price: 0,
   active: true,
   group: 'Serviços básicos', // Default
@@ -143,9 +152,8 @@ onMounted(() => {
     form.value = {
         ...props.service,
         idealReturnDays: props.service.idealReturnDays ?? null,
-        rebookingTemplate: props.service.rebookingTemplate ?? '',
         followUpDays: props.service.followUpDays ?? null,
-        followUpTemplate: props.service.followUpTemplate ?? ''
+        friendlyName: props.service.friendlyName ?? ''
     };
   }
 });
