@@ -361,9 +361,23 @@
 
       <!-- Action Plan Section -->
       <section class="space-y-6">
-        <div class="flex items-center gap-3">
-          <div class="h-8 w-1.5 bg-primary rounded-full"></div>
-          <h2 class="text-2xl font-bold text-white">Como atingir minha meta?</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="h-8 w-1.5 bg-primary rounded-full"></div>
+            <h2 class="text-2xl font-bold text-white">Como atingir minha meta?</h2>
+          </div>
+
+          <button
+            type="button"
+            :disabled="generatingCandidates"
+            class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 shadow-sm self-start sm:self-auto disabled:opacity-50 cursor-pointer"
+            title="Gerar mensagens no Hub de Disparo respeitando o rodízio e as necessidades da meta"
+            @click="handleGenerateCandidates"
+          >
+            <i v-if="generatingCandidates" class="fa-solid fa-spinner fa-spin"></i>
+            <i v-else class="fa-solid fa-paper-plane"></i>
+            <span>Gerar Mensagens da Meta</span>
+          </button>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -623,6 +637,7 @@ import { professionalService } from '../services/professionalService';
 import ClientForm from '../components/ClientForm.vue';
 import { clientService } from '../services/clientService';
 import { toastBridge } from '../services/toastBridge';
+import { dispatchMessageService } from '../services/dispatchMessageService';
 
 
 
@@ -632,6 +647,7 @@ const selectedYear = ref(new Date().getFullYear());
 const filterProfessionalId = ref(null);
 const loading = ref(false);
 const saving = ref(false);
+const generatingCandidates = ref(false);
 const progressData = ref(null);
 const showGoalModal = ref(false);
 const showRebookingModal = ref(false);
@@ -880,6 +896,45 @@ watch(showGoalModal, (val) => {
     setTimeout(resetNewGoal, 300);
   }
 });
+
+const handleGenerateCandidates = async () => {
+  generatingCandidates.value = true;
+  try {
+    const res = await dispatchMessageService.generateCandidates({
+      professionalId: filterProfessionalId.value,
+      month: selectedMonth.value,
+      year: selectedYear.value
+    });
+
+    if (res.totalGenerated === 0) {
+      toastBridge.getToast().add({
+        severity: 'info',
+        summary: 'Central de Mensagens',
+        detail: 'Nenhum novo lembrete pendente para os procedimentos desta meta no momento.',
+        life: 5000
+      });
+    } else {
+      const details = res.generatedByService?.map(s => `${s.count} de ${s.serviceName}`).join(', ');
+      toastBridge.getToast().add({
+        severity: 'success',
+        summary: 'Mensagens Geradas',
+        detail: `${res.totalGenerated} mensagem(ns) gerada(s) para moderação no Hub: ${details}.`,
+        life: 6000
+      });
+      await fetchData();
+    }
+  } catch (error) {
+    console.error('Erro ao gerar candidatos da meta:', error);
+    toastBridge.getToast().add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível gerar mensagens para a meta.',
+      life: 5000
+    });
+  } finally {
+    generatingCandidates.value = false;
+  }
+};
 
 onMounted(() => {
   const user = authService.getCurrentUser();

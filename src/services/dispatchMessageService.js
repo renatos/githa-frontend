@@ -36,6 +36,11 @@ export const dispatchMessageService = {
       params: { targetType, targetId }
     });
     return response.data;
+  },
+
+  generateCandidates: async (data = {}) => {
+    const response = await api.post('/dispatch-messages/generate-candidates', data);
+    return response.data;
   }
 };
 
