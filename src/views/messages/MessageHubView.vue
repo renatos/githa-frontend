@@ -1,18 +1,11 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <i class="fa-solid fa-paper-plane text-emerald-600 dark:text-emerald-400"></i>
-          Central de Envio de Mensagens
-        </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Aprovação prévia, moderação e escalonamento espaçado de disparos via WhatsApp.
-        </p>
-      </div>
-
-      <div class="flex items-center gap-2">
+  <div class="p-4 md:p-6 flex flex-col gap-6">
+    <!-- Header Row -->
+    <PageHeader
+      title="Central de Envio de Mensagens"
+      subtitle="Aprovação prévia, moderação e escalonamento espaçado de disparos via WhatsApp."
+    >
+      <template #actions>
         <button
           type="button"
           :disabled="loading"
@@ -22,8 +15,8 @@
           <i class="fa-solid fa-arrows-rotate" :class="{ 'fa-spin': loading }"></i>
           Atualizar
         </button>
-      </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <!-- Operational Banner: Anti-Ban & Pacing -->
     <div class="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-800/40 rounded-xl p-4 flex items-start gap-3">
@@ -49,10 +42,10 @@
           <i class="fa-solid fa-clock"></i>
           <span>Aguardando Aprovação</span>
           <span
-            v-if="pendingMessages.length > 0"
+            v-if="pendingCount > 0"
             class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
           >
-            {{ pendingMessages.length }}
+            {{ pendingCount }}
           </span>
         </button>
 
@@ -104,7 +97,7 @@
     <div v-if="activeTab === 'pending'" class="space-y-4">
       <div v-if="loading && pendingMessages.length === 0" class="text-center py-12 text-slate-500">
         <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-        <p class="text-sm">Carregando mensagens pendentes...</p>
+        <p class="text-sm">Carregando mensagens...</p>
       </div>
 
       <div
@@ -116,7 +109,7 @@
         </div>
         <h3 class="text-base font-semibold text-slate-900 dark:text-white">Tudo em dia!</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
-          Não há mensagens aguardando aprovação no momento. A lista matinal de rebooking é gerada diariamente às 08:00.
+          Não há mensagens para moderação no momento. A lista matinal de rebooking é gerada diariamente às 08:00.
         </p>
       </div>
 
@@ -128,13 +121,14 @@
           :professionals="professionals"
           @approve="onApprove"
           @reject="onReject"
+          @unapprove="onUnapprove"
         />
       </div>
     </div>
 
     <!-- Tab 2: Fila de Envio (Agendadas) -->
     <div v-if="activeTab === 'queue'">
-      <DispatchQueueTable :messages="queueMessages" :loading="loading" />
+      <DispatchQueueTable :messages="queueMessages" :loading="loading" @unapprove="handleQueueUnapprove" />
     </div>
 
     <!-- Tab 3: Histórico & Falhas -->
@@ -150,9 +144,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { dispatchMessageService } from '../../services/dispatchMessageService';
 import { professionalService } from '../../services/professionalService';
+import PageHeader from '../../components/common/PageHeader.vue';
 import DispatchMessageCard from '../../components/messages/DispatchMessageCard.vue';
 import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue';
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
@@ -166,6 +161,10 @@ const queueMessages = ref([]);
 const historyMessages = ref([]);
 const professionals = ref([]);
 
+const pendingCount = computed(() => {
+  return pendingMessages.value.filter(m => m.status === 'PENDING_APPROVAL').length;
+});
+
 const loadProfessionals = async () => {
   try {
     const resp = await professionalService.getAll({ page: 0, size: 100 });
@@ -178,11 +177,13 @@ const loadProfessionals = async () => {
 const loadPending = async () => {
   loading.value = true;
   try {
-    const data = await dispatchMessageService.getAll({ status: 'PENDING_APPROVAL' });
+    const data = await dispatchMessageService.getAll({
+      statuses: 'PENDING_APPROVAL,SCHEDULED'
+    });
     pendingMessages.value = data || [];
   } catch (e) {
     console.error(e);
-    toastBridge.getToast()?.error('Erro ao carregar mensagens pendentes.');
+    toastBridge.error('Erro', 'Erro ao carregar mensagens pendentes.');
   } finally {
     loading.value = false;
   }
@@ -195,7 +196,7 @@ const loadQueue = async () => {
     queueMessages.value = data || [];
   } catch (e) {
     console.error(e);
-    toastBridge.getToast()?.error('Erro ao carregar fila de envio.');
+    toastBridge.error('Erro', 'Erro ao carregar fila de envio.');
   } finally {
     loading.value = false;
   }
@@ -208,7 +209,7 @@ const loadHistory = async () => {
     historyMessages.value = data || [];
   } catch (e) {
     console.error(e);
-    toastBridge.getToast()?.error('Erro ao carregar histórico de envios.');
+    toastBridge.error('Erro', 'Erro ao carregar histórico de envios.');
   } finally {
     loading.value = false;
   }
@@ -227,15 +228,19 @@ const switchTab = (tab) => {
 
 const onApprove = async ({ id, customMessageText, professionalId, done }) => {
   try {
-    await dispatchMessageService.approve(id, {
+    const updated = await dispatchMessageService.approve(id, {
       customMessageText,
       professionalId
     });
-    toastBridge.getToast()?.success('Mensagem aprovada e agendada na fila!');
-    pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
+    const idx = pendingMessages.value.findIndex(m => m.id === id);
+    if (idx !== -1 && updated) {
+      pendingMessages.value.splice(idx, 1, { ...pendingMessages.value[idx], ...updated });
+    }
+    toastBridge.success('Sucesso', 'Mensagem aprovada e agendada na fila!');
   } catch (e) {
+    console.error('Erro ao aprovar mensagem:', e);
     const errorMsg = e.response?.data?.message || 'Erro ao aprovar mensagem.';
-    toastBridge.getToast()?.error(errorMsg);
+    toastBridge.error('Erro', errorMsg);
   } finally {
     done();
   }
@@ -244,13 +249,45 @@ const onApprove = async ({ id, customMessageText, professionalId, done }) => {
 const onReject = async ({ id, done }) => {
   try {
     await dispatchMessageService.reject(id);
-    toastBridge.getToast()?.info('Mensagem descartada.');
     pendingMessages.value = pendingMessages.value.filter(m => m.id !== id);
+    toastBridge.info('Informação', 'Mensagem descartada.');
   } catch (e) {
-    console.error(e);
-    toastBridge.getToast()?.error('Erro ao descartar mensagem.');
+    console.error('Erro ao descartar mensagem:', e);
+    toastBridge.error('Erro', 'Erro ao descartar mensagem.');
   } finally {
     done();
+  }
+};
+
+const onUnapprove = async ({ id, done }) => {
+  try {
+    const updated = await dispatchMessageService.unapprove(id);
+    const idx = pendingMessages.value.findIndex(m => m.id === id);
+    if (idx !== -1 && updated) {
+      pendingMessages.value.splice(idx, 1, { ...pendingMessages.value[idx], ...updated });
+    }
+    toastBridge.info('Informação', 'Aprovação desfeita. Mensagem retornou para aprovação pendente.');
+  } catch (e) {
+    console.error('Erro ao desfazer aprovação:', e);
+    const errorMsg = e.response?.data?.message || 'Erro ao desfazer aprovação.';
+    toastBridge.error('Erro', errorMsg);
+  } finally {
+    done();
+  }
+};
+
+const handleQueueUnapprove = async (msg) => {
+  if (!confirm(`Deseja desfazer a aprovação da mensagem para ${msg.targetName}? O envio agendado será cancelado.`)) {
+    return;
+  }
+  try {
+    await dispatchMessageService.unapprove(msg.id);
+    toastBridge.info('Informação', 'Aprovação desfeita com sucesso!');
+    loadQueue();
+  } catch (e) {
+    console.error('Erro ao desfazer aprovação:', e);
+    const errorMsg = e.response?.data?.message || 'Erro ao desfazer aprovação.';
+    toastBridge.error('Erro', errorMsg);
   }
 };
 

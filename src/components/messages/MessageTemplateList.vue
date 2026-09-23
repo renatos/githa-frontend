@@ -63,7 +63,8 @@
             <tr
               v-for="tmpl in filteredTemplates"
               :key="tmpl.id"
-              class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors"
+              class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
+              @click="openEditModal(tmpl)"
             >
               <!-- Nome e Conteúdo -->
               <td class="px-4 py-3 max-w-xs">
@@ -118,20 +119,11 @@
               <!-- Ações -->
               <td class="px-4 py-3 text-right">
                 <div class="flex items-center justify-end gap-1">
-                  <!-- Editar -->
-                  <button
-                    title="Editar Template"
-                    class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    @click="openEditModal(tmpl)"
-                  >
-                    <Edit2 class="w-4 h-4" />
-                  </button>
-
                   <!-- Toggle Ativo -->
                   <button
                     :title="tmpl.active ? 'Desativar Template' : 'Ativar Template'"
                     class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    @click="handleToggleActive(tmpl)"
+                    @click.stop="handleToggleActive(tmpl)"
                   >
                     <Power class="w-4 h-4" />
                   </button>
@@ -141,7 +133,7 @@
                     v-if="!tmpl.isDefault"
                     title="Excluir Template"
                     class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                    @click="handleDelete(tmpl)"
+                    @click.stop="handleDelete(tmpl)"
                   >
                     <Trash2 class="w-4 h-4" />
                   </button>
@@ -165,7 +157,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Edit2, Trash2, Power, FileText, Loader2 } from 'lucide-vue-next';
+import { Plus, Trash2, Power, FileText, Loader2 } from 'lucide-vue-next';
 import messageTemplateService from '../../services/messageTemplateService';
 import MessageTemplateModal from './MessageTemplateModal.vue';
 

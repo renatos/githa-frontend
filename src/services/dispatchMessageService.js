@@ -26,6 +26,11 @@ export const dispatchMessageService = {
     return response.data;
   },
 
+  unapprove: async (id) => {
+    const response = await api.post(`/dispatch-messages/${id}/unapprove`);
+    return response.data;
+  },
+
   getEntityHistory: async (targetType, targetId) => {
     const response = await api.get('/dispatch-messages/history', {
       params: { targetType, targetId }

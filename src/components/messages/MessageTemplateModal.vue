@@ -286,7 +286,7 @@ const renderedPreview = computed(() => {
   if (!form.value.content) return '';
   return form.value.content
     .replace(/\{nome\}/g, 'Ana Paula')
-    .replace(/\{servico\}/g, 'Design de Sobrancelhas')
+    .replace(/\{servico\}/g, 'design de sobrancelhas')
     .replace(/\{data\}/g, '25/09/2026')
     .replace(/\{horario\}/g, '14:30')
     .replace(/\{profissional\}/g, 'Dra. Camila')

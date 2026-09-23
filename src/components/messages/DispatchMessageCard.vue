@@ -11,7 +11,7 @@
             <h4 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               {{ message.targetName }}
               <span v-if="metadataObj.serviceName" class="text-xs font-normal text-slate-500 dark:text-slate-400">
-                • {{ metadataObj.serviceName }}
+                • {{ metadataObj.serviceName.toLowerCase() }}
               </span>
             </h4>
             <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -24,7 +24,24 @@
           </div>
         </div>
 
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20">
+        <!-- Dynamic Status Badge -->
+        <span
+          v-if="isScheduled"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-500/20"
+        >
+          <i class="fa-regular fa-calendar-check text-[10px]"></i>
+          {{ scheduledLabel }}
+        </span>
+        <span
+          v-else-if="message.status === 'SENT'"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20"
+        >
+          <i class="fa-solid fa-check text-[10px]"></i> Enviado
+        </span>
+        <span
+          v-else
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20"
+        >
           <i class="fa-solid fa-clock text-[10px]"></i> Aguardando OK
         </span>
       </div>
@@ -36,6 +53,7 @@
             Mensagem a ser enviada
           </label>
           <button
+            v-if="!isScheduled && message.status !== 'SENT'"
             type="button"
             class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
             @click="isEditing = !isEditing"
@@ -46,7 +64,7 @@
         </div>
 
         <textarea
-          v-if="isEditing"
+          v-if="isEditing && !isScheduled"
           v-model="editedText"
           rows="4"
           class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -63,59 +81,106 @@
 
     <!-- Actions & Professional Selection -->
     <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-      <div class="flex-1 max-w-xs">
-        <select
-          v-model="selectedProfessionalId"
-          class="w-full text-xs border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2 focus:ring-blue-500"
-        >
-          <option :value="null">Profissional responsável (opcional)</option>
-          <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
-            {{ prof.name }}
-          </option>
-        </select>
-      </div>
-
-      <div class="flex items-center gap-2 justify-end">
-        <button
-          type="button"
-          :disabled="rejecting || approving"
-          class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-          @click="handleReject"
-        >
-          <i v-if="rejecting" class="fa-solid fa-spinner fa-spin mr-1"></i>
-          <i v-else class="fa-solid fa-xmark mr-1"></i> Descartar
-        </button>
+      <!-- Se já estiver Agendado, permite Desfazer Aprovação -->
+      <div v-if="isScheduled" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
+        <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
+          <span>Agendado para disparo automático.</span>
+        </div>
 
         <button
           type="button"
-          :disabled="approving || rejecting"
-          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
-          @click="handleApprove"
+          :disabled="unapproving"
+          class="px-3.5 py-2 border border-amber-300 dark:border-amber-700/60 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 text-amber-800 dark:text-amber-300 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          @click="handleUnapprove"
         >
-          <i v-if="approving" class="fa-solid fa-spinner fa-spin"></i>
-          <i v-else class="fa-solid fa-check"></i>
-          <span>Aprovar e Agendar</span>
+          <i v-if="unapproving" class="fa-solid fa-spinner fa-spin"></i>
+          <i v-else class="fa-solid fa-rotate-left"></i>
+          <span>Desfazer Aprovação</span>
         </button>
       </div>
+
+      <!-- Se ainda estiver Aguardando Aprovação -->
+      <template v-else>
+        <div class="flex-1 max-w-xs">
+          <select
+            v-model="selectedProfessionalId"
+            class="w-full text-xs border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2 focus:ring-blue-500"
+          >
+            <option :value="null">Profissional responsável (opcional)</option>
+            <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
+              {{ prof.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 justify-end">
+          <button
+            type="button"
+            :disabled="rejecting || approving"
+            class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+            @click="handleReject"
+          >
+            <i v-if="rejecting" class="fa-solid fa-spinner fa-spin mr-1"></i>
+            <i v-else class="fa-solid fa-xmark mr-1"></i> Descartar
+          </button>
+
+          <button
+            type="button"
+            :disabled="approving || rejecting"
+            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            @click="handleApprove"
+          >
+            <i v-if="approving" class="fa-solid fa-spinner fa-spin"></i>
+            <i v-else class="fa-solid fa-check"></i>
+            <span>Aprovar e Agendar</span>
+          </button>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   message: { type: Object, required: true },
   professionals: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['approve', 'reject']);
+const emit = defineEmits(['approve', 'reject', 'unapprove']);
 
 const isEditing = ref(false);
 const editedText = ref(props.message.messageText || '');
 const selectedProfessionalId = ref(props.message.approvedByProfessionalId || null);
 const approving = ref(false);
 const rejecting = ref(false);
+const unapproving = ref(false);
+
+watch(
+  () => props.message,
+  (newMsg) => {
+    if (newMsg) {
+      editedText.value = newMsg.messageText || '';
+      selectedProfessionalId.value = newMsg.approvedByProfessionalId || null;
+    }
+  },
+  { deep: true }
+);
+
+const isScheduled = computed(() => {
+  return props.message.status === 'SCHEDULED' || props.message.status === 'APPROVED';
+});
+
+const scheduledLabel = computed(() => {
+  if (props.message.scheduledAt) {
+    const d = new Date(props.message.scheduledAt);
+    const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `Agendado às ${timeStr}`;
+  }
+  return 'Agendado';
+});
 
 const metadataObj = computed(() => {
   if (!props.message.metadata) return {};
@@ -155,6 +220,17 @@ const handleReject = () => {
   emit('reject', {
     id: props.message.id,
     done: () => { rejecting.value = false; }
+  });
+};
+
+const handleUnapprove = () => {
+  if (!confirm(`Deseja desfazer a aprovação da mensagem para ${props.message.targetName}? O envio agendado será cancelado e a mensagem voltará para a moderação.`)) {
+    return;
+  }
+  unapproving.value = true;
+  emit('unapprove', {
+    id: props.message.id,
+    done: () => { unapproving.value = false; }
   });
 };
 </script>

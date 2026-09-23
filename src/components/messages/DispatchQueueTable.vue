@@ -8,16 +8,17 @@
           <th class="py-3.5 px-4">Horário Programado</th>
           <th class="py-3.5 px-4">Mensagem</th>
           <th class="py-3.5 px-4">Status</th>
+          <th class="py-3.5 px-4 text-right">Ações</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
         <tr v-if="loading" class="text-center">
-          <td colspan="5" class="py-8 text-slate-500 dark:text-slate-400">
+          <td colspan="6" class="py-8 text-slate-500 dark:text-slate-400">
             <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando mensagens...
           </td>
         </tr>
         <tr v-else-if="messages.length === 0" class="text-center">
-          <td colspan="5" class="py-8 text-slate-500 dark:text-slate-400">
+          <td colspan="6" class="py-8 text-slate-500 dark:text-slate-400">
             Nenhuma mensagem encontrada nesta seção.
           </td>
         </tr>
@@ -87,6 +88,21 @@
               {{ statusLabel(msg.status) }}
             </span>
           </td>
+
+          <!-- Ações -->
+          <td class="py-3.5 px-4 text-right">
+            <button
+              v-if="msg.status === 'SCHEDULED' || msg.status === 'APPROVED'"
+              type="button"
+              title="Desfazer Aprovação (cancelar envio agendado)"
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700/60 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 text-amber-800 dark:text-amber-300 transition-colors"
+              @click="$emit('unapprove', msg)"
+            >
+              <i class="fa-solid fa-rotate-left text-[11px]"></i>
+              <span>Desfazer</span>
+            </button>
+            <span v-else class="text-xs text-slate-400">—</span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -98,6 +114,8 @@ defineProps({
   messages: { type: Array, default: () => [] },
   loading: { type: Boolean, default: () => false }
 });
+
+defineEmits(['unapprove']);
 
 const formatPhone = (phone) => {
   if (!phone) return '';
