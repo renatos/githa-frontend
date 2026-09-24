@@ -93,6 +93,10 @@
           <i class="fa-solid fa-sack-dollar w-6 text-lg"></i>
           <span class="ml-2">Financeiro</span>
         </router-link>
+        <router-link to="/reports" class="nav-link" :class="{ 'nav-link-active': isReportsActive }" @click="closeSidebar">
+          <i class="fa-solid fa-chart-pie w-6 text-lg"></i>
+          <span class="ml-2">Relatórios</span>
+        </router-link>
         <router-link to="/payment-methods" class="nav-link" active-class="nav-link-active" @click="closeSidebar">
           <i class="fa-regular fa-credit-card w-6 text-lg"></i>
           <span class="ml-2">Formas de Pagamento</span>
@@ -205,6 +209,10 @@ onMessage((data) => {
 
 const isProfessionalsActive = computed(() => {
   return route.path === '/professionals' && !route.query.view;
+});
+
+const isReportsActive = computed(() => {
+  return route.path.startsWith('/reports');
 });
 
 const isCommissionsActive = computed(() => {

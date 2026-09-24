@@ -96,6 +96,28 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/reports',
+            component: () => import('../views/reports/ReportsHubView.vue'),
+            meta: { requiresAuth: true },
+            children: [
+                {
+                    path: '',
+                    name: 'reports-catalog',
+                    component: () => import('../views/reports/ReportsCatalogView.vue')
+                },
+                {
+                    path: 'financial/dre',
+                    name: 'report-dre',
+                    component: () => import('../views/reports/financial/DreReportView.vue')
+                },
+                {
+                    path: 'financial/billing-payment-methods',
+                    name: 'report-billing-payment-methods',
+                    component: () => import('../views/reports/financial/BillingPaymentMethodsReportView.vue')
+                }
+            ]
+        },
+        {
             path: '/account-groups',
             name: 'AccountGroups',
             component: () => import('../views/financial/AccountGroupList.vue'),
