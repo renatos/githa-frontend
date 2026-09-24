@@ -139,7 +139,7 @@ const props = defineProps({
 const loading = ref(true);
 const error = ref(false);
 const allReminders = ref([]);
-const statusFilter = ref('PENDING');
+const statusFilter = ref('NEW');
 const selectedReminder = ref(null);
 const showAppointmentForm = ref(false);
 const preFilledAppointment = ref({});
@@ -148,7 +148,7 @@ const statusFilterOptions = ref([]);
 
 const bulletFilterItems = computed(() => {
     const totalCount = allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt)).length;
-    const pending = allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+    const awaiting = allReminders.value.filter(r => r.status === 'NEW').length;
     const notified = allReminders.value.filter(r => r.status === 'NOTIFIED').length;
     const scheduled = allReminders.value.filter(r => r.status === 'SCHEDULED').length;
     const converted = allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt)).length;
@@ -156,7 +156,7 @@ const bulletFilterItems = computed(() => {
 
     return [
         { label: 'Todos', value: '', count: totalCount },
-        { label: 'Pendentes', value: 'PENDING', dotColor: 'bg-amber-500', count: pending },
+        { label: 'Aguardando Contato', value: 'NEW', dotColor: 'bg-indigo-500', count: awaiting },
         { label: 'Notificados', value: 'NOTIFIED', dotColor: 'bg-yellow-500', count: notified },
         { label: 'Agendados', value: 'SCHEDULED', dotColor: 'bg-blue-500', count: scheduled },
         { label: 'Efetivados', value: 'CONVERTED', dotColor: 'bg-emerald-500', count: converted },
@@ -201,9 +201,6 @@ const reminders = computed(() => {
     if (!statusFilter.value) {
         return allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt));
     }
-    if (statusFilter.value === 'PENDING') {
-        return allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED');
-    }
     if (statusFilter.value === 'NOTIFIED') {
         return allReminders.value.filter(r => r.status === 'NOTIFIED')
             .slice()
@@ -219,8 +216,8 @@ const emptyMessage = computed(() => {
     if (!statusFilter.value) {
         return 'Nenhum lembrete encontrado.';
     }
-    if (statusFilter.value === 'PENDING') {
-        return 'Nenhum lembrete pendente encontrado.';
+    if (statusFilter.value === 'NEW') {
+        return 'Nenhum lembrete aguardando contato encontrado.';
     }
     if (statusFilter.value === 'NOTIFIED') {
         return 'Nenhum lembrete notificado encontrado.';
