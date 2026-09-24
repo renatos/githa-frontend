@@ -185,11 +185,11 @@
 
         <!-- Conversation Tab -->
         <div v-if="activeTab === 'conversation'" class="space-y-3 p-1">
-          <div v-if="!formData.conversationHistory || formData.conversationHistory.length === 0" class="text-center py-6 text-slate-400 text-sm">
+          <div v-if="!sortedConversationHistory || sortedConversationHistory.length === 0" class="text-center py-6 text-slate-400 text-sm">
             Nenhuma mensagem registrada no histórico.
           </div>
           <div
-            v-for="(msg, index) in formData.conversationHistory"
+            v-for="(msg, index) in sortedConversationHistory"
             :key="index"
             class="flex flex-col"
             :class="msg.direction === 'INBOUND' ? 'items-start' : 'items-end'"
@@ -393,6 +393,15 @@ const whatsAppUrl = computed(() => {
   const digits = formData.value.phone.replace(/\D/g, '');
   const fullPhone = digits.length <= 11 ? `55${digits}` : digits;
   return `https://wa.me/${fullPhone}`;
+});
+
+const sortedConversationHistory = computed(() => {
+  if (!formData.value.conversationHistory) return [];
+  return [...formData.value.conversationHistory].sort((a, b) => {
+    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return timeA - timeB;
+  });
 });
 
 const statusBadgeClass = (status) => {
