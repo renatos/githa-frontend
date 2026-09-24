@@ -149,6 +149,7 @@ const statusFilterOptions = ref([]);
 const bulletFilterItems = computed(() => {
     const totalCount = allReminders.value.filter(r => r.status !== 'CONVERTED' || isWithinLast30Days(r.updatedAt)).length;
     const pending = allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED').length;
+    const notified = allReminders.value.filter(r => r.status === 'NOTIFIED').length;
     const scheduled = allReminders.value.filter(r => r.status === 'SCHEDULED').length;
     const converted = allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt)).length;
     const declined = allReminders.value.filter(r => r.status === 'DECLINED').length;
@@ -156,6 +157,7 @@ const bulletFilterItems = computed(() => {
     return [
         { label: 'Todos', value: '', count: totalCount },
         { label: 'Pendentes', value: 'PENDING', dotColor: 'bg-amber-500', count: pending },
+        { label: 'Notificados', value: 'NOTIFIED', dotColor: 'bg-yellow-500', count: notified },
         { label: 'Agendados', value: 'SCHEDULED', dotColor: 'bg-blue-500', count: scheduled },
         { label: 'Efetivados', value: 'CONVERTED', dotColor: 'bg-emerald-500', count: converted },
         { label: 'Declinados', value: 'DECLINED', dotColor: 'bg-slate-400', count: declined }
@@ -202,6 +204,11 @@ const reminders = computed(() => {
     if (statusFilter.value === 'PENDING') {
         return allReminders.value.filter(r => r.status === 'NEW' || r.status === 'NOTIFIED');
     }
+    if (statusFilter.value === 'NOTIFIED') {
+        return allReminders.value.filter(r => r.status === 'NOTIFIED')
+            .slice()
+            .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+    }
     if (statusFilter.value === 'CONVERTED') {
         return allReminders.value.filter(r => r.status === 'CONVERTED' && isWithinLast30Days(r.updatedAt));
     }
@@ -214,6 +221,9 @@ const emptyMessage = computed(() => {
     }
     if (statusFilter.value === 'PENDING') {
         return 'Nenhum lembrete pendente encontrado.';
+    }
+    if (statusFilter.value === 'NOTIFIED') {
+        return 'Nenhum lembrete notificado encontrado.';
     }
     if (statusFilter.value === 'SCHEDULED') {
         return 'Nenhum lembrete agendado encontrado.';

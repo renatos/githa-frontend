@@ -133,7 +133,7 @@ const bulletFilterItems = computed(() => {
     return [
         { label: 'Todos', value: '', count: totalCount },
         { label: 'Aguardando Contato', value: 'NEW', dotColor: 'bg-indigo-500', count: awaiting },
-        { label: 'Em Acompanhamento', value: 'NOTIFIED', dotColor: 'bg-blue-500', count: following },
+        { label: 'Notificados', value: 'NOTIFIED', dotColor: 'bg-yellow-500', count: following },
         { label: 'Concluídos', value: 'CONVERTED', dotColor: 'bg-emerald-500', count: concluded },
         { label: 'Declinados', value: 'DECLINED', dotColor: 'bg-slate-400', count: declined }
     ];
@@ -169,6 +169,9 @@ const reminders = computed(() => {
     let list = filteredByProfessional.value;
     if (statusFilter.value) {
         list = list.filter(r => r.status === statusFilter.value);
+    }
+    if (statusFilter.value === 'NOTIFIED') {
+        return list.slice().sort((a, b) => new Date(b.contactDate || b.updatedAt || b.createdAt) - new Date(a.contactDate || a.updatedAt || a.createdAt));
     }
     return list;
 });

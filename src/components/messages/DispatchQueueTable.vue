@@ -26,18 +26,19 @@
           v-for="msg in messages"
           :id="`dispatch-row-${msg.id}`"
           :key="msg.id"
-          class="transition-all duration-300"
+          class="transition-all duration-300 cursor-pointer"
           :class="[
             highlightedMessageId && highlightedMessageId == msg.id
               ? 'bg-emerald-50 dark:bg-emerald-950/40 ring-2 ring-emerald-500 font-semibold'
-              : 'hover:bg-slate-50/60 dark:hover:bg-slate-700/30'
+              : 'hover:bg-slate-50/80 dark:hover:bg-slate-700/40'
           ]"
+          @click="$emit('view', msg)"
         >
           <!-- Destinatário -->
           <td class="py-3.5 px-4">
             <div class="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>{{ msg.targetName }}</span>
-              <span v-if="msg.priority >= 10" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Prioridade de Transbordo">
+              <span v-if="isOverflowMessage(msg)" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Mensagem de Transbordo">
                 TRANSBORDO
               </span>
             </div>
@@ -79,7 +80,7 @@
             <p class="text-xs text-slate-600 dark:text-slate-300 truncate" :title="msg.messageText">
               {{ msg.messageText }}
             </p>
-            <p v-if="msg.errorMessage" class="text-[11px] text-red-500 mt-1 font-medium">
+            <p v-if="msg.errorMessage" class="text-[11px] text-red-500 mt-1 font-medium truncate" :title="msg.errorMessage">
               <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ msg.errorMessage }}
             </p>
           </td>
@@ -97,17 +98,28 @@
 
           <!-- Ações -->
           <td class="py-3.5 px-4 text-right">
-            <button
-              v-if="msg.status === 'SCHEDULED' || msg.status === 'APPROVED'"
-              type="button"
-              title="Desfazer Aprovação (cancelar envio agendado)"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700/60 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 text-amber-800 dark:text-amber-300 transition-colors"
-              @click="$emit('unapprove', msg)"
-            >
-              <i class="fa-solid fa-rotate-left text-[11px]"></i>
-              <span>Desfazer</span>
-            </button>
-            <span v-else class="text-xs text-slate-400">—</span>
+            <div class="flex items-center justify-end gap-1.5" @click.stop>
+              <button
+                type="button"
+                title="Visualizar Detalhes"
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                @click.stop="$emit('view', msg)"
+              >
+                <i class="fa-regular fa-eye text-xs"></i>
+                <span class="hidden sm:inline">Ver</span>
+              </button>
+
+              <button
+                v-if="msg.status === 'SCHEDULED' || msg.status === 'APPROVED'"
+                type="button"
+                title="Desfazer Aprovação (cancelar envio agendado)"
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700/60 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 text-amber-800 dark:text-amber-300 transition-colors cursor-pointer"
+                @click.stop="$emit('unapprove', msg)"
+              >
+                <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                <span class="hidden sm:inline">Desfazer</span>
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -119,10 +131,22 @@
 defineProps({
   messages: { type: Array, default: () => [] },
   loading: { type: Boolean, default: () => false },
-  highlightedMessageId: { type: [Number, String], default: null }
+  highlightedMessageId: { type: [Number, String], default: null },
+  professionals: { type: Array, default: () => [] }
 });
 
-defineEmits(['unapprove']);
+const emit = defineEmits(['unapprove', 'view']);
+
+const isOverflowMessage = (msg) => {
+  if (msg.overflow === true) return true;
+  if (!msg.metadata) return false;
+  try {
+    const meta = typeof msg.metadata === 'string' ? JSON.parse(msg.metadata) : msg.metadata;
+    return !!meta.overflow;
+  } catch {
+    return false;
+  }
+};
 
 const formatPhone = (phone) => {
   if (!phone) return '';

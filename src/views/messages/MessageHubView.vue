@@ -308,7 +308,9 @@
         :messages="filteredQueueMessages"
         :loading="loading"
         :highlighted-message-id="highlightedMessageId"
+        :professionals="professionals"
         @unapprove="handleQueueUnapprove"
+        @view="openDetailModal"
       />
     </div>
 
@@ -318,6 +320,8 @@
         :messages="filteredHistoryMessages"
         :loading="loading"
         :highlighted-message-id="highlightedMessageId"
+        :professionals="professionals"
+        @view="openDetailModal"
       />
     </div>
 
@@ -325,6 +329,14 @@
     <div v-if="activeTab === 'templates'">
       <MessageTemplateList />
     </div>
+
+    <!-- Modal de Visualização Detalhada da Mensagem Enviada / Falha -->
+    <DispatchMessageDetailModal
+      :show="showDetailModal"
+      :message="selectedDetailMessage"
+      :professionals="professionals"
+      @close="closeDetailModal"
+    />
   </div>
 </template>
 
@@ -338,6 +350,7 @@ import PageHeader from '../../components/common/PageHeader.vue';
 import StatusBulletsBar from '../../components/common/StatusBulletsBar.vue';
 import DispatchMessageCard from '../../components/messages/DispatchMessageCard.vue';
 import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue';
+import DispatchMessageDetailModal from '../../components/messages/DispatchMessageDetailModal.vue';
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
 import { toastBridge } from '../../services/toastBridge';
 
@@ -351,6 +364,19 @@ const queueMessages = ref([]);
 const historyMessages = ref([]);
 const professionals = ref([]);
 const statusOptions = ref([]);
+
+const showDetailModal = ref(false);
+const selectedDetailMessage = ref(null);
+
+const openDetailModal = (msg) => {
+  selectedDetailMessage.value = msg;
+  showDetailModal.value = true;
+};
+
+const closeDetailModal = () => {
+  showDetailModal.value = false;
+  selectedDetailMessage.value = null;
+};
 
 // Filter States
 const selectedOrigin = ref('');
