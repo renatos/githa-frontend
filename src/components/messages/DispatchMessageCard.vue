@@ -7,7 +7,7 @@
       <div class="relative overflow-hidden sm:overflow-visible rounded-xl">
     <!-- Swipe Action Backdrop (Mobile visual cues revealed when dragging horizontally) -->
     <div
-      v-if="!isScheduled && message.status !== 'SENT' && (isSwiping || animatingOut)"
+      v-if="!isScheduled && message.status !== 'SENT' && message.status !== 'UPDATING' && (isSwiping || animatingOut)"
       class="absolute inset-0 rounded-xl flex items-center justify-between px-6 pointer-events-none transition-colors duration-200 z-0"
       :class="{
         'bg-emerald-500/15 dark:bg-emerald-500/25 border-2 border-emerald-500/50': touchDeltaX > 0 || animatingOut === 'right',
@@ -99,6 +99,12 @@
           <i class="fa-solid fa-check text-[10px]"></i> Enviado
         </span>
         <span
+          v-else-if="message.status === 'UPDATING'"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-500/20"
+        >
+          <i class="fa-solid fa-arrows-rotate fa-spin text-[10px]"></i> Atualizando texto...
+        </span>
+        <span
           v-else
           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20"
         >
@@ -116,7 +122,7 @@
             Mensagem a ser enviada
           </label>
           <button
-            v-if="!isScheduled && message.status !== 'SENT'"
+            v-if="!isScheduled && message.status !== 'SENT' && message.status !== 'UPDATING'"
             type="button"
             class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
             @click="isEditing = !isEditing"
@@ -168,7 +174,8 @@
         <div class="flex-1 max-w-xs">
           <select
             v-model="selectedProfessionalId"
-            class="w-full text-xs border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2 focus:ring-blue-500"
+            :disabled="message.status === 'UPDATING'"
+            class="w-full text-xs border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2 focus:ring-blue-500 disabled:opacity-50"
           >
             <option :value="null">Profissional responsável (opcional)</option>
             <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
@@ -180,7 +187,7 @@
         <div class="flex items-center gap-2 justify-end">
           <button
             type="button"
-            :disabled="rejecting || approving"
+            :disabled="rejecting || approving || message.status === 'UPDATING'"
             class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
             @click="handleReject"
           >
@@ -190,13 +197,15 @@
 
           <button
             type="button"
-            :disabled="approving || rejecting"
+            :disabled="approving || rejecting || message.status === 'UPDATING'"
             class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
             @click="handleApprove"
           >
             <i v-if="approving" class="fa-solid fa-spinner fa-spin"></i>
+            <i v-else-if="message.status === 'UPDATING'" class="fa-solid fa-arrows-rotate fa-spin"></i>
             <i v-else class="fa-solid fa-check"></i>
-            <span>Aprovar e Agendar</span>
+            <span v-if="message.status === 'UPDATING'">Atualizando...</span>
+            <span v-else>Aprovar e Agendar</span>
           </button>
         </div>
       </template>

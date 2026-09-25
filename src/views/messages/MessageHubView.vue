@@ -535,7 +535,7 @@ const filteredQueueMessages = computed(() => applyFiltersAndSort(queueMessages.v
 const filteredHistoryMessages = computed(() => applyFiltersAndSort(historyMessages.value));
 
 const pendingCount = computed(() => {
-  return pendingMessages.value.filter(m => m.status === 'PENDING_APPROVAL').length;
+  return pendingMessages.value.filter(m => m.status === 'PENDING_APPROVAL' || m.status === 'UPDATING').length;
 });
 
 const loadProfessionals = async () => {
@@ -551,7 +551,7 @@ const loadPending = async () => {
   loading.value = true;
   try {
     const data = await dispatchMessageService.getAll({
-      statuses: 'PENDING_APPROVAL'
+      statuses: 'PENDING_APPROVAL,UPDATING'
     });
     pendingMessages.value = data || [];
   } catch (e) {

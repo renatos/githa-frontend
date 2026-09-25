@@ -159,6 +159,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus, Trash2, Power, FileText, Loader2 } from 'lucide-vue-next';
 import messageTemplateService from '../../services/messageTemplateService';
 import { enumService } from '../../services/enumService';
+import { toastBridge } from '../../services/toastBridge';
 import MessageTemplateModal from './MessageTemplateModal.vue';
 
 const templates = ref([]);
@@ -252,14 +253,16 @@ const handleSaveTemplate = async (formData) => {
   try {
     if (formData.id) {
       await messageTemplateService.update(formData.id, formData);
+      toastBridge.success('Template Atualizado', 'O template foi salvo e as mensagens pendentes estão sendo recalculadas.');
     } else {
       await messageTemplateService.create(formData);
+      toastBridge.success('Template Criado', 'Novo modelo cadastrado com sucesso.');
     }
     closeModal();
     await loadTemplates();
   } catch (err) {
     console.error('Failed to save template:', err);
-    alert(err?.response?.data?.message || 'Erro ao salvar template');
+    toastBridge.error('Erro ao salvar template', err?.response?.data?.message || 'Falha ao processar solicitação.');
   }
 };
 
