@@ -413,6 +413,7 @@ const originFilterItems = computed(() => {
   return [
     { label: 'Todas as Mensagens', value: '', count: list.length },
     { label: 'Retorno / Rebooking', value: 'REBOOKING', dotColor: 'bg-emerald-500', count: countByOrigin('REBOOKING') },
+    { label: 'Recuperação de Evasão', value: 'CHURN', dotColor: 'bg-rose-500', count: countByOrigin('CHURN') },
     { label: 'Acompanhamento', value: 'FOLLOW_UP', dotColor: 'bg-indigo-500', count: countByOrigin('FOLLOW_UP') },
     { label: 'Leads', value: 'LEAD', dotColor: 'bg-blue-500', count: countByOrigin('LEAD') },
     { label: 'Agendamentos', value: 'APPOINTMENT', dotColor: 'bg-amber-500', count: countByOrigin('APPOINTMENT') },

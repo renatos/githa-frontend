@@ -77,7 +77,7 @@
             <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               <span>{{ formatPhone(message.targetPhone) }}</span>
               <span>•</span>
-              <span class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
+              <span class="inline-flex items-center gap-1 font-medium" :class="originColorClass">
                 <i :class="originIcon" class="text-[10px]"></i> {{ originLabel }}
               </span>
             </div>
@@ -293,10 +293,7 @@ const metadataObj = computed(() => {
 });
 
 const displayTags = computed(() => {
-  if (Array.isArray(metadataObj.value?.displayTags)) {
-    return metadataObj.value.displayTags;
-  }
-  return [];
+  return metadataObj.value?.display?.tags || [];
 });
 
 const originLabel = computed(() => {
@@ -305,6 +302,7 @@ const originLabel = computed(() => {
   }
   const map = {
     REBOOKING: 'Retorno / Rebooking',
+    CHURN: 'Recuperação de Evasão',
     FOLLOW_UP: 'Acompanhamento',
     APPOINTMENT: 'Agendamento',
     LEAD: 'Lead',
@@ -316,12 +314,25 @@ const originLabel = computed(() => {
 const originIcon = computed(() => {
   const map = {
     REBOOKING: 'fa-solid fa-arrows-rotate',
+    CHURN: 'fa-solid fa-user-shield',
     FOLLOW_UP: 'fa-solid fa-heart-pulse',
     APPOINTMENT: 'fa-regular fa-calendar-check',
     LEAD: 'fa-solid fa-bullhorn',
     SYSTEM: 'fa-solid fa-gear'
   };
   return map[props.message.originType] || 'fa-solid fa-message';
+});
+
+const originColorClass = computed(() => {
+  const map = {
+    REBOOKING: 'text-emerald-600 dark:text-emerald-400',
+    CHURN: 'text-rose-600 dark:text-rose-400',
+    FOLLOW_UP: 'text-indigo-600 dark:text-indigo-400',
+    APPOINTMENT: 'text-amber-600 dark:text-amber-400',
+    LEAD: 'text-blue-600 dark:text-blue-400',
+    SYSTEM: 'text-slate-600 dark:text-slate-400'
+  };
+  return map[props.message.originType] || 'text-blue-600 dark:text-blue-400';
 });
 
 const formatPhone = (phone) => {
