@@ -34,9 +34,10 @@ export const REPORTS_REGISTRY = [
     description: 'Procedimentos e produtos mais vendidos, ticket médio e performance de conversão do catálogo.',
     category: 'OPERATIONAL',
     icon: 'fa-solid fa-bag-shopping',
-    badge: 'Em Breve',
-    tags: ['vendas', 'produtos', 'servicos', 'ticket medio'],
-    isAvailable: false
+    route: '/reports/sales/performance',
+    badge: 'Vendas',
+    tags: ['vendas', 'produtos', 'servicos', 'ticket medio', 'procedimentos', 'ranking'],
+    isAvailable: true
   },
   {
     id: 'productivity-occupancy',

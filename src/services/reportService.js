@@ -7,6 +7,10 @@ export const reportService = {
 
   getBillingByPaymentMethod(params = {}) {
     return api.get('/v1/reports/billing-by-payment-method', { params });
+  },
+
+  getSalesPerformance(params = {}) {
+    return api.get('/v1/reports/sales-performance', { params });
   }
 };
 

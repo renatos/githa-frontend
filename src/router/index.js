@@ -114,6 +114,11 @@ const router = createRouter({
                     path: 'financial/billing-payment-methods',
                     name: 'report-billing-payment-methods',
                     component: () => import('../views/reports/financial/BillingPaymentMethodsReportView.vue')
+                },
+                {
+                    path: 'sales/performance',
+                    name: 'report-sales-performance',
+                    component: () => import('../views/reports/sales/SalesPerformanceReportView.vue')
                 }
             ]
         },
