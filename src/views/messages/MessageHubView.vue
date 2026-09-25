@@ -435,8 +435,9 @@ const availableServices = computed(() => {
   const set = new Set();
   currentActiveList.value.forEach(msg => {
     const meta = getParsedMetadata(msg);
-    if (meta.serviceName) {
-      set.add(meta.serviceName);
+    const sName = meta.internal?.serviceName || meta.serviceName;
+    if (sName) {
+      set.add(sName);
     }
   });
   return Array.from(set).sort();
@@ -498,13 +499,15 @@ const applyFiltersAndSort = (items) => {
     // 4. Service filter
     if (filters.value.service) {
       const meta = getParsedMetadata(msg);
-      if (meta.serviceName !== filters.value.service) return false;
+      const sName = meta.internal?.serviceName || meta.serviceName;
+      if (sName !== filters.value.service) return false;
     }
 
     // 5. Professional filter
     if (filters.value.professionalId) {
       const meta = getParsedMetadata(msg);
-      if (meta.professionalId !== filters.value.professionalId && msg.contactResponsibleId !== filters.value.professionalId) {
+      const pId = meta.internal?.professionalId || meta.professionalId;
+      if (pId !== filters.value.professionalId && msg.contactResponsibleId !== filters.value.professionalId) {
         return false;
       }
     }
@@ -552,7 +555,8 @@ const loadPending = async () => {
   loading.value = true;
   try {
     const data = await dispatchMessageService.getAll({
-      statuses: 'PENDING_APPROVAL,UPDATING'
+      statuses: 'PENDING_APPROVAL,UPDATING',
+      size: 200
     });
     pendingMessages.value = data || [];
   } catch (e) {
@@ -566,7 +570,7 @@ const loadPending = async () => {
 const loadQueue = async () => {
   loading.value = true;
   try {
-    const data = await dispatchMessageService.getQueue();
+    const data = await dispatchMessageService.getQueue({ size: 200 });
     queueMessages.value = data || [];
   } catch (e) {
     console.error(e);
@@ -579,7 +583,7 @@ const loadQueue = async () => {
 const loadHistory = async () => {
   loading.value = true;
   try {
-    const data = await dispatchMessageService.getHistory();
+    const data = await dispatchMessageService.getHistory({ size: 200 });
     historyMessages.value = data || [];
   } catch (e) {
     console.error(e);
@@ -658,6 +662,33 @@ const handleTargetMessageHighlight = async () => {
       if (targetMsg) {
         activeTab.value = 'history';
       }
+    }
+  }
+
+  // Fallback: If still not found, fetch directly by ID from API
+  if (!targetMsg && targetMessageId) {
+    try {
+      targetMsg = await dispatchMessageService.getById(targetMessageId);
+      if (targetMsg) {
+        if (['PENDING_APPROVAL', 'UPDATING'].includes(targetMsg.status)) {
+          activeTab.value = 'pending';
+          if (!pendingMessages.value.some(m => m.id === targetMsg.id)) {
+            pendingMessages.value = [targetMsg, ...pendingMessages.value];
+          }
+        } else if (['SCHEDULED', 'APPROVED'].includes(targetMsg.status)) {
+          activeTab.value = 'queue';
+          if (!queueMessages.value.some(m => m.id === targetMsg.id)) {
+            queueMessages.value = [targetMsg, ...queueMessages.value];
+          }
+        } else {
+          activeTab.value = 'history';
+          if (!historyMessages.value.some(m => m.id === targetMsg.id)) {
+            historyMessages.value = [targetMsg, ...historyMessages.value];
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Mensagem alvo não encontrada na API:', e);
     }
   }
 

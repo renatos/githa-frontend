@@ -6,6 +6,11 @@ export const dispatchMessageService = {
     return response.data;
   },
 
+  getById: async (id) => {
+    const response = await api.get(`/dispatch-messages/${id}`);
+    return response.data;
+  },
+
   getQueue: async (params = {}) => {
     const response = await api.get('/dispatch-messages/queue', { params });
     return response.data;

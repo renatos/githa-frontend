@@ -64,6 +64,37 @@ describe('DispatchMessageCard.vue', () => {
     expect(wrapper.text()).toContain('R$ 85,00');
   });
 
+  it('renders dynamic display tags when partitioned metadata (display.tags) is used', () => {
+    const messageWithPartitionedMeta = {
+      ...baseMessage,
+      metadata: {
+        display: {
+          tags: [
+            { label: 'Última Visita', value: '15/08/2026' },
+            { label: 'Valor Previsto', value: 'R$ 85,00' }
+          ]
+        },
+        internal: {
+          clientId: 10,
+          serviceName: 'Design de Sobrancelhas'
+        }
+      }
+    };
+
+    const wrapper = mount(DispatchMessageCard, {
+      props: {
+        message: messageWithPartitionedMeta,
+        professionals: []
+      }
+    });
+
+    expect(wrapper.text()).toContain('Última Visita:');
+    expect(wrapper.text()).toContain('15/08/2026');
+    expect(wrapper.text()).toContain('Valor Previsto:');
+    expect(wrapper.text()).toContain('R$ 85,00');
+  });
+
+
   it('does not render displayTags container when displayTags is empty or missing', () => {
     const messageWithoutTags = {
       ...baseMessage,

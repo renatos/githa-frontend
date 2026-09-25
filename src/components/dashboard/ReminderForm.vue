@@ -218,7 +218,9 @@ const form = ref({
 });
 
 const originType = computed(() => {
-    return props.reminder.type === 'FOLLOW_UP' ? 'FOLLOW_UP' : 'REBOOKING';
+    if (props.reminder.type === 'CHURN') return 'CHURN';
+    if (props.reminder.type === 'FOLLOW_UP') return 'FOLLOW_UP';
+    return 'REBOOKING';
 });
 
 const isQueuedOrSent = computed(() => {

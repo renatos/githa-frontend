@@ -293,7 +293,7 @@ const metadataObj = computed(() => {
 });
 
 const displayTags = computed(() => {
-  return metadataObj.value?.display?.tags || [];
+  return metadataObj.value?.display?.tags || metadataObj.value?.displayTags || [];
 });
 
 const originLabel = computed(() => {
