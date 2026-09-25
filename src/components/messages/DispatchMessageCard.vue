@@ -122,7 +122,7 @@
             Mensagem a ser enviada
           </label>
           <button
-            v-if="!isScheduled && message.status !== 'SENT' && message.status !== 'UPDATING'"
+            v-if="!isScheduled && message.status !== 'SENT' && message.status !== 'UPDATING' && message.status !== 'SENDING'"
             type="button"
             class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
             @click="isEditing = !isEditing"
@@ -133,7 +133,7 @@
         </div>
 
         <textarea
-          v-if="isEditing && !isScheduled"
+          v-if="isEditing && !isScheduled && message.status !== 'SENDING'"
           v-model="editedText"
           rows="4"
           class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -150,8 +150,14 @@
 
     <!-- Actions & Professional Selection -->
     <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <!-- Se estiver Enviando -->
+      <div v-if="message.status === 'SENDING'" class="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold py-1">
+        <i class="fa-solid fa-paper-plane animate-pulse"></i>
+        <span>Enviando mensagem via WhatsApp...</span>
+      </div>
+
       <!-- Se já estiver Agendado, permite Desfazer Aprovação -->
-      <div v-if="isScheduled" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
+      <div v-else-if="isScheduled" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
         <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
           <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
           <span>Agendado para disparo automático.</span>

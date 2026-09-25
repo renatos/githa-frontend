@@ -195,6 +195,7 @@ const statusLabel = (status) => {
     case 'PENDING_APPROVAL': return 'Aguardando OK';
     case 'APPROVED': return 'Aprovado';
     case 'SCHEDULED': return 'Agendado';
+    case 'SENDING': return 'Enviando';
     case 'SENT': return 'Enviado';
     case 'FAILED': return 'Falha';
     case 'REJECTED': return 'Descartado';
@@ -210,6 +211,8 @@ const statusBadgeClass = (status) => {
     case 'APPROVED':
     case 'SCHEDULED':
       return 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200/60 dark:border-blue-500/20';
+    case 'SENDING':
+      return 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20';
     case 'SENT':
       return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20';
     case 'FAILED':
@@ -224,6 +227,7 @@ const statusIcon = (status) => {
     case 'PENDING_APPROVAL': return 'fa-solid fa-clock';
     case 'APPROVED':
     case 'SCHEDULED': return 'fa-regular fa-calendar-check';
+    case 'SENDING': return 'fa-solid fa-paper-plane animate-pulse';
     case 'SENT': return 'fa-solid fa-check';
     case 'FAILED': return 'fa-solid fa-triangle-exclamation';
     default: return 'fa-solid fa-circle-info';
