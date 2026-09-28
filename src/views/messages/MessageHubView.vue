@@ -295,6 +295,7 @@
             :professionals="professionals"
             :highlighted="highlightedMessageId === msg.id"
             @approve="onApprove"
+            @phone-correction-needed="onPhoneCorrectionNeeded"
             @reject="onReject"
             @unapprove="onUnapprove"
           />
@@ -337,6 +338,16 @@
       :professionals="professionals"
       @close="closeDetailModal"
     />
+
+    <!-- Modal de Correção Rápida de Celular -->
+    <PhoneCorrectionModal
+      v-if="phoneCorrectionData"
+      :client-id="phoneCorrectionData.message.targetId"
+      :client-name="phoneCorrectionData.message.targetName"
+      :current-phone="phoneCorrectionData.message.targetPhone"
+      @saved="onPhoneCorrected"
+      @close="phoneCorrectionData = null"
+    />
   </div>
 </template>
 
@@ -351,6 +362,7 @@ import StatusBulletsBar from '../../components/common/StatusBulletsBar.vue';
 import DispatchMessageCard from '../../components/messages/DispatchMessageCard.vue';
 import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue';
 import DispatchMessageDetailModal from '../../components/messages/DispatchMessageDetailModal.vue';
+import PhoneCorrectionModal from '../../components/messages/PhoneCorrectionModal.vue';
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
 import { toastBridge } from '../../services/toastBridge';
 
@@ -367,6 +379,7 @@ const statusOptions = ref([]);
 
 const showDetailModal = ref(false);
 const selectedDetailMessage = ref(null);
+const phoneCorrectionData = ref(null);
 
 const openDetailModal = (msg) => {
   selectedDetailMessage.value = msg;
@@ -735,6 +748,30 @@ const onApprove = async ({ id, customMessageText, professionalId, done }) => {
   } finally {
     done();
   }
+};
+
+const onPhoneCorrectionNeeded = ({ message, customMessageText, professionalId }) => {
+  phoneCorrectionData.value = { message, customMessageText, professionalId };
+};
+
+const onPhoneCorrected = async (updatedPhone) => {
+  const data = phoneCorrectionData.value;
+  if (!data) return;
+  phoneCorrectionData.value = null;
+
+  // Atualiza o targetPhone na mensagem pendente local para refletir imediatamente
+  const msg = pendingMessages.value.find(m => m.id === data.message.id);
+  if (msg) {
+    msg.targetPhone = updatedPhone;
+  }
+
+  // Prossegue com a aprovação
+  await onApprove({
+    id: data.message.id,
+    customMessageText: data.customMessageText,
+    professionalId: data.professionalId,
+    done: () => {}
+  });
 };
 
 const onReject = async ({ id, done }) => {

@@ -75,7 +75,16 @@
               </span>
             </h4>
             <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              <span>{{ formatPhone(message.targetPhone) }}</span>
+              <span class="flex items-center gap-1.5">
+                {{ formatPhone(message.targetPhone) }}
+                <span
+                  v-if="isPhoneInvalid"
+                  class="inline-flex items-center text-amber-500 dark:text-amber-400"
+                  title="Celular inválido — será necessário corrigir antes de aprovar"
+                >
+                  <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
+                </span>
+              </span>
               <span>•</span>
               <span class="inline-flex items-center gap-1 font-medium" :class="originColorClass">
                 <i :class="originIcon" class="text-[10px]"></i> {{ originLabel }}
@@ -226,6 +235,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import DisplayTags from '@/components/common/DisplayTags.vue';
 import { enumService } from '@/services/enumService';
+import { isValidBrazilianPhone } from '@/utils/formatters';
 
 const props = defineProps({
   message: { type: Object, required: true },
@@ -233,7 +243,7 @@ const props = defineProps({
   highlighted: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['approve', 'reject', 'unapprove']);
+const emit = defineEmits(['approve', 'reject', 'unapprove', 'phone-correction-needed']);
 
 const isEditing = ref(false);
 const editedText = ref(props.message.messageText || '');
@@ -350,6 +360,8 @@ const formatPhone = (phone) => {
   return phone;
 };
 
+const isPhoneInvalid = computed(() => !isValidBrazilianPhone(props.message.targetPhone));
+
 const isCollapsing = ref(false);
 const animatingOut = ref(null); // 'right' | 'left' | null
 const touchDeltaX = ref(0);
@@ -436,7 +448,17 @@ const onTouchEnd = () => {
 
   const threshold = 85;
   if (touchDeltaX.value > threshold) {
-    triggerApprove();
+    if (isPhoneInvalid.value) {
+      emit('phone-correction-needed', {
+        message: props.message,
+        customMessageText: editedText.value,
+        professionalId: selectedProfessionalId.value,
+      });
+      touchDeltaX.value = 0;
+      isSwiping.value = false;
+    } else {
+      triggerApprove();
+    }
   } else if (touchDeltaX.value < -threshold) {
     triggerReject();
   } else {
@@ -495,6 +517,14 @@ const triggerReject = () => {
 };
 
 const handleApprove = () => {
+  if (isPhoneInvalid.value) {
+    emit('phone-correction-needed', {
+      message: props.message,
+      customMessageText: editedText.value,
+      professionalId: selectedProfessionalId.value,
+    });
+    return;
+  }
   triggerApprove();
 };
 

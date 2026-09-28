@@ -57,3 +57,13 @@ export const formatPhone = (value) => {
     }
     return numericValue;
 };
+
+export const isValidBrazilianPhone = (phone) => {
+    if (!phone) return false;
+    let digits = String(phone).replace(/\D/g, '');
+    if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+        digits = digits.substring(2);
+    }
+    return digits.length === 10 || digits.length === 11;
+};
+
