@@ -1,10 +1,11 @@
 import api from './api';
 
 const cache = new Map();
+const pendingRequests = new Map();
 
 /**
  * Service to fetch enum values and descriptions from the backend.
- * Uses an in-memory cache to avoid redundant API calls.
+ * Uses an in-memory cache and promise deduplication to avoid redundant API calls.
  */
 export const enumService = {
     /**
@@ -17,14 +18,24 @@ export const enumService = {
             return cache.get(enumName);
         }
 
-        try {
-            const response = await api.get(`/enums/${enumName}`);
-            cache.set(enumName, response.data);
-            return response.data;
-        } catch (error) {
-            console.error(`Failed to fetch options for enum ${enumName}:`, error);
-            return [];
+        if (pendingRequests.has(enumName)) {
+            return pendingRequests.get(enumName);
         }
+
+        const requestPromise = api.get(`/enums/${enumName}`)
+            .then(response => {
+                cache.set(enumName, response.data);
+                pendingRequests.delete(enumName);
+                return response.data;
+            })
+            .catch(error => {
+                pendingRequests.delete(enumName);
+                console.error(`Failed to fetch options for enum ${enumName}:`, error);
+                return [];
+            });
+
+        pendingRequests.set(enumName, requestPromise);
+        return requestPromise;
     },
 
     /**
