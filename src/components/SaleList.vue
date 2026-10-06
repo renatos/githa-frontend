@@ -11,6 +11,8 @@
       ref="tableRef"
       :columns="columns"
       :fetch-data="fetchDataAdapter"
+      initial-sort-key="createdAt"
+      initial-sort-order="desc"
       @row-click="(item) => $emit('edit', item)"
     >
       <template #cell-createdAt="{ value }">
