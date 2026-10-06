@@ -43,8 +43,17 @@ const showForm = ref(false);
 const editingClient = ref({});
 const { errorState, showError, closeError } = useErrorHandler();
 
-const openForm = (client = {}) => {
-  editingClient.value = { ...client };
+const openForm = async (client = {}) => {
+  if (client && client.id && (!client.conversationHistory || !client.campaigns)) {
+    try {
+      const response = await clientService.getById(client.id);
+      editingClient.value = response.data || response;
+    } catch {
+      editingClient.value = { ...client };
+    }
+  } else {
+    editingClient.value = { ...client };
+  }
   showForm.value = true;
 };
 

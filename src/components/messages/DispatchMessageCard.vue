@@ -111,12 +111,21 @@
           <i class="fa-regular fa-calendar-check text-[10px]"></i>
           {{ scheduledLabel }}
         </span>
-        <span
-          v-else-if="message.status === 'SENT'"
-          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20"
-        >
-          <i class="fa-solid fa-check text-[10px]"></i> Enviado
-        </span>
+        <div v-else-if="message.status === 'SENT'" class="flex items-center gap-1.5 flex-wrap justify-end">
+          <span
+            v-if="message.responded"
+            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shadow-xs"
+            :title="responseTooltip"
+          >
+            <i class="fa-solid fa-reply text-[10px]"></i> Respondida
+          </span>
+          <span
+            v-else
+            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20"
+          >
+            <i class="fa-solid fa-check text-[10px]"></i> Enviado
+          </span>
+        </div>
         <span
           v-else-if="message.status === 'UPDATING'"
           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-500/20"
@@ -163,6 +172,22 @@
           class="text-sm bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed"
         >
           {{ editedText }}
+        </div>
+
+        <!-- Bloco de Resposta da Cliente -->
+        <div
+          v-if="message.responded && message.responseMessage"
+          class="mt-3 p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 text-xs flex flex-col gap-1"
+        >
+          <div class="flex items-center justify-between font-semibold text-emerald-800 dark:text-emerald-300">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-reply text-xs"></i> Resposta da Cliente:
+            </span>
+            <span v-if="formattedResponseTime" class="font-normal text-[11px] text-emerald-700 dark:text-emerald-400">
+              {{ formattedResponseTime }}
+            </span>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 italic whitespace-pre-wrap">"{{ message.responseMessage }}"</p>
         </div>
       </div>
     </div>
@@ -309,6 +334,28 @@ const scheduledLabel = computed(() => {
     return `Agendado às ${timeStr}`;
   }
   return 'Agendado';
+});
+
+const responseTooltip = computed(() => {
+  if (!props.message?.responded) return '';
+  let tip = 'Cliente respondeu à mensagem';
+  if (props.message.respondedAt) {
+    const d = new Date(props.message.respondedAt);
+    tip += ` em ${d.toLocaleString('pt-BR')}`;
+  }
+  return tip;
+});
+
+const formattedResponseTime = computed(() => {
+  if (!props.message?.respondedAt) return '';
+  const d = new Date(props.message.respondedAt);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (isToday) {
+    return `Hoje às ${timeStr}`;
+  }
+  return `${d.toLocaleDateString('pt-BR')} às ${timeStr}`;
 });
 
 const metadataObj = computed(() => {

@@ -28,6 +28,78 @@
       </div>
     </div>
 
+    <!-- Response Metrics Analytics Cards -->
+    <div v-if="metrics && metrics.totalSent > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Card 1: Taxa Global de Resposta -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 shadow-xs flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-base">
+          <i class="fa-solid fa-reply-all"></i>
+        </div>
+        <div class="min-w-0">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium block">Taxa Global de Resposta</span>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-lg font-bold text-slate-900 dark:text-white">
+              {{ metrics.globalResponseRate ? metrics.globalResponseRate.toFixed(1) + '%' : '0%' }}
+            </span>
+            <span class="text-[11px] text-slate-400 font-normal truncate">
+              ({{ metrics.totalResponded }}/{{ metrics.totalSent }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Rebooking (Retorno) -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 shadow-xs flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 text-base">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
+        <div class="min-w-0">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium block">Respostas Retorno</span>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-lg font-bold text-slate-900 dark:text-white">
+              {{ metrics.responseRateByOrigin?.REBOOKING != null ? metrics.responseRateByOrigin.REBOOKING.toFixed(1) + '%' : '0%' }}
+            </span>
+            <span class="text-[11px] text-slate-400 font-normal truncate">
+              ({{ metrics.respondedByOrigin?.REBOOKING || 0 }}/{{ metrics.sentByOrigin?.REBOOKING || 0 }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Follow-Up (Pós-Procedimento) -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 shadow-xs flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 text-base">
+          <i class="fa-solid fa-heart-pulse"></i>
+        </div>
+        <div class="min-w-0">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium block">Respostas Follow-Up</span>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-lg font-bold text-slate-900 dark:text-white">
+              {{ metrics.responseRateByOrigin?.FOLLOW_UP != null ? metrics.responseRateByOrigin.FOLLOW_UP.toFixed(1) + '%' : '0%' }}
+            </span>
+            <span class="text-[11px] text-slate-400 font-normal truncate">
+              ({{ metrics.respondedByOrigin?.FOLLOW_UP || 0 }}/{{ metrics.sentByOrigin?.FOLLOW_UP || 0 }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Tempo Médio de Resposta (TMR) -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 shadow-xs flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-base">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="min-w-0">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium block">Tempo Médio Resposta</span>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-lg font-bold text-slate-900 dark:text-white">
+              {{ formatTmr(metrics.averageResponseTimeHours) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabs Navigation -->
     <div class="border-b border-slate-200 dark:border-slate-700">
       <nav class="flex space-x-2 sm:space-x-6 text-xs sm:text-sm font-medium overflow-x-auto no-scrollbar justify-between sm:justify-start">
@@ -664,7 +736,33 @@ const loadHistory = async () => {
   }
 };
 
+const metrics = ref(null);
+
+const loadMetrics = async () => {
+  try {
+    const data = await dispatchMessageService.getMetrics();
+    metrics.value = data;
+  } catch (err) {
+    console.warn('Erro ao carregar métricas de resposta do hub:', err);
+  }
+};
+
+const formatTmr = (hours) => {
+  if (hours == null) return 'N/D';
+  if (hours < 1) {
+    const mins = Math.round(hours * 60);
+    return `${mins} min`;
+  }
+  if (hours < 24) {
+    return `${hours.toFixed(1)}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = Math.round(hours % 24);
+  return `${days}d ${remainingHours}h`;
+};
+
 const loadCurrentTab = async () => {
+  loadMetrics();
   if (activeTab.value === 'pending') await loadPending();
   else if (activeTab.value === 'queue') await loadQueue();
   else if (activeTab.value === 'history') await loadHistory();

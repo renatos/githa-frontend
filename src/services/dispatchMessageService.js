@@ -63,6 +63,11 @@ export const dispatchMessageService = {
       params: { originType, originId }
     });
     return response.data;
+  },
+
+  getMetrics: async () => {
+    const response = await api.get('/dispatch-messages/metrics');
+    return response.data;
   }
 };
 

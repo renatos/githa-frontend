@@ -151,6 +151,44 @@
           </div>
         </div>
 
+        <!-- Tab 7: Conversas (WhatsApp) -->
+        <div v-if="form.id" v-show="activeTab === 7" class="pb-10">
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 m-0">
+                <i class="fa-regular fa-comments text-indigo-600 dark:text-indigo-400"></i>
+                Histórico de Conversas (WhatsApp)
+              </h3>
+              <span class="text-xs text-slate-500 dark:text-slate-400">
+                {{ form.conversationHistory?.length || 0 }} mensagens registradas
+              </span>
+            </div>
+
+            <div v-if="!form.conversationHistory || form.conversationHistory.length === 0" class="text-center py-8 text-slate-500 dark:text-slate-400 text-sm border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+              Nenhuma mensagem registrada no histórico desta cliente.
+            </div>
+            <div v-else class="space-y-3 p-1 max-h-[460px] overflow-y-auto pr-2">
+              <div
+                v-for="(msg, index) in sortedClientMessages"
+                :key="index"
+                class="flex flex-col"
+                :class="msg.direction === 'INBOUND' ? 'items-start' : 'items-end'"
+              >
+                <div
+                  class="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm shadow-xs"
+                  :class="msg.direction === 'INBOUND' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-tl-xs' : 'bg-emerald-600 text-white rounded-tr-xs'"
+                >
+                  <p class="whitespace-pre-wrap leading-relaxed">{{ msg.content }}</p>
+                  <div class="mt-1 flex items-center justify-end gap-1 text-[10px]" :class="msg.direction === 'INBOUND' ? 'text-slate-400' : 'text-emerald-100'">
+                    <span>{{ formatDateTime(msg.timestamp) }}</span>
+                    <i v-if="msg.direction === 'OUTBOUND'" class="fa-solid fa-check text-[9px]"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </form>
 
@@ -214,6 +252,7 @@ const tabs = computed(() => {
     { label: 'Anamneses', disabled: isNew },
     { label: 'Histórico', disabled: isNew },
     { label: 'Campanhas', disabled: isNew },
+    { label: 'Conversas', disabled: isNew },
   ];
 });
 
@@ -310,7 +349,8 @@ const form = ref({
     skincareRoutine: false,
     prescribedProducts: false,
   },
-  campaigns: []
+  campaigns: [],
+  conversationHistory: []
 });
 
 const selectedCampaignId = ref(null);
@@ -342,6 +382,13 @@ const sortedClientCampaigns = computed(() => {
       return dateB.localeCompare(dateA);
     }
     return (b.id || 0) - (a.id || 0);
+  });
+});
+
+const sortedClientMessages = computed(() => {
+  if (!form.value.conversationHistory || form.value.conversationHistory.length === 0) return [];
+  return [...form.value.conversationHistory].sort((a, b) => {
+    return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
   });
 });
 
@@ -470,7 +517,8 @@ const populateForm = (clientData) => {
       skincareRoutine: false,
       prescribedProducts: false,
     },
-    campaigns: clientData.campaigns || []
+    campaigns: clientData.campaigns || [],
+    conversationHistory: clientData.conversationHistory || []
   };
 };
 
