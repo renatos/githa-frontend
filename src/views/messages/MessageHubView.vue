@@ -298,6 +298,7 @@
             @phone-correction-needed="onPhoneCorrectionNeeded"
             @reject="onReject"
             @unapprove="onUnapprove"
+            @open-client="openClientForm"
           />
         </TransitionGroup>
       </template>
@@ -337,6 +338,7 @@
       :message="selectedDetailMessage"
       :professionals="professionals"
       @close="closeDetailModal"
+      @open-client="openClientForm"
     />
 
     <!-- Modal de Correção Rápida de Celular -->
@@ -348,14 +350,25 @@
       @saved="onPhoneCorrected"
       @close="phoneCorrectionData = null"
     />
+
+    <!-- Modal de Detalhes do Cliente -->
+    <ClientForm
+      v-if="editingClient"
+      :client="editingClient"
+      :z-index="11000"
+      @close="closeClientForm"
+      @save="saveClient"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import router from '../../router';
 import { dispatchMessageService } from '../../services/dispatchMessageService';
 import { professionalService } from '../../services/professionalService';
+import { clientService } from '../../services/clientService';
 import { enumService } from '../../services/enumService';
 import PageHeader from '../../components/common/PageHeader.vue';
 import StatusBulletsBar from '../../components/common/StatusBulletsBar.vue';
@@ -364,9 +377,11 @@ import DispatchQueueTable from '../../components/messages/DispatchQueueTable.vue
 import DispatchMessageDetailModal from '../../components/messages/DispatchMessageDetailModal.vue';
 import PhoneCorrectionModal from '../../components/messages/PhoneCorrectionModal.vue';
 import MessageTemplateList from '../../components/messages/MessageTemplateList.vue';
+import ClientForm from '../../components/ClientForm.vue';
 import { toastBridge } from '../../services/toastBridge';
 
 const route = useRoute();
+const currentRouteQuery = () => route?.query || router?.currentRoute?.value?.query || {};
 const activeTab = ref('pending');
 const loading = ref(false);
 const highlightedMessageId = ref(null);
@@ -380,6 +395,7 @@ const statusOptions = ref([]);
 const showDetailModal = ref(false);
 const selectedDetailMessage = ref(null);
 const phoneCorrectionData = ref(null);
+const editingClient = ref(null);
 
 const openDetailModal = (msg) => {
   selectedDetailMessage.value = msg;
@@ -389,6 +405,48 @@ const openDetailModal = (msg) => {
 const closeDetailModal = () => {
   showDetailModal.value = false;
   selectedDetailMessage.value = null;
+};
+
+const openClientForm = async (clientIdOrClient) => {
+  const clientId = typeof clientIdOrClient === 'object' ? clientIdOrClient.id : clientIdOrClient;
+  if (!clientId) return;
+  try {
+    const response = await clientService.getById(clientId);
+    editingClient.value = response.data || response;
+  } catch (error) {
+    console.error('Error loading client details:', error);
+    toastBridge.error('Erro', 'Não foi possível carregar os detalhes do cliente.');
+  }
+};
+
+const closeClientForm = () => {
+  editingClient.value = null;
+};
+
+const saveClient = async (clientData) => {
+  try {
+    await clientService.update(clientData.id, clientData);
+    toastBridge.success('Sucesso', 'Cliente atualizado com sucesso!');
+
+    window.dispatchEvent(new CustomEvent('client-updated', { detail: clientData }));
+
+    const updateTargetInfo = (list) => {
+      list.forEach(m => {
+        if ((!m.targetType || m.targetType === 'CLIENT') && m.targetId === clientData.id) {
+          if (clientData.name) m.targetName = clientData.name;
+          if (clientData.phone) m.targetPhone = clientData.phone;
+        }
+      });
+    };
+    updateTargetInfo(pendingMessages.value);
+    updateTargetInfo(queueMessages.value);
+    updateTargetInfo(historyMessages.value);
+
+    closeClientForm();
+  } catch (error) {
+    console.error('Error saving client:', error);
+    toastBridge.error('Erro', 'Não foi possível salvar as alterações do cliente.');
+  }
 };
 
 // Filter States
@@ -634,8 +692,9 @@ const scrollToTargetCard = (msgId) => {
 };
 
 const handleTargetMessageHighlight = async () => {
-  const targetMessageId = route.query.messageId ? Number(route.query.messageId) : null;
-  const targetReminderId = route.query.reminderId ? Number(route.query.reminderId) : null;
+  const query = currentRouteQuery();
+  const targetMessageId = query.messageId ? Number(query.messageId) : null;
+  const targetReminderId = query.reminderId ? Number(query.reminderId) : null;
   if (!targetMessageId && !targetReminderId) return;
 
   // Search in current active list
@@ -832,21 +891,22 @@ onMounted(async () => {
     console.error('Erro ao carregar enum DispatchStatus:', e);
   }
 
-  if (route.query.tab && ['pending', 'queue', 'history', 'templates'].includes(route.query.tab)) {
-    activeTab.value = route.query.tab;
+  const query = currentRouteQuery();
+  if (query.tab && ['pending', 'queue', 'history', 'templates'].includes(query.tab)) {
+    activeTab.value = query.tab;
   }
-  if (route.query.origin) {
-    selectedOrigin.value = route.query.origin;
+  if (query.origin) {
+    selectedOrigin.value = query.origin;
   }
 
   await loadCurrentTab();
 
-  if (route.query.messageId || route.query.reminderId) {
+  if (query.messageId || query.reminderId) {
     await handleTargetMessageHighlight();
   }
 });
 
-watch(() => route.query.messageId, async (newVal) => {
+watch(() => currentRouteQuery().messageId, async (newVal) => {
   if (newVal) {
     await handleTargetMessageHighlight();
   }

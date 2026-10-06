@@ -34,7 +34,15 @@
             Destinatário
           </span>
           <div class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-            <span>{{ message.targetName }}</span>
+            <span
+              v-if="isClient"
+              title="Ver detalhes do cliente"
+              class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              @click.stop="$emit('open-client', message.targetId)"
+            >
+              {{ message.targetName }}
+            </span>
+            <span v-else>{{ message.targetName }}</span>
             <span
               v-if="isOverflow"
               class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
@@ -187,7 +195,11 @@ const props = defineProps({
   professionals: { type: Array, default: () => [] }
 });
 
-defineEmits(['close']);
+defineEmits(['close', 'open-client']);
+
+const isClient = computed(() => {
+  return (!props.message?.targetType || props.message.targetType === 'CLIENT') && !!props.message?.targetId;
+});
 
 const copied = ref(false);
 

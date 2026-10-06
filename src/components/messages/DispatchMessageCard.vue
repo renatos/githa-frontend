@@ -69,7 +69,17 @@
           </div>
           <div>
             <h4 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              {{ message.targetName }}
+              <span
+                v-if="isClient"
+                title="Ver detalhes do cliente"
+                class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                @click.stop="$emit('open-client', message.targetId)"
+              >
+                {{ message.targetName }}
+              </span>
+              <span v-else>
+                {{ message.targetName }}
+              </span>
               <span v-if="metadataObj.serviceName && displayTags.length === 0" class="text-xs font-normal text-slate-500 dark:text-slate-400">
                 • {{ metadataObj.serviceName.toLowerCase() }}
               </span>
@@ -243,7 +253,7 @@ const props = defineProps({
   highlighted: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['approve', 'reject', 'unapprove', 'phone-correction-needed']);
+const emit = defineEmits(['approve', 'reject', 'unapprove', 'phone-correction-needed', 'open-client']);
 
 const isEditing = ref(false);
 const editedText = ref(props.message.messageText || '');
@@ -252,6 +262,10 @@ const approving = ref(false);
 const rejecting = ref(false);
 const unapproving = ref(false);
 const originDescription = ref('');
+
+const isClient = computed(() => {
+  return (!props.message?.targetType || props.message.targetType === 'CLIENT') && !!props.message?.targetId;
+});
 
 const fetchOriginDescription = async (originType) => {
   if (!originType) {

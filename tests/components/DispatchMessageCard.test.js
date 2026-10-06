@@ -162,4 +162,29 @@ describe('DispatchMessageCard.vue', () => {
     expect(wrapper.emitted('approve')[0][0].id).toBe(1);
     expect(wrapper.emitted('approve')[0][0].customMessageText).toBe('Olá Ana Paula! Está quase na hora do retorno.');
   });
+
+  it('renders client name as a clickable link and emits open-client when clicked', async () => {
+    const clientMessage = {
+      ...baseMessage,
+      targetId: 42,
+      targetType: 'CLIENT',
+      targetName: 'Natália Resende'
+    };
+
+    const wrapper = mount(DispatchMessageCard, {
+      props: {
+        message: clientMessage,
+        professionals: []
+      }
+    });
+
+    const clientLink = wrapper.find('span[title="Ver detalhes do cliente"]');
+    expect(clientLink.exists()).toBe(true);
+    expect(clientLink.text()).toBe('Natália Resende');
+
+    await clientLink.trigger('click');
+
+    expect(wrapper.emitted('open-client')).toBeTruthy();
+    expect(wrapper.emitted('open-client')[0][0]).toBe(42);
+  });
 });
