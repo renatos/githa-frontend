@@ -435,7 +435,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import router from '../../router';
 import { dispatchMessageService } from '../../services/dispatchMessageService';
@@ -502,19 +502,8 @@ const saveClient = async (clientData) => {
 
     window.dispatchEvent(new CustomEvent('client-updated', { detail: clientData }));
 
-    const updateTargetInfo = (list) => {
-      list.forEach(m => {
-        if ((!m.targetType || m.targetType === 'CLIENT') && m.targetId === clientData.id) {
-          if (clientData.name) m.targetName = clientData.name;
-          if (clientData.phone) m.targetPhone = clientData.phone;
-        }
-      });
-    };
-    updateTargetInfo(pendingMessages.value);
-    updateTargetInfo(queueMessages.value);
-    updateTargetInfo(historyMessages.value);
-
     closeClientForm();
+    await loadCurrentTab();
   } catch (error) {
     console.error('Error saving client:', error);
     toastBridge.error('Erro', 'Não foi possível salvar as alterações do cliente.');
@@ -1002,7 +991,17 @@ onMounted(async () => {
   if (query.messageId || query.reminderId) {
     await handleTargetMessageHighlight();
   }
+
+  window.addEventListener('client-updated', onExternalClientUpdated);
 });
+
+onUnmounted(() => {
+  window.removeEventListener('client-updated', onExternalClientUpdated);
+});
+
+const onExternalClientUpdated = async () => {
+  await loadCurrentTab();
+};
 
 watch(() => currentRouteQuery().messageId, async (newVal) => {
   if (newVal) {

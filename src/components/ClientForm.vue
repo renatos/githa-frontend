@@ -28,6 +28,14 @@
             </span>
             <StatusBadge v-if="form.status" :status="form.status" :status-map="clientStatusMap" />
             <span
+              v-if="form.messagingPreferences?.allBlocked"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-semibold"
+              title="Todas as mensagens automáticas estão bloqueadas para este cliente"
+            >
+              <span class="material-symbols-outlined text-[14px]">notifications_off</span>
+              Sem Mensagens
+            </span>
+            <span
               v-if="form.originLeadId"
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
               title="Cliente originado de Lead capturado"
@@ -350,7 +358,12 @@ const form = ref({
     prescribedProducts: false,
   },
   campaigns: [],
-  conversationHistory: []
+  conversationHistory: [],
+  messagingPreferences: {
+    allBlocked: false,
+    blockedTypes: [],
+    history: []
+  }
 });
 
 const selectedCampaignId = ref(null);
@@ -518,7 +531,12 @@ const populateForm = (clientData) => {
       prescribedProducts: false,
     },
     campaigns: clientData.campaigns || [],
-    conversationHistory: clientData.conversationHistory || []
+    conversationHistory: clientData.conversationHistory || [],
+    messagingPreferences: clientData.messagingPreferences || {
+      allBlocked: false,
+      blockedTypes: clientData.rebookingOptOut ? ['REBOOKING'] : [],
+      history: []
+    }
   };
 };
 
