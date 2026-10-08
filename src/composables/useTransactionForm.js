@@ -237,7 +237,9 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
   });
 
   const save = async () => {
-    if (form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId && launchMode.value === 'MANUAL') {
+    const isSaleTransaction = !!(form.value.saleId || props.transaction?.saleId || props.transaction?.sale || launchMode.value === 'SALE');
+
+    if (launchMode.value === 'MANUAL' && form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId && !isSaleTransaction) {
       confirmBridge.alert({
         title: 'Grupo de Contas Obrigatório',
         message: 'Selecione um Grupo de Contas para transações Pagas.',
@@ -282,7 +284,7 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
         return;
       }
 
-      if (form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId) {
+      if (launchMode.value === 'MANUAL' && form.value.status === 'PAID' && !form.value.accountGroupId && !form.value.appointmentId && !isSaleTransaction) {
         confirmBridge.alert({
           title: 'Grupo de Contas Obrigatório',
           message: 'Selecione um Grupo de Contas para transações Pagas.',
