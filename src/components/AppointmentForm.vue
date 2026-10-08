@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     :show="true"
-    :max-width="isMultiProcedureMode ? 'max-w-4xl' : 'max-w-2xl'"
+    max-width="max-w-4xl"
     :body-padding="false"
     :z-index="zIndex"
     @close="$emit('close')"
@@ -21,8 +21,19 @@
     </template>
 
     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-6">
-      <!-- MODO NOVO AGENDAMENTO (MULTI-PROCEDIMENTO) -->
-      <form v-if="isMultiProcedureMode" class="flex flex-col gap-6" @submit.prevent="save">
+      <form class="flex flex-col gap-6" @submit.prevent="save">
+
+        <!-- Transaction link badge -->
+        <div v-if="form.transactionId" class="flex justify-center -mb-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition-colors cursor-pointer"
+            @click="navigateToTransaction"
+          >
+            <span class="material-symbols-outlined text-[14px]">link</span>
+            Vinculado à Transação #{{ form.transactionId }}
+          </button>
+        </div>
         
         <!-- Header da Sessão: Cliente e Data -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-xs">
@@ -78,7 +89,7 @@
             <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
               <div
                 v-for="(proc, index) in procedures"
-                :key="proc.tempId"
+                :key="proc.tempId || proc.id || index"
                 class="flex flex-col md:grid md:grid-cols-[1fr_180px_160px_130px_48px] gap-3 p-3 items-center group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
               >
                 <!-- Serviço -->
@@ -107,7 +118,8 @@
                     type="text"
                     maxlength="5"
                     placeholder="HH:MM"
-                    class="form-input w-20 text-center rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 h-8 px-1 text-slate-900 dark:text-slate-100 focus:border-indigo-600 outline-none"
+                    :disabled="!canSave"
+                    class="form-input w-20 text-center rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 h-8 px-1 text-slate-900 dark:text-slate-100 focus:border-indigo-600 outline-none disabled:opacity-60"
                     @input="e => { proc.start = maskTime(e); recalculateItemEnd(proc); }"
                   />
                   <span class="text-slate-400 text-xs font-bold">-</span>
@@ -116,7 +128,8 @@
                     type="text"
                     maxlength="5"
                     placeholder="HH:MM"
-                    class="form-input w-20 text-center rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 h-8 px-1 text-slate-900 dark:text-slate-100 focus:border-indigo-600 outline-none"
+                    :disabled="!canSave"
+                    class="form-input w-20 text-center rounded-lg text-xs font-bold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 h-8 px-1 text-slate-900 dark:text-slate-100 focus:border-indigo-600 outline-none disabled:opacity-60"
                     @input="e => proc.end = maskTime(e)"
                   />
                 </div>
@@ -134,7 +147,7 @@
                 <!-- Ação Remover -->
                 <div class="flex justify-end md:justify-center">
                   <button
-                    v-if="procedures.length > 1"
+                    v-if="canSave && (procedures.length > 1 || !form.id)"
                     type="button"
                     class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                     title="Remover procedimento"
@@ -152,7 +165,7 @@
             </div>
 
             <!-- LINHA DE ADIÇÃO RÁPIDA DE NOVO PROCEDIMENTO -->
-            <div class="p-3 bg-indigo-50/40 dark:bg-indigo-950/20 border-t border-indigo-100 dark:border-indigo-900/40 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+            <div v-if="canSave" class="p-3 bg-indigo-50/40 dark:bg-indigo-950/20 border-t border-indigo-100 dark:border-indigo-900/40 flex flex-col md:flex-row items-stretch md:items-center gap-3">
               <!-- Lookup de Serviço -->
               <div class="flex-1 min-w-0">
                 <BaseLookup
@@ -219,7 +232,7 @@
           <!-- Estado 1: Sem desconto aplicado -->
           <div v-if="!discountSummary || discountSummary.totalDiscountAmount <= 0" class="flex justify-end">
             <button
-              v-if="canSave"
+              v-if="canModifyDiscount"
               type="button"
               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/20 transition-all cursor-pointer shadow-xs active:scale-95"
               @click="isDiscountModalOpen = true"
@@ -247,7 +260,7 @@
                 </span>
               </div>
             </div>
-            <div v-if="canSave" class="flex items-center gap-1.5 shrink-0">
+            <div v-if="canModifyDiscount" class="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 class="px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg transition-colors cursor-pointer"
@@ -289,7 +302,7 @@
         <!-- Status e Notas -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Status Inicial</p>
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">{{ form.id ? 'Status' : 'Status Inicial' }}</p>
             <select
               v-model="form.status"
               :disabled="!canSave"
@@ -303,7 +316,7 @@
           </label>
 
           <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Notas Gerais da Sessão</p>
+            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">{{ form.id ? 'Notas' : 'Notas Gerais da Sessão' }}</p>
             <textarea
               v-model="form.notes"
               :disabled="!canSave"
@@ -312,159 +325,6 @@
             ></textarea>
           </label>
         </div>
-      </form>
-
-      <!-- MODO EDIÇÃO (AGENDAMENTO INDIVIDUAL EXISTENTE) -->
-      <form v-else class="flex flex-col gap-6" @submit.prevent="save">
-        <!-- Transaction link badge -->
-        <div v-if="form.transactionId" class="flex justify-center">
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition-colors cursor-pointer"
-            @click="navigateToTransaction"
-          >
-            <span class="material-symbols-outlined text-[14px]">link</span>
-            Vinculado à Transação #{{ form.transactionId }}
-          </button>
-        </div>
-
-        <!-- Cliente -->
-        <label class="flex flex-col">
-          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Cliente</p>
-          <BaseLookup
-            v-model="form.client.id"
-            :disabled="!canSave"
-            :initial-description="form.client.name"
-            :search-service="clientService"
-            placeholder="Pesquisar Cliente..."
-            @edit="onEditClient"
-            @select="(item) => form.client.name = item?.name"
-          />
-        </label>
-
-        <!-- Profissional e Serviço -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Profissional</p>
-            <BaseLookup
-              v-model="form.professional.id"
-              :disabled="!canSave"
-              :initial-description="form.professional.name"
-              :search-service="professionalService"
-              placeholder="Pesquisar Profissional..."
-              @edit="onEditProfessional"
-              @select="(item) => form.professional.name = item?.name"
-            />
-          </label>
-
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Serviço</p>
-            <BaseLookup
-              v-model="form.service.id"
-              :disabled="!canSave"
-              :initial-description="form.service.name"
-              :search-service="serviceService"
-              placeholder="Pesquisar Serviço..."
-              @edit="onEditService"
-              @select="onServiceSelect"
-            />
-          </label>
-        </div>
-
-        <!-- Valor / Desconto / Valor Final -->
-        <div class="grid grid-cols-3 gap-4">
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Valor</p>
-            <CurrencyInput v-model="form.price" :disabled="!canSave" />
-          </label>
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Desconto (%)</p>
-            <input
-              v-model="form.discount"
-              :disabled="!canSave"
-              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-              placeholder="0"
-              step="0.01"
-              type="number"
-            />
-          </label>
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Valor Final</p>
-            <input
-              :value="formatCurrency(finalPriceSingle)"
-              class="form-input flex w-full rounded-lg text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 h-11 px-4 text-base"
-              disabled
-              type="text"
-            />
-          </label>
-        </div>
-
-        <!-- Data / Início / Fim -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Data</p>
-            <input
-              v-model="form.date"
-              :disabled="!canSave"
-              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-              required
-              type="date"
-            />
-          </label>
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Início</p>
-            <input
-              v-model="form.start"
-              :disabled="!canSave"
-              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-              required
-              type="text"
-              placeholder="HH:MM"
-              maxlength="5"
-              @input="e => { form.start = maskTime(e); calculateEndTime(); }"
-            />
-          </label>
-          <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Fim</p>
-            <input
-              v-model="form.end"
-              :disabled="!canSave"
-              class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-              required
-              type="text"
-              placeholder="HH:MM"
-              maxlength="5"
-              @input="e => form.end = maskTime(e)"
-              @focus="calculateEndTime"
-            />
-          </label>
-        </div>
-
-        <!-- Status -->
-        <label class="flex flex-col">
-          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Status</p>
-          <select
-            v-model="form.status"
-            :disabled="!canSave"
-            class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
-            required
-          >
-            <option v-for="status in appointmentStatuses" :key="status.name" :value="status.name">
-              {{ status.description }}
-            </option>
-          </select>
-        </label>
-
-        <!-- Notas -->
-        <label class="flex flex-col">
-          <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">Notas</p>
-          <textarea
-            v-model="form.notes"
-            :disabled="!canSave"
-            class="form-input flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 px-4 py-2 text-base transition-colors disabled:opacity-60 resize-none h-20"
-            rows="2"
-          ></textarea>
-        </label>
       </form>
     </div>
 
@@ -483,19 +343,22 @@
         class="px-5 py-2.5 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-60 disabled:cursor-not-allowed"
         @click="save"
       >
-        {{ isMultiProcedureMode && procedures.length > 1 ? `Salvar (${procedures.length} Procedimentos)` : 'Salvar' }}
+        {{ procedures.length > 1 ? `Salvar (${procedures.length} Procedimentos)` : 'Salvar' }}
       </button>
     </template>
   </BaseModal>
 
   <!-- Modal de Descontos Unificado -->
   <TransactionDiscountModal
+    v-if="isDiscountModalOpen"
     :show="isDiscountModalOpen"
-    :sale-items="procedureItemsForDiscount"
-    :discount-summary="discountSummary"
+    :items="procedureItemsForDiscount"
+    :current-discount="discountSummary"
+    subtitle="Sessão de Procedimentos"
     :z-index="12000"
     @close="isDiscountModalOpen = false"
     @apply="applyDiscount"
+    @remove="removeDiscount"
     @clear="removeDiscount"
   />
 
@@ -521,6 +384,15 @@
     @close="showServiceForm = false"
     @save="onServiceSaved"
   />
+
+  <!-- Modal de Opção de Atualização de Status da Sessão -->
+  <AppointmentGroupStatusModal
+    :show="showGroupStatusModal"
+    :new-status="form.status"
+    :z-index="12500"
+    @close="showGroupStatusModal = false"
+    @choose="handleGroupStatusChoice"
+  />
 </template>
 
 <script setup>
@@ -537,11 +409,11 @@ import BaseLookup from './common/BaseLookup.vue';
 import { confirmBridge } from '../services/confirmBridge';
 import { useModal } from '../composables/useModal';
 import { useEscapeKey } from '../composables/useEscapeKey';
-import CurrencyInput from './common/CurrencyInput.vue';
 import TransactionDiscountModal from './financial/TransactionDiscountModal.vue';
 import ClientForm from './ClientForm.vue';
 import ProfessionalForm from './ProfessionalForm.vue';
 import ServiceForm from './ServiceForm.vue';
+import AppointmentGroupStatusModal from './AppointmentGroupStatusModal.vue';
 import { formatCurrency, round2 } from '@/utils/formatters';
 
 const props = defineProps({
@@ -559,9 +431,6 @@ useEscapeKey(() => emit('close'));
 
 const router = useRouter();
 const isAdmin = ref(false);
-
-// Modo Multi-Procedimento ativo quando criando novo agendamento
-const isMultiProcedureMode = computed(() => !props.appointment?.id);
 
 const form = ref({
   id: null,
@@ -582,6 +451,7 @@ const form = ref({
 
 // Lista de procedimentos para a sessão
 const procedures = ref([]);
+const deletedProcedureIds = ref([]);
 
 // Linha de novo procedimento
 const newProcedure = ref({
@@ -598,6 +468,7 @@ const discountSummary = ref(null);
 const originalStatus = ref('');
 const appointmentStatuses = ref([]);
 const selectedServiceDuration = ref(0);
+const showGroupStatusModal = ref(false);
 
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
@@ -616,11 +487,10 @@ const saveTooltip = computed(() => {
   return '';
 });
 
-// Totalizadores para modo individual
-const finalPriceSingle = computed(() => {
-  const p = parseFloat(form.value.price) || 0;
-  const d = parseFloat(form.value.discount) || 0;
-  return p - (p * d / 100);
+const canModifyDiscount = computed(() => {
+  if (!canSave.value) return false;
+  if (originalStatus.value === 'COMPLETED' || form.value.status === 'COMPLETED') return false;
+  return !form.value.status || form.value.status === 'SCHEDULED';
 });
 
 // Totalizadores para modo multi-procedimento
@@ -685,8 +555,8 @@ const procedureItemsForDiscount = computed(() => {
 const applyDiscount = (discountData) => {
   discountSummary.value = discountData;
   if (discountData.itemsWithDiscount && discountData.itemsWithDiscount.length > 0) {
-    discountData.itemsWithDiscount.forEach(updatedItem => {
-      const target = procedures.value.find((p, idx) => (p.tempId || idx + 1) === updatedItem.id);
+    discountData.itemsWithDiscount.forEach((updatedItem, index) => {
+      const target = procedures.value.find((p, idx) => (p.tempId || idx + 1) === updatedItem.id) || procedures.value[index];
       if (target) {
         target.discountAmount = updatedItem.discountAmount;
         target.netAmount = updatedItem.netAmount;
@@ -756,8 +626,121 @@ const onNewServiceSelect = (item) => {
   calculateNewProcedureEnd();
 };
 
-const addProcedure = () => {
-  if (!newProcedure.value.service.id) return;
+const toMinutes = (timeStr) => {
+  if (!timeStr || !timeStr.includes(':')) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const addProcedure = async () => {
+  if (!newProcedure.value.service.id) {
+    confirmBridge.alert({
+      title: 'Serviço obrigatório',
+      message: 'Selecione um serviço para adicionar à sessão.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  if (!form.value.date) {
+    confirmBridge.alert({
+      title: 'Data obrigatória',
+      message: 'Por favor, selecione a data da sessão antes de adicionar procedimentos.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  if (!newProcedure.value.professional?.id) {
+    confirmBridge.alert({
+      title: 'Profissional obrigatório',
+      message: 'Selecione um profissional para o procedimento.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  if (!newProcedure.value.start || !newProcedure.value.end) {
+    confirmBridge.alert({
+      title: 'Horário incompleto',
+      message: 'Informe os horários de início e término do procedimento.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  const newStartMin = toMinutes(newProcedure.value.start);
+  const newEndMin = toMinutes(newProcedure.value.end);
+
+  if (newEndMin <= newStartMin) {
+    confirmBridge.alert({
+      title: 'Horário inválido',
+      message: 'O horário de término deve ser posterior ao horário de início.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  const profId = newProcedure.value.professional.id;
+  const profName = newProcedure.value.professional.name || 'esse profissional';
+
+  // 1. Validação local: conflito com outros procedimentos da mesma sessão
+  const localConflict = procedures.value.find(p => {
+    if (p.professional?.id === profId) {
+      const pStart = toMinutes(p.start);
+      const pEnd = toMinutes(p.end);
+      return newStartMin < pEnd && newEndMin > pStart;
+    }
+    return false;
+  });
+
+  if (localConflict) {
+    confirmBridge.alert({
+      title: 'Conflito de Horário na Sessão',
+      message: `A profissional ${profName} já possui o procedimento "${localConflict.service.name}" agendado das ${localConflict.start} às ${localConflict.end} nesta mesma sessão.`,
+      type: 'warning'
+    });
+    return;
+  }
+
+  // 2. Validação remota: conflito com agendamentos já salvos no banco de dados para a profissional naquela data
+  try {
+    const res = await appointmentService.getAll({
+      'professional.id': profId,
+      date: form.value.date,
+      size: 100
+    });
+    const existingList = res.data?.content || res.data || [];
+
+    const remoteConflict = existingList.find(apt => {
+      if (props.appointment?.id && apt.id === props.appointment.id) return false;
+      if (apt.status === 'CANCELED' || apt.status === 'MISSED') return false;
+
+      if (!apt.startTime || !apt.endTime) return false;
+      const aptStartStr = apt.startTime.split('T')[1].substring(0, 5);
+      const aptEndStr = apt.endTime.split('T')[1].substring(0, 5);
+      const aStart = toMinutes(aptStartStr);
+      const aEnd = toMinutes(aptEndStr);
+
+      return newStartMin < aEnd && newEndMin > aStart;
+    });
+
+    if (remoteConflict) {
+      const clientName = remoteConflict.clientName || remoteConflict.client?.name || 'Cliente';
+      const serviceName = remoteConflict.serviceName || remoteConflict.service?.name || 'Procedimento';
+      const aptStartStr = remoteConflict.startTime.split('T')[1].substring(0, 5);
+      const aptEndStr = remoteConflict.endTime.split('T')[1].substring(0, 5);
+
+      confirmBridge.alert({
+        title: 'Conflito de Horário',
+        message: `Já existe um agendamento para ${profName}:\n${clientName} (${serviceName}) das ${aptStartStr} às ${aptEndStr}.`,
+        type: 'warning'
+      });
+      return;
+    }
+  } catch (err) {
+    console.error('Erro ao verificar disponibilidade do profissional:', err);
+  }
 
   const itemPrice = newProcedure.value.service.price || 0;
   procedures.value.push({
@@ -786,7 +769,19 @@ const addProcedure = () => {
   }
 };
 
-const removeProcedure = (index) => {
+const removeProcedure = async (index) => {
+  const target = procedures.value[index];
+  if (target && target.id) {
+    const confirmed = await confirmBridge.confirm({
+      title: 'Remover Procedimento',
+      message: `Deseja realmente remover o procedimento "${target.service?.name || ''}" da sessão? Ele será excluído ao salvar.`,
+      confirmLabel: 'Remover',
+      cancelLabel: 'Cancelar',
+      type: 'danger'
+    });
+    if (!confirmed) return;
+    deletedProcedureIds.value.push(target.id);
+  }
   procedures.value.splice(index, 1);
   if (discountSummary.value) {
     removeDiscount();
@@ -833,6 +828,51 @@ onMounted(() => {
 
     if (!form.value.client.id && apt.clientId) form.value.client.id = apt.clientId;
     if (apt.transactionId) form.value.transactionId = apt.transactionId;
+
+    // Popula procedimentos para o novo form unificado (seja edição ou criação com pré-seleção)
+    if (form.value.service?.id) {
+      const itemPrice = parseFloat(form.value.price) || 0;
+      const itemDiscount = parseFloat(form.value.discount) || 0;
+      const itemDiscountAmount = parseFloat(form.value.discountAmount) || (itemDiscount > 0 ? (itemPrice * itemDiscount / 100) : 0);
+      const itemNet = form.value.netAmount !== undefined && form.value.netAmount !== null
+        ? parseFloat(form.value.netAmount)
+        : (itemPrice - itemDiscountAmount);
+
+      procedures.value = [{
+        id: form.value.id || null,
+        tempId: form.value.id || Date.now(),
+        service: {
+          id: form.value.service.id,
+          name: form.value.service.name,
+          durationMinutes: selectedServiceDuration.value || 30,
+          price: itemPrice
+        },
+        professional: {
+          id: form.value.professional.id,
+          name: form.value.professional.name
+        },
+        start: form.value.start || '09:00',
+        end: form.value.end || '10:00',
+        price: itemPrice,
+        discount: itemDiscount,
+        discountAmount: itemDiscountAmount,
+        netAmount: itemNet,
+        status: form.value.status
+      }];
+
+      if (itemDiscountAmount > 0) {
+        discountSummary.value = {
+          mode: 'TOTAL',
+          totalDiscountAmount: itemDiscountAmount,
+          totalDiscountPercentage: itemPrice > 0 ? (itemDiscountAmount / itemPrice) * 100 : 0,
+          itemsWithDiscount: [{
+            id: form.value.id || procedures.value[0].tempId,
+            discountAmount: itemDiscountAmount,
+            netAmount: itemNet
+          }]
+        };
+      }
+    }
   }
 
   // Preenche profissional default a partir do usuário logado se não houver
@@ -852,20 +892,6 @@ onMounted(() => {
     form.value.date = new Date().toISOString().split('T')[0];
   }
 
-  // Se estiver criando e já tiver serviço pré-selecionado (ex: via shortcut ou slot clicado)
-  if (!props.appointment?.id && form.value.service?.id) {
-    procedures.value.push({
-      tempId: Date.now(),
-      service: { ...form.value.service },
-      professional: { ...form.value.professional },
-      start: form.value.start || '09:00',
-      end: form.value.end || '10:00',
-      price: form.value.price || 0,
-      discountAmount: 0,
-      netAmount: form.value.price || 0
-    });
-  }
-
   checkUserRole();
   loadStatuses();
 });
@@ -878,6 +904,69 @@ onMounted(async () => {
         const fullApt = response.data;
         if (fullApt) {
           form.value.transactionId = fullApt.transactionId;
+          if (fullApt.groupId) {
+            form.value.groupId = fullApt.groupId;
+
+            // Busca os demais agendamentos da sessão (mesmo groupId)
+            try {
+              const resGroup = await appointmentService.getAll({
+                date: form.value.date,
+                'client.id': form.value.client.id,
+                size: 100
+              });
+              const allItems = resGroup.data?.content || resGroup.data || [];
+              const groupItems = allItems.filter(item => item.groupId === fullApt.groupId && item.status !== 'CANCELED');
+              if (groupItems.length > 0) {
+                groupItems.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+                procedures.value = groupItems.map(item => {
+                  const pPrice = parseFloat(item.price) || 0;
+                  const pDisc = parseFloat(item.discount) || 0;
+                  const pDiscAmount = parseFloat(item.discountAmount) || (pDisc > 0 ? (pPrice * pDisc / 100) : 0);
+                  const pNet = item.netAmount !== undefined && item.netAmount !== null
+                    ? parseFloat(item.netAmount)
+                    : (pPrice - pDiscAmount);
+
+                  return {
+                    id: item.id,
+                    tempId: item.id,
+                    service: {
+                      id: item.serviceId || item.service?.id,
+                      name: item.serviceName || item.service?.name,
+                      price: pPrice,
+                      durationMinutes: 30
+                    },
+                    professional: {
+                      id: item.professionalId || item.professional?.id,
+                      name: item.professionalName || item.professional?.name
+                    },
+                    start: item.startTime ? item.startTime.split('T')[1].substring(0, 5) : '',
+                    end: item.endTime ? item.endTime.split('T')[1].substring(0, 5) : '',
+                    price: pPrice,
+                    discount: pDisc,
+                    discountAmount: pDiscAmount,
+                    netAmount: pNet,
+                    status: item.status
+                  };
+                });
+
+                const totalDisc = procedures.value.reduce((acc, p) => acc + (p.discountAmount || 0), 0);
+                if (totalDisc > 0) {
+                  discountSummary.value = {
+                    mode: 'ITEM',
+                    totalDiscountAmount: totalDisc,
+                    totalDiscountPercentage: grossSessionTotal.value > 0 ? (totalDisc / grossSessionTotal.value) * 100 : 0,
+                    itemsWithDiscount: procedures.value.filter(p => p.discountAmount > 0).map(p => ({
+                      id: p.id,
+                      discountAmount: p.discountAmount,
+                      netAmount: p.netAmount
+                    }))
+                  };
+                }
+              }
+            } catch (errGroup) {
+              console.error('Falha ao buscar agendamentos da sessão:', errGroup);
+            }
+          }
         }
       } catch (e) {
         console.error("Failed to fetch appointment details", e);
@@ -932,54 +1021,110 @@ const maskTime = (e) => {
 };
 
 const save = () => {
+  if (!form.value.client.id) {
+    confirmBridge.alert({
+      title: 'Cliente obrigatório',
+      message: 'Por favor, selecione um cliente para o agendamento.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  if (procedures.value.length === 0) {
+    confirmBridge.alert({
+      title: 'Nenhum procedimento',
+      message: 'Adicione pelo menos um procedimento à sessão.',
+      type: 'warning'
+    });
+    return;
+  }
+
+  // Validação de horários
+  for (const proc of procedures.value) {
+    if (!proc.start || !proc.end) {
+      confirmBridge.alert({
+        title: 'Horário incompleto',
+        message: `O procedimento ${proc.service.name || ''} possui horários incompletos.`,
+        type: 'warning'
+      });
+      return;
+    }
+    const [sh, sm] = proc.start.split(':').map(Number);
+    const [eh, em] = proc.end.split(':').map(Number);
+    if (eh * 60 + em <= sh * 60 + sm) {
+      confirmBridge.alert({
+        title: 'Horário inválido',
+        message: `No procedimento ${proc.service.name || ''}, o término deve ser posterior ao início.`,
+        type: 'warning'
+      });
+      return;
+    }
+  }
+
+  // Validação de sobreposição entre procedimentos da própria sessão
+  for (let i = 0; i < procedures.value.length; i++) {
+    const p1 = procedures.value[i];
+    const p1Start = toMinutes(p1.start);
+    const p1End = toMinutes(p1.end);
+
+    for (let j = i + 1; j < procedures.value.length; j++) {
+      const p2 = procedures.value[j];
+      if (p1.professional?.id && p2.professional?.id && p1.professional.id === p2.professional.id) {
+        const p2Start = toMinutes(p2.start);
+        const p2End = toMinutes(p2.end);
+        if (p1Start < p2End && p1End > p2Start) {
+          confirmBridge.alert({
+            title: 'Conflito de Horário na Sessão',
+            message: `Os procedimentos "${p1.service.name}" e "${p2.service.name}" possuem horários sobrepostos para o(a) mesmo(a) profissional.`,
+            type: 'warning'
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  // Se o agendamento pertence a uma sessão com múltiplos procedimentos e o status foi alterado, pergunta se aplica a toda a sessão
+  if (form.value.groupId && procedures.value.length > 1 && form.value.status !== originalStatus.value) {
+    showGroupStatusModal.value = true;
+    return;
+  }
+
+  executeSave(false);
+};
+
+const handleGroupStatusChoice = (choice) => {
+  showGroupStatusModal.value = false;
+  executeSave(choice === 'ALL');
+};
+
+const executeSave = (updateAllInGroup = false) => {
   const toISOString = (date, time) => {
     if (!date || !time) return null;
     return `${date}T${time}:00`;
   };
 
-  // MODO NOVO AGENDAMENTO (MULTI-PROCEDIMENTO)
-  if (isMultiProcedureMode.value) {
-    if (!form.value.client.id) {
-      confirmBridge.alert({
-        title: 'Cliente obrigatório',
-        message: 'Por favor, selecione um cliente para o agendamento.',
-        type: 'warning'
-      });
+  // Criação (sem ID)
+  if (!form.value.id) {
+    if (procedures.value.length === 1) {
+      const proc = procedures.value[0];
+      const singleDto = {
+        clientId: form.value.client.id,
+        professionalId: proc.professional?.id || form.value.professional?.id || null,
+        serviceId: proc.service.id,
+        startTime: toISOString(form.value.date, proc.start),
+        endTime: toISOString(form.value.date, proc.end),
+        status: form.value.status || 'SCHEDULED',
+        notes: form.value.notes,
+        price: proc.price,
+        discount: proc.discount || 0,
+        discountAmount: proc.discountAmount || 0,
+        netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0))
+      };
+      emit('save', singleDto);
       return;
     }
 
-    if (procedures.value.length === 0) {
-      confirmBridge.alert({
-        title: 'Nenhum procedimento',
-        message: 'Adicione pelo menos um procedimento à sessão.',
-        type: 'warning'
-      });
-      return;
-    }
-
-    // Validação de horários
-    for (const proc of procedures.value) {
-      if (!proc.start || !proc.end) {
-        confirmBridge.alert({
-          title: 'Horário incompleto',
-          message: `O procedimento ${proc.service.name} possui horários incompletos.`,
-          type: 'warning'
-        });
-        return;
-      }
-      const [sh, sm] = proc.start.split(':').map(Number);
-      const [eh, em] = proc.end.split(':').map(Number);
-      if (eh * 60 + em <= sh * 60 + sm) {
-        confirmBridge.alert({
-          title: 'Horário inválido',
-          message: `No procedimento ${proc.service.name}, o término deve ser posterior ao início.`,
-          type: 'warning'
-        });
-        return;
-      }
-    }
-
-    // Monta o lote de DTOs
     const batchDtos = procedures.value.map(proc => ({
       clientId: form.value.client.id,
       professionalId: proc.professional?.id || form.value.professional?.id || null,
@@ -992,38 +1137,56 @@ const save = () => {
       discountAmount: proc.discountAmount || 0,
       netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0))
     }));
-
     emit('save', batchDtos);
     return;
   }
 
-  // MODO EDIÇÃO (AGENDAMENTO INDIVIDUAL)
-  if (form.value.start && form.value.end) {
-    const [sh, sm] = form.value.start.split(':').map(Number);
-    const [eh, em] = form.value.end.split(':').map(Number);
-    if (eh * 60 + em <= sh * 60 + sm) {
-      confirmBridge.alert({
-        title: 'Horário inválido',
-        message: 'O horário de fim deve ser posterior ao horário de início.',
-        type: 'warning'
-      });
-      return;
-    }
+  // Edição com apenas 1 procedimento original e sem exclusões
+  if (procedures.value.length === 1 && deletedProcedureIds.value.length === 0 && procedures.value[0].id === form.value.id) {
+    const proc = procedures.value[0];
+    const dto = {
+      id: form.value.id,
+      groupId: form.value.groupId || null,
+      clientId: form.value.client?.id || null,
+      professionalId: proc.professional?.id || null,
+      serviceId: proc.service?.id || null,
+      startTime: toISOString(form.value.date, proc.start),
+      endTime: toISOString(form.value.date, proc.end),
+      status: form.value.status,
+      notes: form.value.notes,
+      price: proc.price,
+      discount: proc.discount || 0,
+      discountAmount: proc.discountAmount || 0,
+      netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
+      updateAllInGroup
+    };
+    emit('save', dto);
+    return;
   }
 
-  const dto = {
-    id: form.value.id,
-    clientId: form.value.client?.id || null,
-    professionalId: form.value.professional?.id || null,
-    serviceId: form.value.service?.id || null,
-    startTime: toISOString(form.value.date, form.value.start),
-    endTime: toISOString(form.value.date, form.value.end),
-    status: form.value.status,
+  // Edição com múltiplos procedimentos ou alterações estruturais na sessão
+  const dtos = procedures.value.map(proc => ({
+    id: proc.id || null,
+    groupId: form.value.groupId || null,
+    clientId: form.value.client.id,
+    professionalId: proc.professional?.id || form.value.professional?.id || null,
+    serviceId: proc.service.id,
+    startTime: toISOString(form.value.date, proc.start),
+    endTime: toISOString(form.value.date, proc.end),
+    status: form.value.status || 'SCHEDULED',
     notes: form.value.notes,
-    price: form.value.price,
-    discount: form.value.discount
-  };
-  emit('save', dto);
+    price: proc.price,
+    discountAmount: proc.discountAmount || 0,
+    netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
+    updateAllInGroup
+  }));
+
+  emit('save', {
+    items: dtos,
+    deletedIds: deletedProcedureIds.value,
+    updateAllInGroup,
+    groupId: form.value.groupId
+  });
 };
 
 const navigateToTransaction = () => {

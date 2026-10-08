@@ -113,7 +113,7 @@ v-for="item in group.items" :key="item.id"
           <div class="flex-1 min-w-0 pr-12 md:pr-1 flex flex-col gap-0.5">
             <div class="flex items-center gap-2 flex-wrap">
               <p class="font-bold text-slate-900 dark:text-white text-sm md:text-base leading-tight md:truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
-              <span v-if="item.groupId" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/60 shadow-xs" title="Procedimento vinculado a uma sessão">
+              <span v-if="isGroupSession(item)" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/60 shadow-xs" title="Procedimento vinculado a uma sessão">
                 <i class="fa-solid fa-link text-[8px]"></i> Sessão
               </span>
             </div>
@@ -233,7 +233,7 @@ v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
                    @click.stop="$emit('edit', appt)">
                 <div class="flex items-center gap-1">
                   <p class="font-semibold truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.clientName }}</p>
-                  <i v-if="appt.groupId" class="fa-solid fa-link text-[8px] text-indigo-500 shrink-0" title="Procedimento vinculado a uma sessão"></i>
+                  <i v-if="isGroupSession(appt)" class="fa-solid fa-link text-[8px] text-indigo-500 shrink-0" title="Procedimento vinculado a uma sessão"></i>
                 </div>
                 <p class="opacity-75 truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.serviceName }}</p>
               </div>
@@ -293,6 +293,21 @@ const statusLegend = {
   COMPLETED: 'Finalizado',
   CANCELED: 'Cancelado',
   MISSED: 'Falta',
+};
+
+// --- Multi-Procedure Session Detection ---
+const groupCounts = computed(() => {
+  const counts = {};
+  appointments.value.forEach(appt => {
+    if (appt.groupId && appt.status !== 'CANCELED') {
+      counts[appt.groupId] = (counts[appt.groupId] || 0) + 1;
+    }
+  });
+  return counts;
+});
+
+const isGroupSession = (item) => {
+  return !!(item?.groupId && (groupCounts.value[item.groupId] || 0) > 1);
 };
 
 // --- Grouping ---
@@ -485,7 +500,7 @@ watch([currentDate, viewMode], () => {
 });
 
 const refresh = () => loadAppointments();
-defineExpose({ refresh });
+defineExpose({ refresh, appointments, isGroupSession });
 
 // --- Helpers ---
 const formatTime = (isoString) => {

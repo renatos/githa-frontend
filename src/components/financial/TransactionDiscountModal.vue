@@ -2,7 +2,7 @@
   <BaseModal
     :show="show"
     title="Aplicar Desconto"
-    subtitle="Venda de Produtos e Serviços"
+    :subtitle="subtitle || 'Venda de Produtos e Serviços'"
     icon="fa-solid fa-tag"
     max-width="max-w-2xl"
     :z-index="zIndex"
@@ -258,11 +258,14 @@ import { Money } from '@/utils/Money';
 const props = defineProps({
   show: { type: Boolean, default: true },
   items: { type: Array, default: () => [] },
+  saleItems: { type: Array, default: null },
   currentDiscount: { type: Object, default: () => null },
+  discountSummary: { type: Object, default: null },
+  subtitle: { type: String, default: 'Venda de Produtos e Serviços' },
   zIndex: { type: Number, default: 10050 }
 });
 
-const emit = defineEmits(['close', 'apply', 'remove']);
+const emit = defineEmits(['close', 'apply', 'remove', 'clear']);
 
 const discountMode = ref('TOTAL'); // 'TOTAL' | 'ITEM'
 const totalDiscountType = ref('CURRENCY'); // 'CURRENCY' | 'PERCENTAGE'
@@ -271,9 +274,22 @@ const totalPercentageValue = ref(0);
 
 const itemRows = ref([]);
 
+const getActiveItems = () => {
+  if (props.items && props.items.length > 0) return props.items;
+  if (props.saleItems && props.saleItems.length > 0) return props.saleItems;
+  return props.items || props.saleItems || [];
+};
+
+const getActiveDiscount = () => {
+  return props.currentDiscount || props.discountSummary || null;
+};
+
 // Initialize state
 const initData = () => {
-  itemRows.value = props.items.map(it => {
+  const activeItems = getActiveItems();
+  const activeDiscount = getActiveDiscount();
+
+  itemRows.value = activeItems.map(it => {
     const unitPrice = Money.of(it.unitPrice);
     const subtotal = unitPrice.times(it.quantity || 1);
     const initialDiscount = Money.of(it.discountAmount);
@@ -293,17 +309,17 @@ const initData = () => {
     };
   });
 
-  if (props.currentDiscount) {
-    discountMode.value = props.currentDiscount.mode || 'TOTAL';
-    if (props.currentDiscount.mode === 'TOTAL') {
-      totalDiscountType.value = props.currentDiscount.type || 'CURRENCY';
+  if (activeDiscount) {
+    discountMode.value = activeDiscount.mode || 'TOTAL';
+    if (activeDiscount.mode === 'TOTAL') {
+      totalDiscountType.value = activeDiscount.type || 'CURRENCY';
       if (totalDiscountType.value === 'CURRENCY') {
-        totalCurrencyValue.value = props.currentDiscount.value !== undefined ? props.currentDiscount.value : (props.currentDiscount.totalDiscountAmount || 0);
+        totalCurrencyValue.value = activeDiscount.value !== undefined ? activeDiscount.value : (activeDiscount.totalDiscountAmount || 0);
       } else {
-        totalPercentageValue.value = props.currentDiscount.value !== undefined ? props.currentDiscount.value : (props.currentDiscount.totalDiscountPercentage || 0);
+        totalPercentageValue.value = activeDiscount.value !== undefined ? activeDiscount.value : (activeDiscount.totalDiscountPercentage || 0);
       }
-    } else if (props.currentDiscount.mode === 'ITEM' && props.currentDiscount.itemsWithDiscount) {
-      props.currentDiscount.itemsWithDiscount.forEach(discItem => {
+    } else if (activeDiscount.mode === 'ITEM' && activeDiscount.itemsWithDiscount) {
+      activeDiscount.itemsWithDiscount.forEach(discItem => {
         const row = itemRows.value.find(r => r.id === discItem.id);
         if (row) {
           row.discountType = discItem.discountType || 'CURRENCY';
@@ -314,7 +330,7 @@ const initData = () => {
     }
   } else {
     // If some items already have discountAmount set, default to ITEM mode
-    const hasItemDiscount = props.items.some(i => i.discountAmount && Money.of(i.discountAmount).isPositive());
+    const hasItemDiscount = activeItems.some(i => i.discountAmount && Money.of(i.discountAmount).isPositive());
     if (hasItemDiscount) {
       discountMode.value = 'ITEM';
     } else {
@@ -426,6 +442,7 @@ const clearDiscount = () => {
     it.percentageValue = 0;
   });
   emit('remove');
+  emit('clear');
   emit('close');
 };
 
