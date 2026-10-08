@@ -298,14 +298,23 @@ const initData = () => {
     if (props.currentDiscount.mode === 'TOTAL') {
       totalDiscountType.value = props.currentDiscount.type || 'CURRENCY';
       if (totalDiscountType.value === 'CURRENCY') {
-        totalCurrencyValue.value = props.currentDiscount.value || 0;
+        totalCurrencyValue.value = props.currentDiscount.value !== undefined ? props.currentDiscount.value : (props.currentDiscount.totalDiscountAmount || 0);
       } else {
-        totalPercentageValue.value = props.currentDiscount.value || 0;
+        totalPercentageValue.value = props.currentDiscount.value !== undefined ? props.currentDiscount.value : (props.currentDiscount.totalDiscountPercentage || 0);
       }
+    } else if (props.currentDiscount.mode === 'ITEM' && props.currentDiscount.itemsWithDiscount) {
+      props.currentDiscount.itemsWithDiscount.forEach(discItem => {
+        const row = itemRows.value.find(r => r.id === discItem.id);
+        if (row) {
+          row.discountType = discItem.discountType || 'CURRENCY';
+          row.currencyValue = discItem.currencyValue !== undefined ? discItem.currencyValue : (discItem.discountAmount || 0);
+          row.percentageValue = discItem.percentageValue !== undefined ? discItem.percentageValue : (discItem.discountPercentage || 0);
+        }
+      });
     }
   } else {
     // If some items already have discountAmount set, default to ITEM mode
-    const hasItemDiscount = props.items.some(i => i.discountAmount && i.discountAmount > 0);
+    const hasItemDiscount = props.items.some(i => i.discountAmount && Money.of(i.discountAmount).isPositive());
     if (hasItemDiscount) {
       discountMode.value = 'ITEM';
     } else {

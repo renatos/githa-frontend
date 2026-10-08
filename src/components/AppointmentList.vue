@@ -111,7 +111,12 @@ v-for="item in group.items" :key="item.id"
 
           <!-- Info -->
           <div class="flex-1 min-w-0 pr-12 md:pr-1 flex flex-col gap-0.5">
-            <p class="font-bold text-slate-900 dark:text-white text-sm md:text-base leading-tight md:truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="font-bold text-slate-900 dark:text-white text-sm md:text-base leading-tight md:truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ item.clientName }}</p>
+              <span v-if="item.groupId" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/60 shadow-xs" title="Procedimento vinculado a uma sessão">
+                <i class="fa-solid fa-link text-[8px]"></i> Sessão
+              </span>
+            </div>
             <div class="flex flex-col md:flex-row md:items-center gap-x-2 min-w-0">
                <span class="text-[11px] text-indigo-500/80 dark:text-indigo-400/80 font-bold uppercase tracking-tight md:truncate">{{ item.serviceName }}</span>
                <span class="hidden md:inline text-[10px] text-slate-400">•</span>
@@ -226,7 +231,10 @@ v-for="appt in getAppointmentsForCell(day.iso, hour)" :key="appt.id"
                    :class="calendarCardClass(appt.status)"
                    :style="getCardStyle(appt)"
                    @click.stop="$emit('edit', appt)">
-                <p class="font-semibold truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.clientName }}</p>
+                <div class="flex items-center gap-1">
+                  <p class="font-semibold truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.clientName }}</p>
+                  <i v-if="appt.groupId" class="fa-solid fa-link text-[8px] text-indigo-500 shrink-0" title="Procedimento vinculado a uma sessão"></i>
+                </div>
                 <p class="opacity-75 truncate group-hover/appt:whitespace-normal group-hover/appt:break-words">{{ appt.serviceName }}</p>
               </div>
             </div>

@@ -90,13 +90,100 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
     discountSummary.value = null;
     saleItems.value.forEach(item => {
       item.discountAmount = 0;
-      item.netAmount = round2(item.unitPrice * item.quantity);
+      item.netAmount = Money.of(item.unitPrice).times(item.quantity || 1).toNumber();
     });
     calculateAmountFromItems();
 
     if (!isSplitPayment.value && paymentSplits.value && paymentSplits.value.length === 1) {
       paymentSplits.value[0].amount = form.value.amount;
       paymentSplits.value[0].originalAmount = form.value.amount;
+    }
+  };
+
+  const initDiscountFromTransaction = (transaction) => {
+    if (!transaction) return;
+
+    const grossTotal = saleItems.value.reduce(
+      (acc, item) => acc.plus(Money.of(item.unitPrice).times(item.quantity || 1)),
+      Money.zero()
+    );
+
+    // 1. Checa se há descontos explícitos nos itens
+    const hasItemDiscount = saleItems.value.some(it => it.discountAmount && Money.of(it.discountAmount).isPositive());
+
+    if (hasItemDiscount) {
+      const totalDisc = saleItems.value.reduce(
+        (acc, it) => acc.plus(Money.of(it.discountAmount || 0)),
+        Money.zero()
+      );
+      const totalPct = grossTotal.isPositive() ? grossTotal.calculateDiscountPercentage(totalDisc) : 0;
+      
+      discountSummary.value = {
+        mode: 'ITEM',
+        type: 'CURRENCY',
+        value: totalDisc.toNumber(),
+        totalDiscountAmount: totalDisc.toNumber(),
+        totalDiscountPercentage: totalPct,
+        itemsWithDiscount: saleItems.value.map(it => {
+          const subtotal = Money.of(it.unitPrice).times(it.quantity || 1);
+          const disc = Money.of(it.discountAmount || 0);
+          return {
+            ...it,
+            discountAmount: disc.toNumber(),
+            netAmount: it.netAmount ? Money.of(it.netAmount).toNumber() : subtotal.applyDiscount(disc).toNumber()
+          };
+        }),
+        finalAmount: grossTotal.applyDiscount(totalDisc).toNumber()
+      };
+      return;
+    }
+
+    // 2. Checa se há desconto comercial geral na transação
+    const origMoney = transaction.originalAmount ? Money.of(transaction.originalAmount) : grossTotal;
+    const currentAmount = transaction.amount != null ? Money.of(transaction.amount) : null;
+
+    let totalDiscountAmount = Money.zero();
+    let discountPct = transaction.discountPercentage || 0;
+
+    if (currentAmount && origMoney.isGreaterThan(currentAmount)) {
+      totalDiscountAmount = origMoney.minus(currentAmount);
+      if (!discountPct && origMoney.isPositive()) {
+        discountPct = origMoney.calculateDiscountPercentage(totalDiscountAmount);
+      }
+    } else if (discountPct > 0 && origMoney.isPositive()) {
+      totalDiscountAmount = origMoney.discountAmount(discountPct);
+    }
+
+    if (totalDiscountAmount.isPositive()) {
+      const totalDiscNum = totalDiscountAmount.toNumber();
+      saleItems.value.forEach(item => {
+        const itemSubtotal = Money.of(item.unitPrice).times(item.quantity || 1);
+        if (origMoney.isPositive() && totalDiscNum > 0) {
+          const ratio = itemSubtotal.toNumber() / origMoney.toNumber();
+          const itemDisc = totalDiscountAmount.times(ratio);
+          item.discountAmount = itemDisc.toNumber();
+          item.netAmount = itemSubtotal.applyDiscount(itemDisc).toNumber();
+        } else {
+          item.discountAmount = 0;
+          item.netAmount = itemSubtotal.toNumber();
+        }
+      });
+
+      discountSummary.value = {
+        mode: 'TOTAL',
+        type: 'CURRENCY',
+        value: totalDiscNum,
+        totalDiscountAmount: totalDiscNum,
+        totalDiscountPercentage: discountPct,
+        itemsWithDiscount: saleItems.value.map(it => ({ ...it })),
+        finalAmount: origMoney.applyDiscount(totalDiscountAmount).toNumber()
+      };
+
+      form.value.originalAmount = origMoney.toNumber();
+      form.value.amount = origMoney.applyDiscount(totalDiscountAmount).toNumber();
+      form.value.discountPercentage = discountPct;
+    } else {
+      discountSummary.value = null;
     }
   };
 
@@ -165,7 +252,7 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             discountAmount: item.discountAmount || 0,
-            netAmount: item.netAmount || round2(item.unitPrice * item.quantity)
+            netAmount: item.netAmount || Money.of(item.unitPrice).times(item.quantity || 1).toNumber()
           }))
         },
         transactions: paymentSplits.value.map(split => {
@@ -231,6 +318,7 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
     closeDiscountModal,
     applyDiscount,
     removeDiscount,
+    initDiscountFromTransaction,
     addSaleItem,
     removeSaleItem,
     calculateAmountFromItems,

@@ -129,7 +129,10 @@ const openAddProcedureForm = (sourceItem) => {
 // --- Custom save with status-aware messages ---
 const saveAppointment = async (data) => {
   try {
-    if (data.id) {
+    if (Array.isArray(data)) {
+      await appointmentService.createBatch(data);
+      toastBridge.success('Sucesso', `${data.length} procedimentos agendados com sucesso!`);
+    } else if (data.id) {
       await appointmentService.update(data.id, data);
       if (data.status === 'COMPLETED') {
         toastBridge.success('Sucesso', 'Agendamento concluído e lançamento financeiro gerado!');

@@ -6,6 +6,7 @@ import paymentMethodService from '@/services/paymentMethodService';
 import { enumService } from '@/services/enumService';
 import creditCardService from '@/services/creditCardService';
 import { round2, formatCurrency } from '@/utils/formatters';
+import { Money } from '@/utils/Money';
 
 export function useTransactionForm(props, emit, form, selectedPaymentMethod, splits, sale) {
   const {
@@ -20,6 +21,7 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
 
   const {
     saleItems,
+    initDiscountFromTransaction,
     saveSale
   } = sale;
 
@@ -149,8 +151,14 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
         if (props.transaction.sale?.items) {
           saleItems.value = props.transaction.sale.items.map(item => ({
             ...item,
-            type: item.type || (item.productId ? 'PRODUCT' : 'SERVICE')
+            type: item.type || (item.productId ? 'PRODUCT' : 'SERVICE'),
+            discountAmount: item.discountAmount || 0,
+            netAmount: item.netAmount || Money.of(item.unitPrice).times(item.quantity || 1).toNumber()
           }));
+        }
+
+        if (initDiscountFromTransaction) {
+          initDiscountFromTransaction(props.transaction);
         }
 
         const sId = props.transaction.saleId || props.transaction.sale?.id;
@@ -203,10 +211,10 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
         launchMode.value = 'MANUAL';
       }
 
-      if (form.value.saleId && form.value.saleTotal) {
+      if (form.value.saleId && form.value.saleTotal && isSplitPayment.value) {
         form.value.amount = form.value.saleTotal;
-      } else if (form.value.originalAmount) {
-        form.value.amount = form.value.originalAmount;
+      } else if (form.value.amount === undefined || form.value.amount === null) {
+        form.value.amount = form.value.originalAmount || 0;
       }
       if (form.value.paymentDate?.length > 16) form.value.paymentDate = form.value.paymentDate.substring(0, 19);
 
@@ -291,6 +299,14 @@ export function useTransactionForm(props, emit, form, selectedPaymentMethod, spl
           type: 'warning'
         });
         return;
+      }
+
+      if (isPaidSaleEdit && form.value.sale) {
+        form.value.sale.items = saleItems.value.map(item => ({
+          ...item,
+          discountAmount: item.discountAmount || 0,
+          netAmount: item.netAmount || Money.of(item.unitPrice).times(item.quantity || 1).toNumber()
+        }));
       }
 
       emit('save', form.value);
