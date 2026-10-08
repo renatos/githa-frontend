@@ -161,6 +161,7 @@
             :sale-items="saleItems"
             :sale-item-types="saleItemTypes"
             :auto-filled-message="autoFilledMessage"
+            :discount-summary="discountSummary"
             :client-service="clientService"
             :product-service-adapter="productServiceAdapter"
             :service-service="serviceService"
@@ -168,6 +169,8 @@
             @client-select="onClientSelect"
             @add-item="addSaleItem"
             @remove-item="removeSaleItem"
+            @open-discount-modal="openDiscountModal"
+            @remove-discount="removeDiscount"
           />
 
           <!-- Single Payment Method (Manual, Edit Mode, or Sale with single payment) -->
@@ -223,7 +226,12 @@
             </div>
 
             <div class="space-y-2">
-              <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Valor Total</label>
+              <div class="flex items-center justify-between">
+                <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal block ml-1">Valor Total</label>
+                <span v-if="discountSummary && discountSummary.totalDiscountAmount > 0" class="text-xs text-rose-500 dark:text-rose-400 font-bold">
+                  Desc: -{{ formatCurrency(discountSummary.totalDiscountAmount) }}
+                </span>
+              </div>
               <div class="relative group mt-1">
                 <CurrencyInput
                   v-model="form.amount"
@@ -349,6 +357,17 @@
       </div>
     </template>
   </BaseModal>
+
+  <!-- Dedicated Discount Modal -->
+  <TransactionDiscountModal
+    v-if="isDiscountModalOpen"
+    :show="isDiscountModalOpen"
+    :items="saleItems"
+    :current-discount="discountSummary"
+    @close="closeDiscountModal"
+    @apply="applyDiscount"
+    @remove="removeDiscount"
+  />
 </template>
 
 <script setup>
@@ -366,6 +385,7 @@ import ManualTransactionSection from './ManualTransactionSection.vue';
 import SaleTransactionSection from './SaleTransactionSection.vue';
 import TransactionDiscountBadge from './TransactionDiscountBadge.vue';
 import SplitPaymentSection from './SplitPaymentSection.vue';
+import TransactionDiscountModal from './TransactionDiscountModal.vue';
 
 // Composables
 import { usePaymentSplits } from '@/composables/usePaymentSplits';
@@ -419,6 +439,12 @@ const sale = useSaleTransaction(form, paymentSplits, isSplitPayment, saleTransac
 const {
   saleItems,
   autoFilledMessage,
+  discountSummary,
+  isDiscountModalOpen,
+  openDiscountModal,
+  closeDiscountModal,
+  applyDiscount,
+  removeDiscount,
   addSaleItem,
   removeSaleItem,
   onClientSelect,

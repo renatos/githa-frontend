@@ -85,7 +85,14 @@
           <!-- Total Price -->
           <div class="flex justify-between md:justify-end items-center text-right">
             <span class="md:hidden text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</span>
-            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">{{ formatCurrency(item.unitPrice * item.quantity) }}</span>
+            <div class="flex flex-col items-end">
+              <span v-if="item.discountAmount && item.discountAmount > 0" class="text-[10px] text-slate-400 line-through">
+                {{ formatCurrency(item.unitPrice * item.quantity) }}
+              </span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                {{ formatCurrency((item.unitPrice * item.quantity) - (item.discountAmount || 0)) }}
+              </span>
+            </div>
           </div>
 
           <!-- Desktop Remove Action -->

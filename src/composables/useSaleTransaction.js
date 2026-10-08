@@ -3,26 +3,94 @@ import productService from '@/services/productService';
 import { appointmentService } from '@/services/appointmentService';
 import { saleService } from '@/services/saleService';
 import { confirmBridge } from '@/services/confirmBridge';
+import { round2 } from '@/utils/formatters';
 
 export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTransactionRef, emit) {
   const saleItems = ref([]);
   const autoFilledMessage = ref('');
+  const discountSummary = ref(null);
+  const isDiscountModalOpen = ref(false);
+
+  const calculateAmountFromItems = () => {
+    const grossTotal = round2(saleItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0));
+    form.value.originalAmount = grossTotal;
+
+    if (discountSummary.value && discountSummary.value.totalDiscountAmount > 0) {
+      const discount = Math.min(grossTotal, discountSummary.value.totalDiscountAmount);
+      form.value.amount = round2(grossTotal - discount);
+      form.value.discountPercentage = grossTotal > 0 ? round2((discount / grossTotal) * 100) : null;
+    } else {
+      form.value.amount = grossTotal;
+      form.value.discountPercentage = null;
+    }
+  };
 
   const addSaleItem = (item) => {
-    saleItems.value.push({ ...item, id: Date.now() });
+    saleItems.value.push({
+      ...item,
+      id: Date.now(),
+      discountAmount: 0,
+      netAmount: round2((item.unitPrice || 0) * (item.quantity || 1))
+    });
     autoFilledMessage.value = '';
     calculateAmountFromItems();
   };
 
   const removeSaleItem = (index) => {
     saleItems.value.splice(index, 1);
+    if (saleItems.value.length === 0) {
+      discountSummary.value = null;
+    }
     calculateAmountFromItems();
   };
 
-  const calculateAmountFromItems = () => {
-    const total = saleItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
-    form.value.amount = total;
-    form.value.originalAmount = total;
+  const openDiscountModal = () => {
+    if (saleItems.value.length === 0) {
+      confirmBridge.alert({
+        title: 'Nenhum item na venda',
+        message: 'Adicione pelo menos um produto ou serviço à venda antes de aplicar descontos.',
+        type: 'warning'
+      });
+      return;
+    }
+    isDiscountModalOpen.value = true;
+  };
+
+  const closeDiscountModal = () => {
+    isDiscountModalOpen.value = false;
+  };
+
+  const applyDiscount = (discountData) => {
+    discountSummary.value = discountData;
+    if (discountData.itemsWithDiscount && discountData.itemsWithDiscount.length > 0) {
+      discountData.itemsWithDiscount.forEach(updatedItem => {
+        const target = saleItems.value.find(it => it.id === updatedItem.id);
+        if (target) {
+          target.discountAmount = updatedItem.discountAmount;
+          target.netAmount = updatedItem.netAmount;
+        }
+      });
+    }
+    calculateAmountFromItems();
+
+    if (!isSplitPayment.value && paymentSplits.value && paymentSplits.value.length === 1) {
+      paymentSplits.value[0].amount = form.value.amount;
+      paymentSplits.value[0].originalAmount = form.value.amount;
+    }
+  };
+
+  const removeDiscount = () => {
+    discountSummary.value = null;
+    saleItems.value.forEach(item => {
+      item.discountAmount = 0;
+      item.netAmount = round2(item.unitPrice * item.quantity);
+    });
+    calculateAmountFromItems();
+
+    if (!isSplitPayment.value && paymentSplits.value && paymentSplits.value.length === 1) {
+      paymentSplits.value[0].amount = form.value.amount;
+      paymentSplits.value[0].originalAmount = form.value.amount;
+    }
   };
 
   const onClientSelect = (item) => {
@@ -88,7 +156,9 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
             professionalId: item.professionalId,
             appointmentId: item.appointmentId,
             quantity: item.quantity,
-            unitPrice: item.unitPrice
+            unitPrice: item.unitPrice,
+            discountAmount: item.discountAmount || 0,
+            netAmount: item.netAmount || round2(item.unitPrice * item.quantity)
           }))
         },
         transactions: paymentSplits.value.map(split => {
@@ -104,7 +174,8 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
             paymentMethodId: split.paymentMethodId,
             paymentMethodName: split.paymentMethodName,
             amount: split.amount,
-            originalAmount: split.amount,
+            originalAmount: isSplitPayment.value ? split.amount : (form.value.originalAmount || split.amount),
+            discountPercentage: form.value.discountPercentage || split.discountPercentage || null,
             status: form.value.status
           };
         })
@@ -147,6 +218,12 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
   return {
     saleItems,
     autoFilledMessage,
+    discountSummary,
+    isDiscountModalOpen,
+    openDiscountModal,
+    closeDiscountModal,
+    applyDiscount,
+    removeDiscount,
     addSaleItem,
     removeSaleItem,
     calculateAmountFromItems,
