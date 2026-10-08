@@ -3,7 +3,7 @@ import productService from '@/services/productService';
 import { appointmentService } from '@/services/appointmentService';
 import { saleService } from '@/services/saleService';
 import { confirmBridge } from '@/services/confirmBridge';
-import { round2 } from '@/utils/formatters';
+import { Money } from '@/utils/Money';
 
 export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTransactionRef, emit) {
   const saleItems = ref([]);
@@ -12,25 +12,32 @@ export function useSaleTransaction(form, paymentSplits, isSplitPayment, saleTran
   const isDiscountModalOpen = ref(false);
 
   const calculateAmountFromItems = () => {
-    const grossTotal = round2(saleItems.value.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0));
-    form.value.originalAmount = grossTotal;
+    const grossTotal = saleItems.value.reduce(
+      (acc, item) => acc.plus(Money.of(item.unitPrice).times(item.quantity || 1)),
+      Money.zero()
+    );
+    form.value.originalAmount = grossTotal.toNumber();
 
     if (discountSummary.value && discountSummary.value.totalDiscountAmount > 0) {
-      const discount = Math.min(grossTotal, discountSummary.value.totalDiscountAmount);
-      form.value.amount = round2(grossTotal - discount);
-      form.value.discountPercentage = grossTotal > 0 ? round2((discount / grossTotal) * 100) : null;
+      const discount = Money.of(discountSummary.value.totalDiscountAmount);
+      const finalAmount = grossTotal.applyDiscount(discount);
+      form.value.amount = finalAmount.toNumber();
+      form.value.discountPercentage = grossTotal.calculateDiscountPercentage(discount);
     } else {
-      form.value.amount = grossTotal;
+      form.value.amount = grossTotal.toNumber();
       form.value.discountPercentage = null;
     }
   };
 
   const addSaleItem = (item) => {
+    const unitPrice = Money.of(item.unitPrice);
+    const subtotal = unitPrice.times(item.quantity || 1);
     saleItems.value.push({
       ...item,
       id: Date.now(),
+      unitPrice: unitPrice.toNumber(),
       discountAmount: 0,
-      netAmount: round2((item.unitPrice || 0) * (item.quantity || 1))
+      netAmount: subtotal.toNumber()
     });
     autoFilledMessage.value = '';
     calculateAmountFromItems();

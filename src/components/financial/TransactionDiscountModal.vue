@@ -252,7 +252,8 @@
 import { ref, computed, watch } from 'vue';
 import BaseModal from '../common/BaseModal.vue';
 import CurrencyInput from '../common/CurrencyInput.vue';
-import { formatCurrency, round2 } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
+import { Money } from '@/utils/Money';
 
 const props = defineProps({
   show: { type: Boolean, default: true },
@@ -273,9 +274,10 @@ const itemRows = ref([]);
 // Initialize state
 const initData = () => {
   itemRows.value = props.items.map(it => {
-    const subtotal = round2((it.unitPrice || 0) * (it.quantity || 1));
-    const initialDiscount = it.discountAmount || 0;
-    const initialPct = subtotal > 0 && initialDiscount > 0 ? round2((initialDiscount / subtotal) * 100) : 0;
+    const unitPrice = Money.of(it.unitPrice);
+    const subtotal = unitPrice.times(it.quantity || 1);
+    const initialDiscount = Money.of(it.discountAmount);
+    const initialPct = subtotal.calculateDiscountPercentage(initialDiscount);
 
     return {
       id: it.id,
@@ -283,10 +285,10 @@ const initData = () => {
       productName: it.productName,
       serviceName: it.serviceName,
       quantity: it.quantity || 1,
-      unitPrice: it.unitPrice || 0,
-      subtotal,
+      unitPrice: unitPrice.toNumber(),
+      subtotal: subtotal.toNumber(),
       discountType: it.discountType || 'CURRENCY',
-      currencyValue: initialDiscount,
+      currencyValue: initialDiscount.toNumber(),
       percentageValue: initialPct
     };
   });
@@ -319,21 +321,21 @@ watch(() => props.show, (newVal) => {
 }, { immediate: true });
 
 const grossTotal = computed(() => {
-  return round2(itemRows.value.reduce((sum, it) => sum + it.subtotal, 0));
+  return itemRows.value.reduce((acc, it) => acc.plus(it.subtotal), Money.zero()).toNumber();
 });
 
 const setTotalDiscountType = (type) => {
   if (totalDiscountType.value === type) return;
-  const currentGross = grossTotal.value;
+  const currentGross = Money.of(grossTotal.value);
   if (type === 'PERCENTAGE') {
-    if (currentGross > 0 && totalCurrencyValue.value > 0) {
-      totalPercentageValue.value = round2((totalCurrencyValue.value / currentGross) * 100);
+    if (currentGross.isPositive() && totalCurrencyValue.value > 0) {
+      totalPercentageValue.value = currentGross.calculateDiscountPercentage(totalCurrencyValue.value);
     } else {
       totalPercentageValue.value = 0;
     }
   } else {
-    if (currentGross > 0 && totalPercentageValue.value > 0) {
-      totalCurrencyValue.value = round2((currentGross * totalPercentageValue.value) / 100);
+    if (currentGross.isPositive() && totalPercentageValue.value > 0) {
+      totalCurrencyValue.value = currentGross.discountAmount(totalPercentageValue.value).toNumber();
     } else {
       totalCurrencyValue.value = 0;
     }
@@ -344,15 +346,16 @@ const setTotalDiscountType = (type) => {
 const setItemDiscountType = (idx, type) => {
   const item = itemRows.value[idx];
   if (!item || item.discountType === type) return;
+  const subtotal = Money.of(item.subtotal);
   if (type === 'PERCENTAGE') {
-    if (item.subtotal > 0 && item.currencyValue > 0) {
-      item.percentageValue = round2((item.currencyValue / item.subtotal) * 100);
+    if (subtotal.isPositive() && item.currencyValue > 0) {
+      item.percentageValue = subtotal.calculateDiscountPercentage(item.currencyValue);
     } else {
       item.percentageValue = 0;
     }
   } else {
-    if (item.subtotal > 0 && item.percentageValue > 0) {
-      item.currencyValue = round2((item.subtotal * item.percentageValue) / 100);
+    if (subtotal.isPositive() && item.percentageValue > 0) {
+      item.currencyValue = subtotal.discountAmount(item.percentageValue).toNumber();
     } else {
       item.currencyValue = 0;
     }
@@ -361,36 +364,45 @@ const setItemDiscountType = (idx, type) => {
 };
 
 const getItemDiscountAmount = (item) => {
+  const subtotal = Money.of(item.subtotal);
   if (item.discountType === 'CURRENCY') {
-    return Math.min(item.subtotal, Math.max(0, round2(item.currencyValue || 0)));
+    const disc = Money.of(item.currencyValue);
+    return (subtotal.isGreaterThan(disc) ? disc : subtotal).toNumber();
   }
-  const pct = Math.min(100, Math.max(0, item.percentageValue || 0));
-  return round2((item.subtotal * pct) / 100);
+  return subtotal.discountAmount(item.percentageValue).toNumber();
 };
 
 const getItemNetAmount = (item) => {
-  return round2(Math.max(0, item.subtotal - getItemDiscountAmount(item)));
+  const subtotal = Money.of(item.subtotal);
+  if (item.discountType === 'CURRENCY') {
+    return subtotal.applyDiscount(Money.of(item.currencyValue)).toNumber();
+  }
+  return subtotal.applyDiscount(item.percentageValue).toNumber();
 };
 
 const computedTotalDiscountAmount = computed(() => {
+  const gross = Money.of(grossTotal.value);
   if (discountMode.value === 'TOTAL') {
     if (totalDiscountType.value === 'CURRENCY') {
-      return Math.min(grossTotal.value, Math.max(0, round2(totalCurrencyValue.value || 0)));
+      const disc = Money.of(totalCurrencyValue.value);
+      return (gross.isGreaterThan(disc) ? disc : gross).toNumber();
     }
-    const pct = Math.min(100, Math.max(0, totalPercentageValue.value || 0));
-    return round2((grossTotal.value * pct) / 100);
+    return gross.discountAmount(totalPercentageValue.value).toNumber();
   }
   // Mode ITEM
-  return round2(itemRows.value.reduce((sum, it) => sum + getItemDiscountAmount(it), 0));
+  return itemRows.value.reduce((acc, it) => acc.plus(getItemDiscountAmount(it)), Money.zero()).toNumber();
 });
 
 const computedTotalDiscountPercentage = computed(() => {
-  if (grossTotal.value <= 0) return 0;
-  return round2((computedTotalDiscountAmount.value / grossTotal.value) * 100);
+  const gross = Money.of(grossTotal.value);
+  const discount = Money.of(computedTotalDiscountAmount.value);
+  return gross.calculateDiscountPercentage(discount);
 });
 
 const computedFinalAmount = computed(() => {
-  return round2(Math.max(0, grossTotal.value - computedTotalDiscountAmount.value));
+  const gross = Money.of(grossTotal.value);
+  const discount = Money.of(computedTotalDiscountAmount.value);
+  return gross.applyDiscount(discount).toNumber();
 });
 
 const hasAnyDiscountApplied = computed(() => {
@@ -411,23 +423,26 @@ const clearDiscount = () => {
 const apply = () => {
   const totalAmount = computedTotalDiscountAmount.value;
   const totalPct = computedTotalDiscountPercentage.value;
+  const gross = Money.of(grossTotal.value);
 
   // Build items with their individual discounts
   const itemsWithDiscount = itemRows.value.map(it => {
-    let itemDiscount = 0;
+    let itemDiscount = Money.zero();
     if (discountMode.value === 'ITEM') {
-      itemDiscount = getItemDiscountAmount(it);
+      itemDiscount = Money.of(getItemDiscountAmount(it));
     } else {
       // Pro-rata based on subtotal proportion
-      if (grossTotal.value > 0 && totalAmount > 0) {
-        itemDiscount = round2((it.subtotal / grossTotal.value) * totalAmount);
+      if (gross.isPositive() && totalAmount > 0) {
+        const ratio = it.subtotal / gross.toNumber();
+        itemDiscount = Money.of(totalAmount).times(ratio);
       }
     }
-    const net = round2(Math.max(0, it.subtotal - itemDiscount));
+    const itemSubtotal = Money.of(it.subtotal);
+    const net = itemSubtotal.applyDiscount(itemDiscount);
     return {
       ...it,
-      discountAmount: itemDiscount,
-      netAmount: net
+      discountAmount: itemDiscount.toNumber(),
+      netAmount: net.toNumber()
     };
   });
 
