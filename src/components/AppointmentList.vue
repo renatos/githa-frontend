@@ -290,7 +290,7 @@ const currentDate = ref(new Date());
 const statusLegend = {
   SCHEDULED: 'Agendado',
   CONFIRMED: 'Confirmado',
-  COMPLETED: 'Finalizado',
+  COMPLETED: 'Concluído',
   CANCELED: 'Cancelado',
   MISSED: 'Falta',
 };
@@ -299,7 +299,7 @@ const statusLegend = {
 const groupCounts = computed(() => {
   const counts = {};
   appointments.value.forEach(appt => {
-    if (appt.groupId && appt.status !== 'CANCELED') {
+    if (appt.groupId) {
       counts[appt.groupId] = (counts[appt.groupId] || 0) + 1;
     }
   });
@@ -536,9 +536,13 @@ const isToday = (dateStr) => {
   return dateStr === today;
 };
 
-const isActionDisabled = (item) => item.status === 'COMPLETED' && !isAdmin.value;
+const isActionDisabled = (item) => {
+  if (item.transactionId) return true;
+  return item.status === 'COMPLETED' && !isAdmin.value;
+};
 
 const getDeleteTitle = (item) => {
+  if (item.transactionId) return `Agendamento vinculado à transação financeira #${item.transactionId}`;
   if (isActionDisabled(item)) return 'Atendimento concluído, acesso permitido apenas para ADMIN';
   return 'Excluir';
 };
@@ -580,8 +584,8 @@ const statusAccentColor = (status) => {
 const calendarCardClass = (status) => {
   const map = {
     SCHEDULED: 'bg-sky-50 dark:bg-sky-900/30 border-sky-500 text-sky-900 dark:text-sky-100',
-    CONFIRMED: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-900 dark:text-emerald-100',
-    COMPLETED: 'bg-slate-100 dark:bg-slate-700 border-slate-400 text-slate-700 dark:text-slate-300',
+    CONFIRMED: 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 text-indigo-900 dark:text-indigo-100',
+    COMPLETED: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-900 dark:text-emerald-100',
     CANCELED: 'bg-red-50 dark:bg-red-900/20 border-red-400 text-red-800 dark:text-red-200',
     MISSED: 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 text-orange-800 dark:text-orange-200',
   };

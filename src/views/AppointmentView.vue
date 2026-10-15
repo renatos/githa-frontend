@@ -31,6 +31,7 @@
     <AppointmentGroupStatusModal
         :show="showGroupStatusModal"
         :new-status="pendingGroupAction.status"
+        :appointment="pendingGroupAction.item"
         :z-index="12500"
         @close="closeGroupStatusModal"
         @choose="handleGroupActionChoice"
@@ -123,6 +124,11 @@ const handleGroupActionChoice = async (choice) => {
 
 // --- Status updates ---
 const updateStatus = async (item, status, successMessage) => {
+  if (item.transactionId && status !== 'COMPLETED') {
+    toastBridge.error('Bloqueado', `Agendamento vinculado à transação #${item.transactionId} não pode ter o status revertido.`);
+    return;
+  }
+
   if (item.groupId && listRef.value?.isGroupSession?.(item)) {
     pendingGroupAction.value = { item, status, successMessage };
     showGroupStatusModal.value = true;
@@ -150,6 +156,11 @@ const completeItem = (item) => {
 };
 
 const cancelItem = async (data) => {
+  if (cancelingItem.value?.transactionId || data?.transactionId) {
+    toastBridge.error('Bloqueado', 'Agendamento vinculado a transação financeira não pode ser cancelado diretamente.');
+    return;
+  }
+
   try {
     const fullData = {...cancelingItem.value, ...data};
     await appointmentService.update(data.id, fullData);
@@ -191,8 +202,16 @@ const saveAppointment = async (data) => {
       const newItems = data.items.filter(item => !item.id);
 
       for (const item of existingItems) {
-        const { updateAllInGroup, ...cleanData } = item;
-        await appointmentService.update(cleanData.id, cleanData);
+        const { updateAllInGroup: _u1, originalStatus, ...cleanData } = item;
+        if (data.updateAllInGroup && data.groupId && cleanData.status === 'COMPLETED') {
+          // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
+          // na atualização individual de cada item para que o updateGroupStatus execute a transição
+          // e o faturamento consolidado de todos os procedimentos da sessão inteira em lote.
+          const tempStatus = originalStatus || 'SCHEDULED';
+          await appointmentService.update(cleanData.id, { ...cleanData, status: tempStatus });
+        } else {
+          await appointmentService.update(cleanData.id, cleanData);
+        }
       }
 
       if (newItems.length > 0) {
@@ -209,11 +228,13 @@ const saveAppointment = async (data) => {
         }
       }
 
-      toastBridge.success('Sucesso', 'Procedimentos da sessão atualizados com sucesso!');
+      toastBridge.success('Sucesso', (data.updateAllInGroup && data.items[0]?.status === 'COMPLETED')
+        ? 'Todos os procedimentos da sessão foram concluídos e faturados!'
+        : 'Procedimentos da sessão atualizados com sucesso!');
     } else if (data.id) {
       if (data.updateAllInGroup && data.groupId) {
         // Primeiro salva as alterações específicas do agendamento atual sem disparar faturamento isolado
-        const { updateAllInGroup, ...cleanData } = data;
+        const { updateAllInGroup: _u2, ...cleanData } = data;
         if (cleanData.status === 'COMPLETED') {
           // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
           // na atualização individual para que o updateGroupStatus execute a transição e o faturamento
@@ -229,7 +250,7 @@ const saveAppointment = async (data) => {
           ? 'Todos os procedimentos da sessão foram concluídos e faturados!'
           : 'Status de todos os procedimentos da sessão atualizado com sucesso!');
       } else {
-        const { updateAllInGroup, ...cleanData } = data;
+        const { updateAllInGroup: _u3, ...cleanData } = data;
         await appointmentService.update(cleanData.id, cleanData);
         if (cleanData.status === 'COMPLETED') {
           toastBridge.success('Sucesso', 'Agendamento concluído e lançamento financeiro gerado!');

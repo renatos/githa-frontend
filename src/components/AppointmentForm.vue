@@ -10,11 +10,24 @@
       <div class="flex items-center gap-4 min-w-0">
         <span class="material-symbols-outlined text-[24px] shrink-0 text-slate-900 dark:text-slate-100">calendar_month</span>
         <div class="min-w-0">
-          <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
-            {{ form.id ? 'Editar Agendamento' : 'Novo Agendamento' }}
-          </h2>
-          <p v-if="subtitleTimestamp" class="text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1 capitalize">
-            {{ subtitleTimestamp }}
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] m-0 text-slate-900 dark:text-slate-100 truncate">
+              {{ form.id ? 'Editar Agendamento' : 'Novo Agendamento' }}
+            </h2>
+            <span
+              v-if="isSession"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/60 shadow-xs"
+              title="Procedimento vinculado a uma sessão"
+            >
+              <i class="fa-solid fa-link text-[8px]"></i> Sessão
+            </span>
+          </div>
+          <p v-if="subtitleTimestamp" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+            <span class="capitalize">{{ subtitleTimestamp }}</span>
+            <template v-if="headerProcedureName">
+              <span class="text-slate-400 dark:text-slate-600">•</span>
+              <span class="text-indigo-600 dark:text-indigo-400 font-bold">{{ headerProcedureName }}</span>
+            </template>
           </p>
         </div>
       </div>
@@ -98,7 +111,16 @@
                     <i class="fa-solid fa-hand-sparkles text-xs"></i>
                   </div>
                   <div class="min-w-0 flex-1">
-                    <p class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">{{ proc.service.name }}</p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <p class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">{{ proc.service.name }}</p>
+                      <span
+                        v-if="procedures.length > 1 && proc.status"
+                        class="px-1.5 py-0.5 rounded text-[10px] font-bold"
+                        :class="procedureStatusBadgeClass(proc.status)"
+                      >
+                        {{ getStatusDescription(proc.status) }}
+                      </span>
+                    </div>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 md:hidden">{{ proc.professional.name || 'Sem profissional' }}</p>
                   </div>
                 </div>
@@ -147,7 +169,7 @@
                 <!-- Ação Remover -->
                 <div class="flex justify-end md:justify-center">
                   <button
-                    v-if="canSave && (procedures.length > 1 || !form.id)"
+                    v-if="canSave && (procedures.length > 1 || !form.id) && !proc.transactionId && !(hasLinkedTransaction && proc.id === form.id)"
                     type="button"
                     class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                     title="Remover procedimento"
@@ -302,17 +324,37 @@
         <!-- Status e Notas -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="flex flex-col">
-            <p class="text-slate-900 dark:text-slate-100 text-sm font-medium pb-2">{{ form.id ? 'Status' : 'Status Inicial' }}</p>
+            <div class="flex items-center justify-between pb-2">
+              <p class="text-slate-900 dark:text-slate-100 text-sm font-medium">{{ form.id ? 'Status' : 'Status Inicial' }}</p>
+              <span v-if="hasLinkedTransaction" class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/50">
+                <span class="material-symbols-outlined text-[13px]">lock</span>
+                Transação vinculada #{{ linkedTransactionId }}
+              </span>
+            </div>
             <select
               v-model="form.status"
-              :disabled="!canSave"
+              :disabled="!canSave || isStatusLocked"
               class="form-select flex w-full rounded-lg text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 h-11 px-4 text-base transition-colors disabled:opacity-60"
               required
             >
-              <option v-for="status in appointmentStatuses" :key="status.name" :value="status.name">
-                {{ status.description }}
+              <option
+                v-for="status in appointmentStatuses"
+                :key="status.name"
+                :value="status.name"
+                :disabled="hasLinkedTransaction && status.name !== 'COMPLETED'"
+              >
+                {{ status.description }} {{ hasLinkedTransaction && status.name !== 'COMPLETED' ? '(Bloqueado - Transação vinculada)' : '' }}
               </option>
             </select>
+            <p v-if="hasLinkedTransaction" class="text-[11px] text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[14px]">info</span>
+              <span v-if="form.status === 'COMPLETED'">
+                Status bloqueado: Este agendamento possui a transação financeira #{{ linkedTransactionId }} vinculada.
+              </span>
+              <span v-else>
+                Transação vinculada #{{ linkedTransactionId }}: só é permitido manter ou definir como Concluído.
+              </span>
+            </p>
           </label>
 
           <label class="flex flex-col">
@@ -389,6 +431,8 @@
   <AppointmentGroupStatusModal
     :show="showGroupStatusModal"
     :new-status="form.status"
+    :appointment="currentAppointmentData"
+    :total-procedures="procedures.length"
     :z-index="12500"
     @close="showGroupStatusModal = false"
     @choose="handleGroupStatusChoice"
@@ -470,10 +514,36 @@ const appointmentStatuses = ref([]);
 const selectedServiceDuration = ref(0);
 const showGroupStatusModal = ref(false);
 
+const currentAppointmentData = computed(() => {
+  const currentProc = procedures.value.find(p => p.id === form.value.id) || procedures.value[0];
+  if (!currentProc) return null;
+  return {
+    id: currentProc.id,
+    serviceName: currentProc.service?.name || form.value.service?.name,
+    professionalName: currentProc.professional?.name || form.value.professional?.name,
+    start: currentProc.start || form.value.start,
+    end: currentProc.end || form.value.end,
+    clientName: form.value.client?.name,
+    totalInSession: procedures.value.length
+  };
+});
+
 const checkUserRole = () => {
   const user = authService.getCurrentUser();
   isAdmin.value = (user.roles && user.roles.includes('ADMIN')) || user.email === 'admin@githa.com';
 };
+
+const hasLinkedTransaction = computed(() => {
+  return !!form.value.transactionId || procedures.value.some(p => !!p.transactionId);
+});
+
+const linkedTransactionId = computed(() => {
+  return form.value.transactionId || procedures.value.find(p => p.transactionId)?.transactionId || null;
+});
+
+const isStatusLocked = computed(() => {
+  return hasLinkedTransaction.value && form.value.status === 'COMPLETED';
+});
 
 const canSave = computed(() => {
   if (!props.appointment.id) return true;
@@ -490,6 +560,7 @@ const saveTooltip = computed(() => {
 const canModifyDiscount = computed(() => {
   if (!canSave.value) return false;
   if (originalStatus.value === 'COMPLETED' || form.value.status === 'COMPLETED') return false;
+  if (hasLinkedTransaction.value) return false;
   return !form.value.status || form.value.status === 'SCHEDULED';
 });
 
@@ -536,6 +607,15 @@ const subtitleTimestamp = computed(() => {
   } catch (e) {
     return '';
   }
+});
+
+const isSession = computed(() => {
+  return !!(form.value.groupId && procedures.value.length > 1);
+});
+
+const headerProcedureName = computed(() => {
+  const currentProc = procedures.value.find(p => p.id === form.value.id) || procedures.value[0];
+  return currentProc?.service?.name || form.value.service?.name || props.appointment?.serviceName || '';
 });
 
 // Adaptação dos procedimentos para o TransactionDiscountModal
@@ -771,6 +851,14 @@ const addProcedure = async () => {
 
 const removeProcedure = async (index) => {
   const target = procedures.value[index];
+  if (target && (target.transactionId || (hasLinkedTransaction.value && target.id === form.value.id))) {
+    confirmBridge.alert({
+      title: 'Operação não permitida',
+      message: `O procedimento "${target.service?.name || ''}" possui a transação financeira #${target.transactionId || linkedTransactionId.value} vinculada e não pode ser removido da sessão.`,
+      type: 'warning'
+    });
+    return;
+  }
   if (target && target.id) {
     const confirmed = await confirmBridge.confirm({
       title: 'Remover Procedimento',
@@ -857,7 +945,8 @@ onMounted(() => {
         discount: itemDiscount,
         discountAmount: itemDiscountAmount,
         netAmount: itemNet,
-        status: form.value.status
+        status: form.value.status,
+        transactionId: apt.transactionId || form.value.transactionId || null
       }];
 
       if (itemDiscountAmount > 0) {
@@ -915,7 +1004,7 @@ onMounted(async () => {
                 size: 100
               });
               const allItems = resGroup.data?.content || resGroup.data || [];
-              const groupItems = allItems.filter(item => item.groupId === fullApt.groupId && item.status !== 'CANCELED');
+              const groupItems = allItems.filter(item => item.groupId === fullApt.groupId);
               if (groupItems.length > 0) {
                 groupItems.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
                 procedures.value = groupItems.map(item => {
@@ -945,9 +1034,15 @@ onMounted(async () => {
                     discount: pDisc,
                     discountAmount: pDiscAmount,
                     netAmount: pNet,
-                    status: item.status
+                    status: item.status,
+                    transactionId: item.transactionId || null
                   };
                 });
+
+                const anyGroupTx = groupItems.find(item => item.transactionId)?.transactionId;
+                if (anyGroupTx && !form.value.transactionId) {
+                  form.value.transactionId = anyGroupTx;
+                }
 
                 const totalDisc = procedures.value.reduce((acc, p) => acc + (p.discountAmount || 0), 0);
                 if (totalDisc > 0) {
@@ -991,6 +1086,22 @@ onMounted(async () => {
 
 const loadStatuses = async () => {
   appointmentStatuses.value = await enumService.getOptions('AppointmentStatus');
+};
+
+const getStatusDescription = (status) => {
+  const found = appointmentStatuses.value.find(s => s.name === status);
+  return found ? found.description : status;
+};
+
+const procedureStatusBadgeClass = (status) => {
+  const map = {
+    SCHEDULED: 'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-500/20',
+    CONFIRMED: 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20',
+    COMPLETED: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20',
+    CANCELED: 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20',
+    MISSED: 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20',
+  };
+  return map[status] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
 };
 
 const calculateEndTime = () => {
@@ -1084,6 +1195,16 @@ const save = () => {
     }
   }
 
+  // Validação: agendamento com transação financeira não pode ter status revertido
+  if (hasLinkedTransaction.value && form.value.status !== 'COMPLETED') {
+    confirmBridge.alert({
+      title: 'Status Bloqueado',
+      message: `Este agendamento possui uma transação financeira vinculada (#${linkedTransactionId.value}). O status não pode ser alterado para "${getStatusDescription(form.value.status)}".`,
+      type: 'warning'
+    });
+    return;
+  }
+
   // Se o agendamento pertence a uma sessão com múltiplos procedimentos e o status foi alterado, pergunta se aplica a toda a sessão
   if (form.value.groupId && procedures.value.length > 1 && form.value.status !== originalStatus.value) {
     showGroupStatusModal.value = true;
@@ -1099,6 +1220,21 @@ const handleGroupStatusChoice = (choice) => {
 };
 
 const executeSave = (updateAllInGroup = false) => {
+  // Validação de procedimento com transação financeira vinculada
+  for (const proc of procedures.value) {
+    const targetStatus = updateAllInGroup
+      ? form.value.status
+      : (proc.id === form.value.id ? form.value.status : proc.status);
+    if ((proc.transactionId || (hasLinkedTransaction.value && proc.id === form.value.id)) && targetStatus !== 'COMPLETED') {
+      confirmBridge.alert({
+        title: 'Status Bloqueado',
+        message: `O procedimento "${proc.service?.name || ''}" possui a transação financeira #${proc.transactionId || linkedTransactionId.value} vinculada e seu status não pode ser alterado para "${getStatusDescription(targetStatus)}".`,
+        type: 'warning'
+      });
+      return;
+    }
+  }
+
   const toISOString = (date, time) => {
     if (!date || !time) return null;
     return `${date}T${time}:00`;
@@ -1173,12 +1309,15 @@ const executeSave = (updateAllInGroup = false) => {
     serviceId: proc.service.id,
     startTime: toISOString(form.value.date, proc.start),
     endTime: toISOString(form.value.date, proc.end),
-    status: form.value.status || 'SCHEDULED',
+    status: updateAllInGroup
+      ? (form.value.status || 'SCHEDULED')
+      : (proc.id === form.value.id ? (form.value.status || 'SCHEDULED') : (proc.status || 'SCHEDULED')),
     notes: form.value.notes,
     price: proc.price,
     discountAmount: proc.discountAmount || 0,
     netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
-    updateAllInGroup
+    updateAllInGroup,
+    originalStatus: proc.status
   }));
 
   emit('save', {
