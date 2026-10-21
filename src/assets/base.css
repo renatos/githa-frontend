@@ -116,97 +116,9 @@ body {
     background-color: var(--color-primary-dark);
 }
 
-/* PrimeVue Overrides for Theme Consistency */
-:root {
-    --p-tabs-tablist-background: transparent !important;
-    --p-tabs-tab-background: transparent !important;
-    --p-tabs-tab-color: var(--color-text-muted) !important;
-    --p-tabs-tab-active-color: var(--color-primary) !important;
-    --p-tabs-tab-active-border-color: var(--color-primary) !important;
-    --p-tabs-tabpanel-background: transparent !important;
-    --p-tabs-tabpanel-color: var(--color-text-main) !important;
-
-    /* InputText Overrides */
-    --p-inputtext-background: var(--color-bg-card) !important;
-    --p-inputtext-color: var(--color-text-main) !important;
-    --p-inputtext-border-color: var(--color-border) !important;
-    --p-inputtext-focus-border-color: var(--color-primary) !important;
-    --p-inputtext-padding-y: 0.5rem !important;
-    --p-inputtext-padding-x: 0.5rem !important;
-}
-
-/* Fallback for class-based overrides if variables don't catch everything */
-.p-tabview-panels,
-.p-tabview-nav,
-.p-tabview-nav-link {
-    background: transparent !important;
-    color: var(--color-text-main) !important;
-}
-
-.p-tabview-nav-link {
-    color: var(--color-text-muted) !important;
-    white-space: nowrap !important;
-}
-
-.p-tabview-selected .p-tabview-nav-link {
-    color: var(--color-primary) !important;
-    border-color: var(--color-primary) !important;
-}
-
-/* PrimeVue v4 TabView scrollable layout fix */
-.p-tabview-tablist-container {
-    display: flex !important;
-    align-items: stretch !important;
-}
-
-.p-tabview-tablist-scroll-container {
-    overflow: hidden !important;
-    flex: 1 !important;
-    min-width: 0 !important;
-}
-
-/* PrimeVue v4 TabView scroll button styling */
-.p-tabview-prev-button,
-.p-tabview-next-button {
-    background: var(--color-bg-card) !important;
-    color: var(--color-text-main) !important;
-    border: none !important;
-    box-shadow: none !important;
-    width: 2rem !important;
-    flex-shrink: 0 !important;
-    position: relative !important;
-    z-index: 2;
-}
-
-.p-tabview-prev-button:hover,
-.p-tabview-next-button:hover {
-    background: var(--color-bg-body) !important;
-    color: var(--color-primary) !important;
-}
-
-.p-tabview-prev-button:focus,
-.p-tabview-next-button:focus {
-    box-shadow: none !important;
-}
-
-/* Mobile Toast Overrides - Centered */
+/* Larger touch targets for mobile */
 @media screen and (max-width: 768px) {
-    .p-toast {
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: 90% !important;
-        max-width: 350px !important;
-    }
-
-    .p-toast-message {
-        border-radius: var(--radius-md) !important;
-        box-shadow: var(--shadow-lg) !important;
-    }
-
-    /* Larger touch targets for mobile */
-    .btn,
-    .p-button {
+    .btn {
         min-height: 44px;
         min-width: 44px;
     }

@@ -439,6 +439,7 @@ import { useRoute, useRouter } from 'vue-router';
 import PageHeader from '../components/common/PageHeader.vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import { investmentService } from '../services/investmentService';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 const route = useRoute();
 const router = useRouter();
@@ -651,20 +652,6 @@ const roiStatusMessage = computed(() => {
 
 const goBack = () => {
   router.push('/investments');
-};
-
-// Formatters
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value || 0);
-};
-
-const formatDate = (value) => {
-  if (!value) return '';
-  const [year, month, day] = value.split('-');
-  return `${day}/${month}/${year}`;
 };
 
 const formatRoi = (value) => {

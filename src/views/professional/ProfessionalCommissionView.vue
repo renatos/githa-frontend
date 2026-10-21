@@ -142,6 +142,7 @@ import PeriodSelector from '../../components/common/PeriodSelector.vue';
 import PageHeader from '../../components/common/PageHeader.vue';
 import BaseTooltip from '../../components/common/BaseTooltip.vue';
 import WithdrawalForm from '../../components/WithdrawalForm.vue';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 
 const route = useRoute();
 const professionalId = route.params.id;
@@ -239,14 +240,6 @@ const onWithdrawalSaved = async () => {
   setTimeout(async () => {
     await fetchBalance();
   }, 5500);
-};
-
-const formatCurrency = (val) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('pt-BR');
 };
 
 watch([selectedMonth, selectedYear], fetchBalance);

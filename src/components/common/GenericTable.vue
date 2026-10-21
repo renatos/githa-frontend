@@ -357,8 +357,8 @@ const processedItems = computed(() => {
   return result;
 });
 
-// Watchers
-watch([currentPage, pageSize, currentSort], () => {
+// Watchers (pageSize is initialized in onMounted prior to loadData, avoiding duplicate initial fetch)
+watch([currentPage, currentSort], () => {
   if (props.fetchData) loadData();
 }, {deep: true});
 
@@ -600,7 +600,6 @@ defineExpose({loadData});
     justify-content: space-around;
   }
 
-  .card-actions :deep(.p-button),
   .card-actions .btn {
     flex: 1;
     text-align: center;

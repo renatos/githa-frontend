@@ -1,15 +1,15 @@
 <template>
-  <div class="ai-central-container p-4 md:p-6 max-w-7xl mx-auto">
+  <div class="ai-central-container p-4 md:p-6 max-w-7xl mx-auto space-y-6">
     <!-- Standard Page Header -->
-    <header class="bg-white dark:bg-slate-800 shadow-md rounded-xl border border-slate-300 dark:border-slate-700 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 mb-6" style="border-top: 3px solid #6366f1">
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white m-0">Central de Inteligência Githa AI</h2>
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">AI Powered</span>
-        </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400 m-0 mt-1">Acompanhe todos os insights, alertas e descobertas geradas automaticamente.</p>
-      </div>
-      <div class="flex items-center gap-3">
+    <PageHeader
+      title="Central de Inteligência Githa AI"
+      subtitle="Acompanhe todos os insights, alertas e descobertas geradas automaticamente."
+      icon="auto_awesome"
+    >
+      <template #actions>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+          AI Powered
+        </span>
         <button
           :disabled="loading"
           class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -23,8 +23,8 @@
           </span>
           Atualizar Insights
         </button>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
 
     <!-- Loading State -->
     <div v-if="loading && insights.length === 0" class="flex justify-center items-center h-48">
@@ -84,6 +84,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { aiService } from '@/services/aiService';
+import PageHeader from '@/components/common/PageHeader.vue';
+import { formatDateTime as formatDate } from '@/utils/formatters';
 
 const loading = ref(true);
 const error = ref(false);
@@ -100,16 +102,6 @@ const getInsightIcon = (type) => {
     'FEATURE': '🚀'
   };
   return icons[type] || '🔍';
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return dateString;
-  }
 };
 
 const fetchInsights = async () => {

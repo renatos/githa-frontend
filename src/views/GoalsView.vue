@@ -638,6 +638,7 @@ import ClientForm from '../components/ClientForm.vue';
 import { clientService } from '../services/clientService';
 import { toastBridge } from '../services/toastBridge';
 import { dispatchMessageService } from '../services/dispatchMessageService';
+import { formatCurrency } from '../utils/formatters';
 
 
 
@@ -773,10 +774,6 @@ const handleSaveGoal = async () => {
   } finally {
     saving.value = false;
   }
-};
-
-const formatCurrency = (val) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 };
 
 const handleEditGoal = () => {

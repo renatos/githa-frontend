@@ -193,25 +193,26 @@ const saveAppointment = async (data) => {
       toastBridge.success('Sucesso', `${data.length} procedimentos agendados com sucesso!`);
     } else if (data.items) {
       if (data.deletedIds && data.deletedIds.length > 0) {
-        for (const delId of data.deletedIds) {
-          await appointmentService.delete(delId);
-        }
+        await Promise.all(data.deletedIds.map(delId => appointmentService.delete(delId)));
       }
 
       const existingItems = data.items.filter(item => item.id);
       const newItems = data.items.filter(item => !item.id);
 
-      for (const item of existingItems) {
-        const { updateAllInGroup: _u1, originalStatus, ...cleanData } = item;
-        if (data.updateAllInGroup && data.groupId && cleanData.status === 'COMPLETED') {
-          // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
-          // na atualização individual de cada item para que o updateGroupStatus execute a transição
-          // e o faturamento consolidado de todos os procedimentos da sessão inteira em lote.
-          const tempStatus = originalStatus || 'SCHEDULED';
-          await appointmentService.update(cleanData.id, { ...cleanData, status: tempStatus });
-        } else {
-          await appointmentService.update(cleanData.id, cleanData);
-        }
+      if (existingItems.length > 0) {
+        await Promise.all(
+          existingItems.map(item => {
+            const { updateAllInGroup: _u1, originalStatus, ...cleanData } = item;
+            if (data.updateAllInGroup && data.groupId && cleanData.status === 'COMPLETED') {
+              // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
+              // na atualização individual de cada item para que o updateGroupStatus execute a transição
+              // e o faturamento consolidado de todos os procedimentos da sessão inteira em lote.
+              const tempStatus = originalStatus || 'SCHEDULED';
+              return appointmentService.update(cleanData.id, { ...cleanData, status: tempStatus });
+            }
+            return appointmentService.update(cleanData.id, cleanData);
+          })
+        );
       }
 
       if (newItems.length > 0) {

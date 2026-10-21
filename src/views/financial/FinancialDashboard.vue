@@ -255,6 +255,7 @@ import PeriodSelector from '../../components/common/PeriodSelector.vue';
 import PageHeader from '../../components/common/PageHeader.vue';
 import { confirmBridge } from '../../services/confirmBridge';
 import { toastBridge } from '../../services/toastBridge';
+import { formatCurrency } from '../../utils/formatters';
 
 const currentTab = ref(0);
 const dashboardTabs = [
@@ -353,10 +354,6 @@ const loadDailySummary = async () => {
   } catch (error) {
     console.error('Error loading daily summary:', error);
   }
-};
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
 // Appointment Logic (duplicated from AppointmentView for dashboard context)
