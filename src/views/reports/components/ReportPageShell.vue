@@ -19,7 +19,7 @@
       :subtitle="description"
     >
       <template #actions>
-        <div class="flex items-center gap-3 flex-nowrap shrink-0">
+        <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
           <!-- Month/Year Selector -->
           <MonthYearSelector
             :month="month"
@@ -36,7 +36,7 @@
           >
             <button
               type="button"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+              class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition"
               :class="viewMode === 'CHART'
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
@@ -47,7 +47,7 @@
             </button>
             <button
               type="button"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+              class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition"
               :class="viewMode === 'TABLE'
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
@@ -82,24 +82,24 @@
     </div>
 
     <!-- Skeleton Loading State -->
-    <div v-else-if="loading" class="space-y-6 animate-pulse">
+    <div v-else-if="loading" class="space-y-4 sm:space-y-6 animate-pulse">
       <!-- KPI Skeletons -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div v-for="i in 4" :key="i" class="h-28 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div v-for="i in 4" :key="i" class="h-24 sm:h-28 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
       </div>
       <!-- Body Skeleton -->
       <div class="h-80 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
     </div>
 
     <!-- Ready Content -->
-    <div v-else class="space-y-6">
+    <div v-else class="space-y-4 sm:space-y-6">
       <!-- KPI Summary Cards Slot -->
-      <div v-if="$slots.kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div v-if="$slots.kpis" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <slot name="kpis"></slot>
       </div>
 
       <!-- Main Visual Section (Chart or Table) -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-3.5 sm:p-5 shadow-sm">
         <div v-show="viewMode === 'CHART'">
           <slot name="chart"></slot>
         </div>

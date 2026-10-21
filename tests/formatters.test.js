@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDate, formatDateOnly, formatDateTime, formatCurrency, formatShortName, formatPhone, round2 } from '../src/utils/formatters';
+import { formatDate, formatDateOnly, formatDateTime, formatCurrency, formatCompactCurrency, formatShortName, formatPhone, round2 } from '../src/utils/formatters';
 
 describe('formatters utility', () => {
   describe('formatDate and formatDateOnly', () => {
@@ -43,6 +43,14 @@ describe('formatters utility', () => {
       expect(formatCurrency(0)).toContain('0,00');
       expect(formatCurrency(null)).toBe('');
       expect(formatCurrency(undefined)).toBe('');
+    });
+  });
+
+  describe('formatCompactCurrency', () => {
+    it('formats thousands into compact BRL format and keeps small numbers readable', () => {
+      expect(formatCompactCurrency(0)).toContain('0');
+      expect(formatCompactCurrency(500)).toContain('500');
+      expect(formatCompactCurrency(125000)).toMatch(/125.*mil/);
     });
   });
 

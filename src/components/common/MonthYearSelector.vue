@@ -8,7 +8,7 @@
       <span class="material-symbols-outlined text-sm">chevron_left</span>
     </button>
     
-    <div class="px-4 font-bold text-sm min-w-[150px] text-center text-slate-100 tracking-wide select-none">
+    <div class="px-2 sm:px-4 font-bold text-xs sm:text-sm min-w-[92px] sm:min-w-[150px] text-center text-slate-100 tracking-wide select-none">
       {{ currentMonthLabel }}
     </div>
     
@@ -24,6 +24,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useBreakpoint } from '@/composables/useBreakpoint';
 
 const props = defineProps({
   month: { 
@@ -38,13 +39,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:month', 'update:year', 'change']);
+const { isMobile } = useBreakpoint();
 
 const monthNames = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+const shortMonthNames = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+];
+
 const currentMonthLabel = computed(() => {
+  if (isMobile.value) {
+    return `${shortMonthNames[props.month - 1]}/${props.year}`;
+  }
   return `${monthNames[props.month - 1]} ${props.year}`;
 });
 

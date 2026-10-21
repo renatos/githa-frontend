@@ -1,83 +1,97 @@
 <template>
   <ReportPageShell
+    v-model:view-mode="viewMode"
+    v-model:month="month"
+    v-model:year="year"
     title="DRE Simplificado"
     description="Demonstrativo de receitas, despesas operacionais (OPEX), investimentos (CAPEX) e margem líquida."
     icon="fa-solid fa-file-invoice-dollar"
     badge="Financeiro"
     :loading="loading"
     :error="error"
-    :month="month"
-    :year="year"
-    :view-mode="viewMode"
-    @update:month="onMonthChange"
-    @update:year="onYearChange"
-    @update:view-mode="viewMode = $event"
+    @period-change="onPeriodChange"
     @retry="loadData"
   >
     <!-- KPI Summary Cards -->
     <template #kpis>
       <!-- Receita Bruta -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Receita Bruta</p>
-          <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-3.5 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-1">
+          <p class="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+            {{ rLabel('Receita Bruta', 'Receita') }}
+          </p>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs sm:text-sm shrink-0">
             <i class="fa-solid fa-arrow-trend-up"></i>
           </div>
         </div>
-        <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">
-          {{ formatCurrency(data?.revenue?.total) }}
+        <p class="text-base sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1.5 sm:mt-2 truncate">
+          {{ fmtCurrency(data?.revenue?.total) }}
         </p>
-        <p class="text-[11px] text-gray-400 mt-1">Total de receitas pagas</p>
+        <p class="text-[10px] sm:text-[11px] text-gray-400 mt-1 truncate">
+          {{ rLabel('Total de receitas pagas', 'Receitas pagas') }}
+        </p>
       </div>
 
       <!-- OPEX -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Custos OPEX</p>
-          <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-3.5 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-1">
+          <p class="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+            {{ rLabel('Custos OPEX', 'OPEX') }}
+          </p>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs sm:text-sm shrink-0">
             <i class="fa-solid fa-arrow-trend-down"></i>
           </div>
         </div>
-        <p class="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-2">
-          {{ formatCurrency(data?.opex?.total) }}
+        <p class="text-base sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1.5 sm:mt-2 truncate">
+          {{ fmtCurrency(data?.opex?.total) }}
         </p>
-        <p class="text-[11px] text-gray-400 mt-1">Despesas operacionais</p>
+        <p class="text-[10px] sm:text-[11px] text-gray-400 mt-1 truncate">
+          {{ rLabel('Despesas operacionais', 'Operacional') }}
+        </p>
       </div>
 
       <!-- CAPEX -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">CAPEX</p>
-          <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-3.5 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-1">
+          <p class="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+            CAPEX
+          </p>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs sm:text-sm shrink-0">
             <i class="fa-solid fa-building-columns"></i>
           </div>
         </div>
-        <p class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-2">
-          {{ formatCurrency(data?.capex?.total) }}
+        <p class="text-base sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1.5 sm:mt-2 truncate">
+          {{ fmtCurrency(data?.capex?.total) }}
         </p>
-        <p class="text-[11px] text-gray-400 mt-1">Investimentos em ativos</p>
+        <p class="text-[10px] sm:text-[11px] text-gray-400 mt-1 truncate">
+          {{ rLabel('Investimentos em ativos', 'Investimentos') }}
+        </p>
       </div>
 
       <!-- Lucro Líquido & Margem -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lucro Líquido</p>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-3.5 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-1">
+          <p class="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+            {{ rLabel('Lucro Líquido', 'Lucro Líq.') }}
+          </p>
           <span
-            class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            class="text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shrink-0"
             :class="(data?.netProfit ?? 0) >= 0
               ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
               : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'"
           >
-            {{ data?.netMarginPercentage ?? 0 }}% Margem
+            {{ data?.netMarginPercentage ?? 0 }}%{{ rLabel(' Margem', '') }}
           </span>
         </div>
         <p
-          class="text-2xl font-extrabold mt-2"
+          class="text-base sm:text-2xl font-extrabold mt-1.5 sm:mt-2 truncate"
           :class="(data?.netProfit ?? 0) >= 0 ? 'text-gray-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'"
         >
-          {{ formatCurrency(data?.netProfit) }}
+          {{ fmtCurrency(data?.netProfit) }}
         </p>
-        <p class="text-[11px] text-gray-400 mt-1">Resultado final do período</p>
+        <p class="text-[10px] sm:text-[11px] text-gray-400 mt-1 truncate">
+          {{ rLabel('Resultado final do período', 'Resultado final') }}
+        </p>
       </div>
     </template>
 
@@ -85,13 +99,13 @@
     <template #chart>
       <div class="space-y-4">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/60 pb-3">
-          <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <h2 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
             <i class="fa-solid fa-chart-column text-indigo-500"></i>
-            Comparativo de Resultados (R$)
+            {{ rLabel('Comparativo de Resultados (R$)', 'Resultados (R$)') }}
           </h2>
-          <span class="text-xs text-gray-400">Valores consolidados</span>
+          <span class="text-[11px] sm:text-xs text-gray-400">{{ rLabel('Valores consolidados', 'Consolidado') }}</span>
         </div>
-        <div class="h-72 w-full relative">
+        <div class="h-64 sm:h-72 w-full relative">
           <canvas ref="chartCanvas"></canvas>
         </div>
       </div>
@@ -100,111 +114,115 @@
     <!-- Table View -->
     <template #table>
       <div class="space-y-4">
-        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/60 pb-3">
-          <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <div class="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700/60 pb-3">
+          <h2 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 truncate">
             <i class="fa-solid fa-table-list text-indigo-500"></i>
-            Estrutura Detalhada do DRE
+            {{ rLabel('Estrutura Detalhada do DRE', 'Estrutura do DRE') }}
           </h2>
           <button
             type="button"
-            @click="exportCsv"
             :disabled="!data"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            @click="exportCsv"
           >
             <i class="fa-solid fa-file-csv text-emerald-600"></i>
-            Exportar CSV
+            {{ rLabel('Exportar CSV', 'CSV') }}
           </button>
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-          <table class="w-full text-left text-sm border-separate border-spacing-0">
-            <thead class="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+          <table class="w-full text-left text-xs sm:text-sm border-separate border-spacing-0">
+            <thead class="bg-gray-50 dark:bg-gray-900 text-[11px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-[11px] sm:text-xs sticky left-0 z-20 bg-gray-50 dark:bg-gray-900 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                  Classificação / Categoria
+                <th class="py-2.5 px-2.5 sm:py-3 sm:px-4 sticky left-0 z-20 bg-gray-50 dark:bg-gray-900 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                  {{ rLabel('Classificação / Categoria', 'Categoria') }}
                 </th>
-                <th class="py-3 px-4 text-right whitespace-nowrap">Valor (R$)</th>
-                <th class="py-3 px-4 text-right whitespace-nowrap">% da Receita</th>
+                <th class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap">
+                  {{ rLabel('Valor (R$)', 'Valor') }}
+                </th>
+                <th class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap">
+                  {{ rLabel('% da Receita', '% Rec.') }}
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
               <!-- 1. Receita Bruta -->
               <tr class="bg-emerald-50/60 dark:bg-emerald-950/30 font-bold text-emerald-900 dark:text-emerald-300">
-                <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex items-center gap-2 sticky left-0 z-10 bg-emerald-50 dark:bg-emerald-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
-                  <i class="fa-solid fa-circle-plus text-emerald-600 text-xs"></i>
-                  RECEITA BRUTA OPERACIONAL
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-[11px] sm:text-sm flex items-center gap-1.5 sm:gap-2 sticky left-0 z-10 bg-emerald-50 dark:bg-emerald-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] sm:min-w-[260px]">
+                  <i class="fa-solid fa-circle-plus text-emerald-600 text-xs shrink-0"></i>
+                  <span class="truncate">{{ rLabel('RECEITA BRUTA OPERACIONAL', 'RECEITA BRUTA') }}</span>
                 </td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400">{{ formatCurrency(data?.revenue?.total) }}</td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-semibold">100.00%</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-bold text-emerald-700 dark:text-emerald-400">{{ fmtCurrency(data?.revenue?.total) }}</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-semibold">100.00%</td>
               </tr>
               <tr
                 v-for="item in data?.revenue?.categories || []"
                 :key="item.category"
                 class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors group"
               >
-                <td class="py-2 px-3 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-8 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-6 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] max-w-[165px] sm:max-w-none sm:min-w-[260px] truncate" :title="item.category">
                   {{ item.category }}
                 </td>
-                <td class="py-2.5 px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ formatCurrency(item.amount) }}</td>
-                <td class="py-2.5 px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ fmtCurrency(item.amount) }}</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
               </tr>
 
               <!-- 2. OPEX -->
               <tr class="bg-rose-50/60 dark:bg-rose-950/30 font-bold text-rose-900 dark:text-rose-300">
-                <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex items-center gap-2 sticky left-0 z-10 bg-rose-50 dark:bg-rose-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
-                  <i class="fa-solid fa-circle-minus text-rose-600 text-xs"></i>
-                  CUSTOS OPERACIONAIS (OPEX)
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-[11px] sm:text-sm flex items-center gap-1.5 sm:gap-2 sticky left-0 z-10 bg-rose-50 dark:bg-rose-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] sm:min-w-[260px]">
+                  <i class="fa-solid fa-circle-minus text-rose-600 text-xs shrink-0"></i>
+                  <span class="truncate">{{ rLabel('CUSTOS OPERACIONAIS (OPEX)', 'CUSTOS (OPEX)') }}</span>
                 </td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-bold text-rose-700 dark:text-rose-400">{{ formatCurrency(data?.opex?.total) }}</td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-semibold">{{ calcPercentage(data?.opex?.total, data?.revenue?.total) }}%</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-bold text-rose-700 dark:text-rose-400">{{ fmtCurrency(data?.opex?.total) }}</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-semibold">{{ calcPercentage(data?.opex?.total, data?.revenue?.total) }}%</td>
               </tr>
               <tr
                 v-for="item in data?.opex?.categories || []"
                 :key="item.category"
                 class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors group"
               >
-                <td class="py-2 px-3 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-8 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-6 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] max-w-[165px] sm:max-w-none sm:min-w-[260px] truncate" :title="item.category">
                   {{ item.category }}
                 </td>
-                <td class="py-2.5 px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ formatCurrency(item.amount) }}</td>
-                <td class="py-2.5 px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ fmtCurrency(item.amount) }}</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
               </tr>
 
               <!-- 3. CAPEX -->
               <tr class="bg-indigo-50/60 dark:bg-indigo-950/30 font-bold text-indigo-900 dark:text-indigo-300">
-                <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex items-center gap-2 sticky left-0 z-10 bg-indigo-50 dark:bg-indigo-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
-                  <i class="fa-solid fa-building-columns text-indigo-600 text-xs"></i>
-                  INVESTIMENTOS DE CAPITAL (CAPEX)
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-[11px] sm:text-sm flex items-center gap-1.5 sm:gap-2 sticky left-0 z-10 bg-indigo-50 dark:bg-indigo-950/80 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] sm:min-w-[260px]">
+                  <i class="fa-solid fa-building-columns text-indigo-600 text-xs shrink-0"></i>
+                  <span class="truncate">{{ rLabel('INVESTIMENTOS DE CAPITAL (CAPEX)', 'INVEST. (CAPEX)') }}</span>
                 </td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-bold text-indigo-700 dark:text-indigo-400">{{ formatCurrency(data?.capex?.total) }}</td>
-                <td class="py-3 px-4 text-right whitespace-nowrap font-semibold">{{ calcPercentage(data?.capex?.total, data?.revenue?.total) }}%</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-bold text-indigo-700 dark:text-indigo-400">{{ fmtCurrency(data?.capex?.total) }}</td>
+                <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right whitespace-nowrap font-semibold">{{ calcPercentage(data?.capex?.total, data?.revenue?.total) }}%</td>
               </tr>
               <tr
                 v-for="item in data?.capex?.categories || []"
                 :key="item.category"
                 class="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors group"
               >
-                <td class="py-2 px-3 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-8 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px] sm:min-w-[260px]">
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-xs sm:text-sm pl-6 sm:pl-10 text-gray-700 dark:text-gray-300 sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-800 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[135px] max-w-[165px] sm:max-w-none sm:min-w-[260px] truncate" :title="item.category">
                   {{ item.category }}
                 </td>
-                <td class="py-2.5 px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ formatCurrency(item.amount) }}</td>
-                <td class="py-2.5 px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-900 dark:text-white whitespace-nowrap font-medium">{{ fmtCurrency(item.amount) }}</td>
+                <td class="py-2 px-2.5 sm:py-2.5 sm:px-4 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ calcPercentage(item.amount, data?.revenue?.total) }}%</td>
               </tr>
             </tbody>
             <tfoot class="bg-gray-50 dark:bg-gray-900 font-bold border-t-2 border-gray-200 dark:border-gray-700">
               <!-- 4. Lucro Líquido Final -->
               <tr>
-                <td class="py-3 px-3 sm:py-3.5 sm:px-4 uppercase tracking-wider text-xs sm:text-sm flex items-center gap-2 sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-gray-900 dark:text-white min-w-[200px] sm:min-w-[260px]">
-                  <i class="fa-solid fa-equals text-indigo-600"></i>
-                  LUCRO LÍQUIDO DO EXERCÍCIO
+                <td class="py-3 px-2.5 sm:py-3.5 sm:px-4 uppercase tracking-wider text-[11px] sm:text-sm flex items-center gap-1.5 sm:gap-2 sticky left-0 z-10 bg-gray-50 dark:bg-gray-900 border-r border-gray-200/60 dark:border-gray-700/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-gray-900 dark:text-white min-w-[135px] sm:min-w-[260px]">
+                  <i class="fa-solid fa-equals text-indigo-600 shrink-0"></i>
+                  <span class="truncate">{{ rLabel('LUCRO LÍQUIDO DO EXERCÍCIO', 'LUCRO LÍQUIDO') }}</span>
                 </td>
                 <td
-                  class="py-3.5 px-4 text-right whitespace-nowrap font-extrabold text-sm"
+                  class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-right whitespace-nowrap font-extrabold text-xs sm:text-sm"
                   :class="(data?.netProfit ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
                 >
-                  {{ formatCurrency(data?.netProfit) }}
+                  {{ fmtCurrency(data?.netProfit) }}
                 </td>
-                <td class="py-3.5 px-4 text-right whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">
+                <td class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-right whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">
                   {{ data?.netMarginPercentage ?? 0 }}%
                 </td>
               </tr>
@@ -230,13 +248,17 @@ import {
 } from 'chart.js';
 import ReportPageShell from '../components/ReportPageShell.vue';
 import { useReport } from '@/composables/useReport';
+import { useBreakpoint } from '@/composables/useBreakpoint';
 import { reportService } from '@/services/reportService';
+import { formatCurrency, formatCompactCurrency } from '@/utils/formatters';
+import { exportToCsv } from '@/utils/csvExporter';
 
 // Tree-shaking: register only required Chart.js components
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const route = useRoute();
 const router = useRouter();
+const { isMobile, rLabel } = useBreakpoint();
 
 const now = new Date();
 const month = ref(route.query.month ? parseInt(route.query.month) : now.getMonth() + 1);
@@ -246,9 +268,7 @@ const { data, loading, error, viewMode, fetchReport } = useReport();
 const chartCanvas = ref(null);
 let chartInstance = null;
 
-const formatCurrency = (val) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val ?? 0);
-};
+const fmtCurrency = (val) => formatCurrency(val ?? 0);
 
 const calcPercentage = (part, total) => {
   if (!part || !total || total <= 0) return '0.00';
@@ -268,10 +288,14 @@ const updateChart = () => {
   const capex = data.value.capex?.total ?? 0;
   const netProfit = data.value.netProfit ?? 0;
 
+  const chartLabels = isMobile.value
+    ? ['Receita', 'OPEX', 'CAPEX', 'Lucro']
+    : ['Receita Bruta', 'Custos OPEX', 'Investimentos CAPEX', 'Lucro Líquido'];
+
   chartInstance = new Chart(chartCanvas.value, {
     type: 'bar',
     data: {
-      labels: ['Receita Bruta', 'Custos OPEX', 'Investimentos CAPEX', 'Lucro Líquido'],
+      labels: chartLabels,
       datasets: [
         {
           label: 'Total (R$)',
@@ -293,20 +317,24 @@ const updateChart = () => {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx) => `Valor: ${formatCurrency(ctx.parsed.y)}`
+            label: (ctx) => `Valor: ${fmtCurrency(ctx.parsed.y)}`
           }
         }
       },
       scales: {
         y: {
           ticks: {
-            callback: (val) => formatCurrency(val)
+            font: { size: isMobile.value ? 10 : 12 },
+            callback: (val) => (isMobile.value ? formatCompactCurrency(val) : fmtCurrency(val))
           },
           grid: {
             color: 'rgba(156, 163, 175, 0.15)'
           }
         },
         x: {
+          ticks: {
+            font: { size: isMobile.value ? 11 : 12 }
+          },
           grid: { display: false }
         }
       }
@@ -325,22 +353,14 @@ const loadData = async () => {
   }
 };
 
-const onMonthChange = (m) => {
+const onPeriodChange = ({ month: m, year: y }) => {
   month.value = m;
-  syncQueryAndReload();
-};
-
-const onYearChange = (y) => {
   year.value = y;
-  syncQueryAndReload();
-};
-
-const syncQueryAndReload = () => {
   router.replace({
     query: {
       ...route.query,
-      month: month.value,
-      year: year.value
+      month: m,
+      year: y
     }
   });
   loadData();
@@ -358,17 +378,10 @@ const exportCsv = () => {
     ['METRICA', 'MARGEM_PERCENTUAL', data.value.netMarginPercentage]
   ];
 
-  const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(';')).join('\n');
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `DRE_${month.value}_${year.value}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  exportToCsv(`DRE_${month.value}_${year.value}.csv`, rows);
 };
 
-watch(viewMode, async (newMode) => {
+watch([viewMode, isMobile], async ([newMode]) => {
   if (newMode === 'CHART') {
     await nextTick();
     updateChart();

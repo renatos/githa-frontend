@@ -34,6 +34,24 @@ export const formatCurrency = (value) => {
     }).format(value);
 };
 
+export const formatCompactCurrency = (value) => {
+    const num = Number(value ?? 0);
+    if (isNaN(num)) return 'R$ 0';
+    if (Math.abs(num) < 1000) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            maximumFractionDigits: 0
+        }).format(num);
+    }
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(num);
+};
+
 export const round2 = (val) => Math.round((val || 0) * 100) / 100;
 
 
