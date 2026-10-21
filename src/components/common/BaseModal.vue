@@ -85,7 +85,13 @@ v-if="show"
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue';
+import { onUnmounted, watch } from 'vue';
+import {
+  registerEscapeHandler,
+  unregisterEscapeHandler,
+  lockBodyScroll,
+  unlockBodyScroll
+} from '../../composables/useEscapeKey';
 
 const props = defineProps({
   show: { type: Boolean, required: true },
@@ -101,29 +107,34 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-// Handle ESC key
-const handleEsc = (e) => {
-  if (e.key === 'Escape' && props.show) {
+let isCurrentlyLocked = false;
+
+const handleEsc = () => {
+  if (props.show) {
     emit('close');
   }
 };
 
-onMounted(() => {
-  window.addEventListener('keydown', handleEsc);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleEsc);
-});
-
-// Prevent body scroll when modal is open
+// Synchronize LIFO Escape stack & body scroll-lock counter with modal visibility
 watch(() => props.show, (isVisible) => {
-  if (isVisible) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
+  if (isVisible && !isCurrentlyLocked) {
+    isCurrentlyLocked = true;
+    registerEscapeHandler(handleEsc);
+    lockBodyScroll();
+  } else if (!isVisible && isCurrentlyLocked) {
+    isCurrentlyLocked = false;
+    unregisterEscapeHandler(handleEsc);
+    unlockBodyScroll();
   }
 }, { immediate: true });
+
+onUnmounted(() => {
+  if (isCurrentlyLocked) {
+    isCurrentlyLocked = false;
+    unregisterEscapeHandler(handleEsc);
+    unlockBodyScroll();
+  }
+});
 </script>
 
 <style scoped>

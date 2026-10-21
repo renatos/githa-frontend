@@ -178,7 +178,6 @@ import FloatingAIChat from '../components/common/FloatingAIChat.vue';
 import BottomNav from '../components/common/BottomNav.vue';
 import WsStatusIndicator from '../components/common/WsStatusIndicator.vue';
 import { useNotificationWebSocket } from '../composables/useNotificationWebSocket';
-import { toastBridge } from '../services/toastBridge';
 
 const route = useRoute();
 const { isDark, toggleTheme } = useTheme();
@@ -188,24 +187,7 @@ const isAdmin = ref(false);
 const isSysAdmin = ref(false);
 const isSidebarOpen = ref(false);
 
-const token = authService.getToken();
-const { connect, disconnect, onMessage, connectionStatus } = useNotificationWebSocket(token);
-
-
-onMessage((data) => {
-  if (data.type === 'WHATSAPP_NOTIFICATION') {
-    const toast = toastBridge.getToast();
-    const status = data.data?.status;
-    if (toast) {
-      toast.add({
-        severity: status === 'SENT' ? 'success' : 'error',
-        summary: 'Notificação WhatsApp',
-        detail: status === 'SENT' ? 'Enviada com sucesso.' : 'Falha ao enviar notificação para o profissional.',
-        life: 5000
-      });
-    }
-  }
-});
+const { connect, disconnect, connectionStatus } = useNotificationWebSocket();
 
 const isProfessionalsActive = computed(() => {
   return route.path === '/professionals' && !route.query.view;
@@ -249,8 +231,9 @@ onMounted(async () => {
     }
 
     // WebSocket Notifications
-    if (token) {
-      connect();
+    const activeToken = authService.getToken();
+    if (activeToken) {
+      connect(activeToken);
     }
   }
 });

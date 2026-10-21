@@ -60,7 +60,7 @@ export function useNotificationWebSocket(initialToken) {
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws/notifications/${currentToken}`;
 
-    console.warn('Connecting to WebSocket:', wsUrl);
+    console.warn('Connecting to WebSocket:', `${protocol}//${host}/ws/notifications/[REDACTED]`);
     socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {

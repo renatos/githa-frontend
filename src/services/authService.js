@@ -1,6 +1,21 @@
 import api from './api';
 import { professionalService } from './professionalService';
 
+function parseJwtPayload(token) {
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length < 2 || !parts[1]) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+        window.atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
+    return JSON.parse(jsonPayload);
+}
+
 export const authService = {
     login: async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
@@ -107,13 +122,8 @@ export const authService = {
 
     extractRoles: (token) => {
         try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const payload = JSON.parse(jsonPayload);
+            const payload = parseJwtPayload(token);
+            if (!payload) return [];
             const groups = payload.groups || [];
             // Handle both "ADMIN" and "ROLE_ADMIN" formats
             return groups.map(g => g.startsWith('ROLE_') ? g.replace('ROLE_', '') : g);
@@ -131,17 +141,13 @@ export const authService = {
         const token = localStorage.getItem('token');
         if (!token) return false;
         try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            const payload = JSON.parse(jsonPayload);
+            const payload = parseJwtPayload(token);
+            if (!payload) return false;
             if (payload.exp) {
                 return Date.now() < payload.exp * 1000;
             }
             return true;
-        } catch (e) {
+        } catch {
             return false;
         }
     },

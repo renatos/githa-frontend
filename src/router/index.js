@@ -202,9 +202,8 @@ router.beforeEach((to, from, next) => {
         return;
     }
 
-    // Protected routes — require token
-    const token = localStorage.getItem('token');
-    if (to.meta.requiresAuth && !token) {
+    // Protected routes — require an active (non-expired) token
+    if (to.meta.requiresAuth && !authService.isTokenActive()) {
         sessionStorage.setItem('redirect_after_login', to.fullPath);
         next({ path: '/login', query: { redirect: to.fullPath } });
         return;

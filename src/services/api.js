@@ -51,6 +51,11 @@ import { toastBridge } from './toastBridge';
 import { confirmBridge } from './confirmBridge';
 
 const getToast = () => toastBridge.getToast();
+let isSessionExpiredAlertOpen = false;
+
+export function resetApiSessionLockForTests() {
+    isSessionExpiredAlertOpen = false;
+}
 
 api.interceptors.response.use(
     response => {
@@ -61,23 +66,30 @@ api.interceptors.response.use(
         stopLoading();
         
         // Skip global error handling for 404 on /professionals/me (ADMIN users without professional record)
+        // or when explicitly requested via config.skipGlobalErrorHandler
         const isMeEndpoint = error.config?.url?.includes('/professionals/me');
         const is404 = error.response?.status === 404;
+        const skipGlobal = Boolean(error.config?.skipGlobalErrorHandler);
 
-        if (!(isMeEndpoint && is404)) {
+        if (!skipGlobal && !(isMeEndpoint && is404)) {
             const toast = getToast();
             errorHandler.handle(error, toast);
+            error._handledGlobally = true;
         }
 
-        if (error.response && (error.response.status === 403 || error.response.status === 401)) {
+        // Only 401 (Unauthorized / expired token) should invalidate session; 403 is permission denied
+        if (error.response && error.response.status === 401 && !isSessionExpiredAlertOpen) {
+            isSessionExpiredAlertOpen = true;
             // Give user a chance to read the error toast or see the modal before redirecting
             setTimeout(() => {
                 confirmBridge.alert({
                     title: 'Sessão Expirada',
-                    message: 'Sessão expirada ou sem permissão. Você será redirecionado para o login.',
+                    message: 'Sua sessão expirou. Você será redirecionado para o login.',
                     type: 'warning',
                     onConfirm: () => {
+                        isSessionExpiredAlertOpen = false;
                         localStorage.removeItem('token');
+                        localStorage.removeItem('user');
                         window.location.href = '/login';
                     }
                 });
