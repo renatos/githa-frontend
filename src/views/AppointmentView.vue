@@ -110,7 +110,7 @@ const handleGroupActionChoice = async (choice) => {
       await appointmentService.updateGroupStatus(item.groupId, status);
       toastBridge.success('Sucesso', status === 'COMPLETED' ? 'Todos os procedimentos da sessão foram concluídos e faturados!' : 'Status de toda a sessão atualizado com sucesso!');
     } else {
-      const updated = { ...item, status };
+      const updated = { ...item, status, groupId: null };
       await appointmentService.update(item.id, updated);
       toastBridge.success('Sucesso', successMessage);
     }
@@ -136,7 +136,7 @@ const updateStatus = async (item, status, successMessage) => {
   }
 
   try {
-    const updated = {...item, status};
+    const updated = { ...item, status, groupId: null };
     await appointmentService.update(item.id, updated);
     toastBridge.success('Sucesso', successMessage);
     refreshList();
@@ -202,62 +202,44 @@ const saveAppointment = async (data) => {
       if (existingItems.length > 0) {
         await Promise.all(
           existingItems.map(item => {
-            const { updateAllInGroup: _u1, originalStatus, ...cleanData } = item;
-            if (data.updateAllInGroup && data.groupId && cleanData.status === 'COMPLETED') {
-              // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
-              // na atualização individual de cada item para que o updateGroupStatus execute a transição
-              // e o faturamento consolidado de todos os procedimentos da sessão inteira em lote.
+            const { originalStatus, ...cleanData } = item;
+            if (data.groupId && cleanData.status === 'COMPLETED') {
               const tempStatus = originalStatus || 'SCHEDULED';
-              return appointmentService.update(cleanData.id, { ...cleanData, status: tempStatus });
+              return appointmentService.update(cleanData.id, { ...cleanData, status: tempStatus, groupId: null });
             }
-            return appointmentService.update(cleanData.id, cleanData);
+            return appointmentService.update(cleanData.id, { ...cleanData, groupId: null });
           })
         );
       }
 
       if (newItems.length > 0) {
-        if (data.groupId) {
-          newItems.forEach(item => item.groupId = data.groupId);
+        const targetGroupId = data.sessionGroupId || data.groupId;
+        if (targetGroupId) {
+          newItems.forEach(item => item.groupId = targetGroupId);
         }
         await appointmentService.createBatch(newItems);
       }
 
-      if (data.updateAllInGroup && data.groupId) {
+      if (data.groupId) {
         const anyStatus = data.items[0]?.status;
         if (anyStatus) {
           await appointmentService.updateGroupStatus(data.groupId, anyStatus);
         }
       }
 
-      toastBridge.success('Sucesso', (data.updateAllInGroup && data.items[0]?.status === 'COMPLETED')
+      toastBridge.success('Sucesso', (data.groupId && data.items[0]?.status === 'COMPLETED')
         ? 'Todos os procedimentos da sessão foram concluídos e faturados!'
         : 'Procedimentos da sessão atualizados com sucesso!');
     } else if (data.id) {
-      if (data.updateAllInGroup && data.groupId) {
-        // Primeiro salva as alterações específicas do agendamento atual sem disparar faturamento isolado
-        const { updateAllInGroup: _u2, ...cleanData } = data;
-        if (cleanData.status === 'COMPLETED') {
-          // Se for transição para COMPLETED de toda a sessão, mantemos o status antes da conclusão
-          // na atualização individual para que o updateGroupStatus execute a transição e o faturamento
-          // consolidado da sessão inteira em lote.
-          const tempStatusData = { ...cleanData, status: editingItem.value?.status || 'SCHEDULED' };
-          await appointmentService.update(cleanData.id, tempStatusData);
-        } else {
-          await appointmentService.update(cleanData.id, cleanData);
-        }
-        // Em seguida, atualiza o status de todos os procedimentos daquela sessão
-        await appointmentService.updateGroupStatus(data.groupId, data.status);
+      await appointmentService.update(data.id, data);
+      if (data.groupId) {
         toastBridge.success('Sucesso', data.status === 'COMPLETED'
           ? 'Todos os procedimentos da sessão foram concluídos e faturados!'
           : 'Status de todos os procedimentos da sessão atualizado com sucesso!');
+      } else if (data.status === 'COMPLETED') {
+        toastBridge.success('Sucesso', 'Agendamento concluído e lançamento financeiro gerado!');
       } else {
-        const { updateAllInGroup: _u3, ...cleanData } = data;
-        await appointmentService.update(cleanData.id, cleanData);
-        if (cleanData.status === 'COMPLETED') {
-          toastBridge.success('Sucesso', 'Agendamento concluído e lançamento financeiro gerado!');
-        } else {
-          toastBridge.success('Sucesso', 'Agendamento atualizado com sucesso!');
-        }
+        toastBridge.success('Sucesso', 'Agendamento atualizado com sucesso!');
       }
     } else {
       await appointmentService.create(data);

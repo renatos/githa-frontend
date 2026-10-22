@@ -158,4 +158,136 @@ describe('AppointmentForm.vue - Transaction Status Lock', () => {
     }));
     expect(wrapper.emitted('save')).toBeUndefined();
   });
+
+  it('emits single appointment DTO with groupId: null when user chooses SINGLE on session status change', async () => {
+    const groupId = '11111111-2222-3333-4444-555555555555';
+    const appt1 = {
+      id: 1692,
+      groupId,
+      clientId: 10,
+      clientName: 'Daniel Resende',
+      serviceId: 2,
+      serviceName: 'Limpeza de Pele',
+      professionalId: 3,
+      professionalName: 'Thaís',
+      startTime: '2026-10-22T09:00:00',
+      endTime: '2026-10-22T10:30:00',
+      status: 'PENDING_BILLING',
+      price: 150
+    };
+    const appt2 = {
+      id: 1693,
+      groupId,
+      clientId: 10,
+      clientName: 'Daniel Resende',
+      serviceId: 3,
+      serviceName: 'Remoção',
+      professionalId: 4,
+      professionalName: 'Giselle',
+      startTime: '2026-10-22T10:30:00',
+      endTime: '2026-10-22T11:00:00',
+      status: 'PENDING_BILLING',
+      price: 80
+    };
+
+    appointmentService.getById.mockResolvedValueOnce({ data: { ...appt1 } });
+    appointmentService.getAll.mockResolvedValueOnce({ data: { content: [appt1, appt2] } });
+
+    const wrapper = mount(AppointmentForm, {
+      props: { appointment: appt1 },
+      global: {
+        stubs: {
+          BaseModal: {
+            template: '<div><slot name="header-content"></slot><slot></slot><slot name="footer"></slot></div>'
+          },
+          BaseLookup: true,
+          TransactionDiscountModal: true,
+          AppointmentGroupStatusModal: true,
+          ClientForm: true,
+          ProfessionalForm: true,
+          ServiceForm: true
+        }
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 20));
+
+    wrapper.vm.form.status = 'COMPLETED';
+    wrapper.vm.handleGroupStatusChoice('SINGLE');
+
+    const emitted = wrapper.emitted('save');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toEqual(expect.objectContaining({
+      id: 1692,
+      groupId: null,
+      status: 'COMPLETED'
+    }));
+    expect(emitted[0][0].items).toBeUndefined();
+  });
+
+  it('emits single appointment DTO with session groupId when user chooses ALL on session status change', async () => {
+    const groupId = '11111111-2222-3333-4444-555555555555';
+    const appt1 = {
+      id: 1692,
+      groupId,
+      clientId: 10,
+      clientName: 'Daniel Resende',
+      serviceId: 2,
+      serviceName: 'Limpeza de Pele',
+      professionalId: 3,
+      professionalName: 'Thaís',
+      startTime: '2026-10-22T09:00:00',
+      endTime: '2026-10-22T10:30:00',
+      status: 'PENDING_BILLING',
+      price: 150
+    };
+    const appt2 = {
+      id: 1693,
+      groupId,
+      clientId: 10,
+      clientName: 'Daniel Resende',
+      serviceId: 3,
+      serviceName: 'Remoção',
+      professionalId: 4,
+      professionalName: 'Giselle',
+      startTime: '2026-10-22T10:30:00',
+      endTime: '2026-10-22T11:00:00',
+      status: 'PENDING_BILLING',
+      price: 80
+    };
+
+    appointmentService.getById.mockResolvedValueOnce({ data: { ...appt1 } });
+    appointmentService.getAll.mockResolvedValueOnce({ data: { content: [appt1, appt2] } });
+
+    const wrapper = mount(AppointmentForm, {
+      props: { appointment: appt1 },
+      global: {
+        stubs: {
+          BaseModal: {
+            template: '<div><slot name="header-content"></slot><slot></slot><slot name="footer"></slot></div>'
+          },
+          BaseLookup: true,
+          TransactionDiscountModal: true,
+          AppointmentGroupStatusModal: true,
+          ClientForm: true,
+          ProfessionalForm: true,
+          ServiceForm: true
+        }
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 20));
+
+    wrapper.vm.form.status = 'COMPLETED';
+    wrapper.vm.handleGroupStatusChoice('ALL');
+
+    const emitted = wrapper.emitted('save');
+    expect(emitted).toBeTruthy();
+    expect(emitted[0][0]).toEqual(expect.objectContaining({
+      id: 1692,
+      groupId,
+      status: 'COMPLETED'
+    }));
+    expect(emitted[0][0].items).toBeUndefined();
+  });
 });

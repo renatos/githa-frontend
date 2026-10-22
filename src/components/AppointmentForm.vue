@@ -926,6 +926,9 @@ onMounted(() => {
         ? parseFloat(form.value.netAmount)
         : (itemPrice - itemDiscountAmount);
 
+      const startStr = form.value.start || '09:00';
+      const endStr = form.value.end || '10:00';
+
       procedures.value = [{
         id: form.value.id || null,
         tempId: form.value.id || Date.now(),
@@ -939,14 +942,25 @@ onMounted(() => {
           id: form.value.professional.id,
           name: form.value.professional.name
         },
-        start: form.value.start || '09:00',
-        end: form.value.end || '10:00',
+        start: startStr,
+        end: endStr,
         price: itemPrice,
         discount: itemDiscount,
         discountAmount: itemDiscountAmount,
         netAmount: itemNet,
         status: form.value.status,
-        transactionId: apt.transactionId || form.value.transactionId || null
+        notes: form.value.notes || '',
+        transactionId: apt.transactionId || form.value.transactionId || null,
+        _original: {
+          clientId: form.value.client.id,
+          date: form.value.date,
+          start: startStr,
+          end: endStr,
+          discountAmount: itemDiscountAmount,
+          netAmount: itemNet,
+          status: form.value.status,
+          notes: form.value.notes || ''
+        }
       }];
 
       if (itemDiscountAmount > 0) {
@@ -1014,6 +1028,9 @@ onMounted(async () => {
                   const pNet = item.netAmount !== undefined && item.netAmount !== null
                     ? parseFloat(item.netAmount)
                     : (pPrice - pDiscAmount);
+                  const startStr = item.startTime ? item.startTime.split('T')[1].substring(0, 5) : '';
+                  const endStr = item.endTime ? item.endTime.split('T')[1].substring(0, 5) : '';
+                  const dateStr = item.startTime ? item.startTime.split('T')[0] : form.value.date;
 
                   return {
                     id: item.id,
@@ -1028,14 +1045,25 @@ onMounted(async () => {
                       id: item.professionalId || item.professional?.id,
                       name: item.professionalName || item.professional?.name
                     },
-                    start: item.startTime ? item.startTime.split('T')[1].substring(0, 5) : '',
-                    end: item.endTime ? item.endTime.split('T')[1].substring(0, 5) : '',
+                    start: startStr,
+                    end: endStr,
                     price: pPrice,
                     discount: pDisc,
                     discountAmount: pDiscAmount,
                     netAmount: pNet,
                     status: item.status,
-                    transactionId: item.transactionId || null
+                    notes: item.notes || '',
+                    transactionId: item.transactionId || null,
+                    _original: {
+                      clientId: item.clientId || item.client?.id || form.value.client.id,
+                      date: dateStr,
+                      start: startStr,
+                      end: endStr,
+                      discountAmount: pDiscAmount,
+                      netAmount: pNet,
+                      status: item.status,
+                      notes: item.notes || ''
+                    }
                   };
                 });
 
@@ -1220,6 +1248,19 @@ const handleGroupStatusChoice = (choice) => {
   executeSave(choice === 'ALL');
 };
 
+const isProcedureFieldsModified = (proc) => {
+  if (!proc.id || !proc._original) return true;
+  const orig = proc._original;
+  const currentNet = proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0));
+  if (String(orig.clientId || '') !== String(form.value.client?.id || '')) return true;
+  if (orig.date !== form.value.date) return true;
+  if (orig.start !== proc.start || orig.end !== proc.end) return true;
+  if (round2(orig.discountAmount || 0) !== round2(proc.discountAmount || 0)) return true;
+  if (round2(orig.netAmount ?? proc.price) !== round2(currentNet)) return true;
+  if (proc.id === form.value.id && (orig.notes || '') !== (form.value.notes || '')) return true;
+  return false;
+};
+
 const executeSave = (updateAllInGroup = false) => {
   // Validação de procedimento com transação financeira vinculada
   for (const proc of procedures.value) {
@@ -1278,54 +1319,61 @@ const executeSave = (updateAllInGroup = false) => {
     return;
   }
 
-  // Edição com apenas 1 procedimento original e sem exclusões
-  if (procedures.value.length === 1 && deletedProcedureIds.value.length === 0 && procedures.value[0].id === form.value.id) {
-    const proc = procedures.value[0];
+  const hasNewProcedures = procedures.value.some(p => !p.id);
+  const hasDeletedProcedures = deletedProcedureIds.value.length > 0;
+  const hasModifiedSiblings = procedures.value.some(
+    p => p.id && p.id !== form.value.id && isProcedureFieldsModified(p)
+  );
+  const currentProc = procedures.value.find(p => p.id === form.value.id) || procedures.value[0];
+  const effectiveGroupId = updateAllInGroup ? (form.value.groupId || null) : null;
+
+  // Edição sem adição/exclusão e sem alteração nos demais procedimentos da sessão
+  if (!hasNewProcedures && !hasDeletedProcedures && !hasModifiedSiblings && currentProc?.id === form.value.id) {
     const dto = {
       id: form.value.id,
-      groupId: form.value.groupId || null,
+      groupId: effectiveGroupId,
       clientId: form.value.client?.id || null,
-      professionalId: proc.professional?.id || null,
-      serviceId: proc.service?.id || null,
-      startTime: toISOString(form.value.date, proc.start),
-      endTime: toISOString(form.value.date, proc.end),
+      professionalId: currentProc.professional?.id || null,
+      serviceId: currentProc.service?.id || null,
+      startTime: toISOString(form.value.date, currentProc.start),
+      endTime: toISOString(form.value.date, currentProc.end),
       status: form.value.status,
       notes: form.value.notes,
-      price: proc.price,
-      discount: proc.discount || 0,
-      discountAmount: proc.discountAmount || 0,
-      netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
-      updateAllInGroup
+      price: currentProc.price,
+      discount: currentProc.discount || 0,
+      discountAmount: currentProc.discountAmount || 0,
+      netAmount: currentProc.netAmount !== undefined ? currentProc.netAmount : (currentProc.price - (currentProc.discountAmount || 0))
     };
     emit('save', dto);
     return;
   }
 
-  // Edição com múltiplos procedimentos ou alterações estruturais na sessão
-  const dtos = procedures.value.map(proc => ({
-    id: proc.id || null,
-    groupId: form.value.groupId || null,
-    clientId: form.value.client.id,
-    professionalId: proc.professional?.id || form.value.professional?.id || null,
-    serviceId: proc.service.id,
-    startTime: toISOString(form.value.date, proc.start),
-    endTime: toISOString(form.value.date, proc.end),
-    status: updateAllInGroup
-      ? (form.value.status || 'SCHEDULED')
-      : (proc.id === form.value.id ? (form.value.status || 'SCHEDULED') : (proc.status || 'SCHEDULED')),
-    notes: form.value.notes,
-    price: proc.price,
-    discountAmount: proc.discountAmount || 0,
-    netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
-    updateAllInGroup,
-    originalStatus: proc.status
-  }));
+  // Edição com múltiplos procedimentos modificados ou alterações estruturais na sessão
+  const dtos = procedures.value
+    .filter(proc => !proc.id || proc.id === form.value.id || isProcedureFieldsModified(proc))
+    .map(proc => ({
+      id: proc.id || null,
+      groupId: proc.id ? null : (form.value.groupId || null),
+      clientId: form.value.client.id,
+      professionalId: proc.professional?.id || form.value.professional?.id || null,
+      serviceId: proc.service.id,
+      startTime: toISOString(form.value.date, proc.start),
+      endTime: toISOString(form.value.date, proc.end),
+      status: updateAllInGroup
+        ? (form.value.status || 'SCHEDULED')
+        : (proc.id === form.value.id ? (form.value.status || 'SCHEDULED') : (proc.status || 'SCHEDULED')),
+      notes: proc.id === form.value.id ? form.value.notes : (proc.notes ?? form.value.notes),
+      price: proc.price,
+      discountAmount: proc.discountAmount || 0,
+      netAmount: proc.netAmount !== undefined ? proc.netAmount : (proc.price - (proc.discountAmount || 0)),
+      originalStatus: proc.status
+    }));
 
   emit('save', {
     items: dtos,
     deletedIds: deletedProcedureIds.value,
-    updateAllInGroup,
-    groupId: form.value.groupId
+    groupId: effectiveGroupId,
+    sessionGroupId: form.value.groupId || null
   });
 };
 
